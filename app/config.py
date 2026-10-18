@@ -65,7 +65,7 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
 # Tier 6: Groq Cloud (Ultra-Fast Free Tier: Llama 3.3 70B / Llama 3.1 8B)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 # Tier 7: Cerebras Cloud (Ultra-Fast Free Tier: Llama 3.1 8B)
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "").strip()

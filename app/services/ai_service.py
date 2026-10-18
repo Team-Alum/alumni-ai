@@ -958,6 +958,24 @@ async def generate_ai_response(
             logger.warning(f"[Tier 2: OpenRouter free failed]: {e}. Failing over to Tier 3...")
             fallback_count += 1
 
+    # Tier 2b: Groq Cloud (Ultra-Fast Free Tier — ~0.4s replies, sits before Gemini)
+    groq_key = client_key or GROQ_API_KEY
+    if GROQ_API_KEY and _can() and _fast_path_open():
+        try:
+            content = await _call_openai_compatible(
+                endpoint="https://api.groq.com/openai/v1/chat/completions",
+                api_key=groq_key,
+                model=GROQ_MODEL,
+                prompt=prompt,
+                system_instruction=system_instruction,
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
+            )
+            return AIResponse(content, provider="groq", fallback_count=fallback_count, status="success")
+        except Exception as e:
+            logger.warning(f"[Tier 2b: Groq free failed]: {e}. Failing over to Gemini...")
+            fallback_count += 1
+
     # Tier 3: Qwen (Alibaba DashScope / Compatible Endpoint)
     qwen_key = client_key or QWEN_API_KEY
     if qwen_key and _can() and _fast_path_open():
@@ -1009,23 +1027,6 @@ async def generate_ai_response(
             return AIResponse(content, provider="gemini_free", fallback_count=fallback_count, status="success")
         except Exception as e:
             logger.warning(f"[Tier 5: Gemini failed]: {e}. Failing over to Tier 6...")
-            fallback_count += 1
-
-    # Tier 6: Groq Cloud (Ultra-Fast Free Tier: Llama 3.3 70B / Llama 3.1 8B)
-    if GROQ_API_KEY and _can():
-        try:
-            content = await _call_openai_compatible(
-                endpoint="https://api.groq.com/openai/v1/chat/completions",
-                api_key=GROQ_API_KEY,
-                model=GROQ_MODEL,
-                prompt=prompt,
-                system_instruction=system_instruction,
-                conversation_history=conversation_history,
-                timeout=_to(8.0)
-            )
-            return AIResponse(content, provider="groq", fallback_count=fallback_count, status="success")
-        except Exception as e:
-            logger.warning(f"[Tier 6: Groq failed]: {e}. Failing over to Tier 7...")
             fallback_count += 1
 
     # Tier 7: Cerebras Cloud (Ultra-Fast Free Tier: Llama 3.1 8B)
