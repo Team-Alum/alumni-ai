@@ -1936,28 +1936,22 @@
                             <!-- Populated dynamically by JS -->
                         </div>
 
-                        <!-- Integrated Chat Editor: May Voice Button & File Attachment Inside Input Field -->
-                        <div class="relative flex items-center">
-                            <!-- Left: Paperclip Button inside Input -->
-                            <div class="absolute left-2 z-10 flex items-center">
-                                <button type="button" id="attach-file-btn" onclick="triggerFileInput(); playTactileSound('click');" title="Attach Code, File, or Document (Python, JS, PDF, TXT, JSON, MD, etc.)" class="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-cyan-600 dark:text-cyan-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 shadow-xs touch-target-44">
-                                    <i class="fa-solid fa-paperclip text-xs"></i>
-                                </button>
-                            </div>
+                        <!-- Integrated Chat Editor: attach, textarea, May, send in one aligned flex row -->
+                        <div class="flex items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e293b] px-1.5 py-1 transition-colors focus-within:border-cyan-400/70 dark:focus-within:border-cyan-500/60">
+                            <button type="button" id="attach-file-btn" onclick="triggerFileInput(); playTactileSound('click');" title="Attach file (code, PDF, image, document)" class="w-10 h-10 rounded-xl hover:bg-white dark:hover:bg-slate-800 text-cyan-600 dark:text-cyan-400 flex items-center justify-center transition shrink-0 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                                <i class="fa-solid fa-paperclip text-xs"></i>
+                            </button>
 
-                            <textarea id="chat-input" rows="1" placeholder="Ask Alumni AI anything..." onkeydown="handleChatKeyDown(event)" oninput="autoGrowChatInput(this)" enterkeyhint="send" class="clay-input w-full rounded-2xl pl-11 pr-[92px] py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 bg-slate-50 dark:bg-[#1e293b] border-slate-200 dark:border-slate-700"></textarea>
-                            
-                            <!-- Right: May Assistant Button + Send Button inside Input -->
-                            <div class="absolute right-2 z-10 flex items-center gap-1.5">
-                                <button type="button" id="may-input-btn" onclick="openMayAssistant(); playTactileSound('click');" title="Voice Assistant May" class="w-9 h-9 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-pink-200/60 dark:border-pink-800/60 shadow-xs touch-target-44">
-                                    <i class="fa-solid fa-microphone text-xs"></i>
-                                </button>
-                                <button type="button" id="send-msg-btn" onclick="sendUserMessage(); createRipple(event); playTactileSound('send');" title="Send Message" class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition bg-gradient-to-r from-cyan-500 to-blue-500 text-white touch-target-44 active:scale-95">
-                                    <i class="fa-solid fa-paper-plane text-xs"></i>
-                                </button>
-                            </div>
+                            <textarea id="chat-input" rows="1" placeholder="Ask Alumni AI anything..." onkeydown="handleChatKeyDown(event)" oninput="autoGrowChatInput(this)" enterkeyhint="send" class="flex-1 min-w-0 bg-transparent border-0 outline-none resize-none text-[13px] leading-relaxed py-2 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 max-h-[30vh]"></textarea>
 
-                            <input type="file" id="file-upload-input" multiple onchange="handleFileSelection(event)" class="hidden" accept=".py,.js,.jsx,.ts,.tsx,.html,.css,.json,.md,.txt,.pdf,.csv,.c,.cpp,.h,.java,.rs,.go,.sql,.sh,.bat,.yml,.yaml,.xml,.log,.env">
+                            <button type="button" id="may-input-btn" onclick="openMayAssistant(); playTactileSound('click');" title="Voice Assistant May" class="w-10 h-10 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center transition shrink-0 border border-transparent hover:border-pink-200/60 dark:hover:border-pink-800/60">
+                                <i class="fa-solid fa-microphone text-xs"></i>
+                            </button>
+                            <button type="button" id="send-msg-btn" onclick="sendUserMessage(); createRipple(event); playTactileSound('send');" title="Send Message" class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm transition bg-gradient-to-r from-cyan-500 to-blue-500 text-white shrink-0 active:scale-95">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                            </button>
+
+                            <input type="file" id="file-upload-input" multiple onchange="handleFileSelection(event)" class="hidden" accept=".py,.js,.jsx,.ts,.tsx,.html,.css,.json,.md,.txt,.pdf,.csv,.c,.cpp,.h,.java,.rs,.go,.sql,.sh,.bat,.yml,.yaml,.xml,.log,.env,.png,.jpg,.jpeg,.gif,.webp,.bmp,.svg">
                         </div>
                         <div class="flex items-center justify-between gap-2 mt-1.5 px-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                             <div class="flex items-center gap-2 flex-wrap min-w-0">
@@ -3026,6 +3020,7 @@
             if (ext === 'py') return { icon: 'fa-brands fa-python', color: 'text-amber-500', label: 'Python' };
             if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) return { icon: 'fa-brands fa-js', color: 'text-yellow-500', label: 'JavaScript' };
             if (ext === 'pdf') return { icon: 'fa-solid fa-file-pdf', color: 'text-rose-500', label: 'PDF Document' };
+            if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return { icon: 'fa-solid fa-file-image', color: 'text-fuchsia-500', label: 'Image' };
             if (['html', 'css', 'scss', 'vue', 'svelte'].includes(ext)) return { icon: 'fa-solid fa-file-code', color: 'text-cyan-500', label: 'Web Code' };
             if (['json', 'yaml', 'yml', 'toml'].includes(ext)) return { icon: 'fa-solid fa-file-invoice', color: 'text-emerald-500', label: 'Config / JSON' };
             if (['c', 'cpp', 'h', 'hpp', 'rs', 'go', 'java', 'sql', 'sh', 'bat'].includes(ext)) return { icon: 'fa-solid fa-code', color: 'text-indigo-500', label: 'Source Code' };
@@ -3059,9 +3054,10 @@
                 }
                 const lowerName = file.name.toLowerCase();
                 const isPdf = lowerName.endsWith('.pdf') || file.type === 'application/pdf';
+                const isImage = (file.type && file.type.startsWith('image/')) || /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(lowerName);
 
                 showToast(`Processing ${file.name}...`);
-                if (isPdf) {
+                if (isPdf || isImage) {
                     try {
                         const base64Content = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
@@ -3075,32 +3071,32 @@
                             body: JSON.stringify({
                                 name: file.name,
                                 content_base64: base64Content,
-                                type: file.type || 'application/pdf'
+                                type: file.type || (isPdf ? 'application/pdf' : 'image/png')
                             })
                         });
                         if (!resp.ok) {
-                            showToast(`Failed to parse PDF: ${file.name}`, 'error');
+                            showToast(`Failed to parse ${isImage ? 'image' : 'PDF'}: ${file.name}`, 'error');
                             continue;
                         }
                         const extracted = await resp.json();
                         currentAttachments.push({
                             name: extracted.name,
-                            type: 'application/pdf',
+                            type: extracted.type,
                             size: extracted.size,
                             pages: extracted.pages,
                             text: extracted.text
                         });
-                        showToast(`Extracted ${extracted.pages} pages from ${file.name}`);
+                        showToast(isImage ? `Attached image ${file.name}` : `Extracted ${extracted.pages} pages from ${file.name}`);
                     } catch (err) {
-                        console.error('PDF extraction failed:', err);
-                        showToast(`Error processing PDF: ${file.name}`, 'error');
+                        console.error('File processing error:', err);
+                        showToast(`Error processing ${file.name}`, 'error');
                     }
                 } else {
                     try {
                         const text = await new Promise((resolve, reject) => {
                             const reader = new FileReader();
                             reader.onload = () => resolve(reader.result);
-                            reader.onerror = reject;
+                            reader.onerror = () => reject(new Error('read error'));
                             reader.readAsText(file);
                         });
                         currentAttachments.push({
@@ -3111,8 +3107,30 @@
                         });
                         showToast(`Attached ${file.name} (${formatFileSize(file.size)})`);
                     } catch (err) {
-                        console.error('File read error:', err);
-                        showToast(`Could not read ${file.name}`, 'error');
+                        // Binary non-image file: fall back to base64 data URL via backend
+                        try {
+                            const dataUrl = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(file);
+                            });
+                            const resp = await fetch('/api/files/extract', {
+                                method: 'POST',
+                                headers: getAuthHeaders(),
+                                body: JSON.stringify({ name: file.name, content_base64: dataUrl, type: file.type || 'application/octet-stream' })
+                            });
+                            if (resp.ok) {
+                                const ex = await resp.json();
+                                currentAttachments.push({ name: ex.name, type: ex.type, size: ex.size, pages: ex.pages, text: ex.text });
+                                showToast(`Attached ${file.name}`);
+                            } else {
+                                showToast(`Could not read ${file.name}`, 'error');
+                            }
+                        } catch (e2) {
+                            console.error('File read error:', err);
+                            showToast(`Could not read ${file.name}`, 'error');
+                        }
                     }
                 }
             }
