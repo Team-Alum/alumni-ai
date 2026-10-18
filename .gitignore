@@ -1,0 +1,31 @@
+# Environment & secrets
+.env
+
+# Internal deployment notes & server scripts (not for the repo)
+SESSION_CHECKPOINT.md
+deploy_nest.sh
+deploy_to_nest.bat
+update_to_nest.bat
+
+# Database
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Logs & temp
+*.log
+scratch/
+.pm2/
+dump.pm2
+
+# OS
+.DS_Store
+Thumbs.db

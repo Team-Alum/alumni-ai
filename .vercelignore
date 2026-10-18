@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+data/
+scratch/
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+test_*.py
+verify_app.py
+*.bat
+*.sh
+SESSION_CHECKPOINT.md
+.git/
+.vscode/
