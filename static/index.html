@@ -65,11 +65,36 @@
 
         :root {
             /* Claymorphism Base Colors (Clean Organic - No Neon) */
-            --bg-color: #e8eff5;
+            --bg-color: #eef3f8;
             --shadow-light: #ffffff;
             --shadow-dark: #c3d0e2;
             --accent-cyan: #d0e8e9;
             --accent-pink: #f2dce0;
+
+            /* Design Tokens: Color */
+            --surface: #ffffff;
+            --surface-2: #f5f8fb;
+            --cyan: #0891b2;
+            --blue: #2563eb;
+            --pink: #db2777;
+            --text-1: #0f172a;
+            --text-2: #475569;
+            --text-3: #94a3b8;
+            --border-soft: rgba(148, 163, 184, 0.25);
+
+            /* Design Tokens: Spacing Scale */
+            --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+
+            /* Design Tokens: Radii */
+            --r-sm: 10px; --r-md: 14px; --r-lg: 18px; --r-xl: 24px;
+
+            /* Design Tokens: Restrained Shadows */
+            --sh-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --sh-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+            --sh-lg: 0 10px 24px rgba(15, 23, 42, 0.10);
+
+            /* Layout */
+            --header-h: 48px;
         }
 
         /* Full Dark Mode Theme Variables */
@@ -79,6 +104,18 @@
             --shadow-dark: #04070e;
             --accent-cyan: #164e63;
             --accent-pink: #831843;
+            --surface: #101827;
+            --surface-2: #0f172a;
+            --cyan: #22d3ee;
+            --blue: #60a5fa;
+            --pink: #f472b6;
+            --text-1: #f8fafc;
+            --text-2: #cbd5e1;
+            --text-3: #64748b;
+            --border-soft: rgba(100, 116, 139, 0.25);
+            --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+            --sh-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --sh-lg: 0 10px 24px rgba(0, 0, 0, 0.45);
             background-color: #0b0f19 !important;
             color: #f1f5f9 !important;
         }
@@ -95,9 +132,18 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             overscroll-behavior-y: none;
-            overflow-x: hidden;
+            overflow-x: clip;
             width: 100%;
+            max-width: 100%;
             height: 100%;
+        }
+
+        /* Dynamic viewport: app shell tracks the visible viewport (keyboard-safe on Android) */
+        #app-view {
+            height: 100vh;
+            height: 100dvh;
+            max-width: 100vw;
+            overflow-x: clip;
         }
 
         /* Prevent iOS Safari 16px auto-zoom on input focus */
@@ -194,33 +240,33 @@
         /* Dark Mode Clay Overrides */
         html.dark .clay-card {
             background-color: #0f172a;
-            box-shadow: 14px 14px 28px #050811, -14px -14px 28px #18253d, inset 1px 1px 2px rgba(255, 255, 255, 0.05);
+            box-shadow: 6px 6px 16px #050811, -6px -6px 16px #18253d, inset 1px 1px 2px rgba(255, 255, 255, 0.04);
         }
         html.dark .clay-surface-white {
             background: #131b2e !important;
             border-color: #1e293b !important;
-            box-shadow: 6px 6px 14px #060a13, -6px -6px 14px #1b263e;
+            box-shadow: 2px 2px 6px #060a13, -2px -2px 6px #1b263e;
         }
         html.dark .clay-pill {
             background-color: #131b2e !important;
             border-color: #24324c !important;
             color: #e2e8f0;
-            box-shadow: 4px 4px 10px #060a13, -4px -4px 10px #1a273f;
+            box-shadow: 2px 2px 5px #060a13, -2px -2px 5px #1a273f;
         }
         html.dark .clay-input {
             background-color: #0f172a !important;
             border-color: #24324c !important;
             color: #f8fafc !important;
-            box-shadow: inset 3px 3px 6px #080d16, inset -3px -3px 6px #1a273f;
+            box-shadow: inset 2px 2px 5px #080d16, inset -2px -2px 5px #1a273f;
         }
         html.dark .clay-btn {
             background-color: #162034 !important;
             color: #f1f5f9 !important;
-            box-shadow: 4px 4px 10px #060a13, -4px -4px 10px #1c2a44;
+            box-shadow: 2px 2px 6px #060a13, -2px -2px 6px #1c2a44;
         }
         html.dark .clay-btn:hover {
             background-color: #1e2c47 !important;
-            box-shadow: 6px 6px 14px #060a13, -6px -6px 14px #1c2a44;
+            box-shadow: 3px 3px 8px #060a13, -3px -3px 8px #1c2a44;
         }
         html.dark .clay-panel-border {
             border-right: 1.5px solid #1e293b !important;
@@ -273,106 +319,107 @@
             overflow: hidden;
         }
 
-        /* Clay-morphism Surfaces */
+        /* Clay-morphism Surfaces (Restrained — subtle elevation, no heavy glow) */
         .clay-card {
             background-color: var(--bg-color);
-            border-radius: 40px;
+            border-radius: var(--r-xl);
             box-shadow: 
-                20px 20px 40px var(--shadow-dark),
-                -20px -20px 40px var(--shadow-light),
-                inset 2px 2px 4px rgba(255, 255, 255, 0.7);
+                8px 8px 20px var(--shadow-dark),
+                -8px -8px 20px var(--shadow-light),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.5);
         }
 
         .clay-surface-gradient {
             background: linear-gradient(135deg, #e8eff5 0%, #f1f5f9 100%);
-            box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.9),
-                        inset 4px 4px 10px rgba(195, 208, 226, 0.4);
+            box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.8),
+                        inset 3px 3px 8px rgba(195, 208, 226, 0.35);
         }
 
         .clay-surface-white {
             background: #ffffff;
             box-shadow: 
-                6px 6px 14px var(--shadow-dark),
-                -6px -6px 14px var(--shadow-light);
+                2px 2px 8px var(--shadow-dark),
+                -2px -2px 8px var(--shadow-light);
         }
 
         .clay-panel-border {
-            border-right: 1.5px solid rgba(195, 208, 226, 0.6);
-            border-bottom: 1.5px solid rgba(195, 208, 226, 0.6);
+            border-right: 1px solid rgba(195, 208, 226, 0.5);
+            border-bottom: 1px solid rgba(195, 208, 226, 0.5);
         }
 
         .clay-input {
             background-color: var(--bg-color);
-            border-radius: 16px;
-            border: 1px solid rgba(195, 208, 226, 0.4);
+            border-radius: var(--r-lg);
+            border: 1px solid rgba(195, 208, 226, 0.45);
             box-shadow: 
-                inset 5px 5px 10px var(--shadow-dark),
-                inset -5px -5px 10px var(--shadow-light);
+                inset 2px 2px 5px var(--shadow-dark),
+                inset -2px -2px 5px var(--shadow-light);
             color: #334155;
-            transition: all 0.25s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .clay-input:focus {
             outline: none;
-            border-color: #94a3b8;
+            border-color: #06b6d4;
             box-shadow: 
-                inset 7px 7px 14px var(--shadow-dark),
-                inset -7px -7px 14px var(--shadow-light);
+                inset 1px 1px 3px var(--shadow-dark),
+                inset -1px -1px 3px var(--shadow-light),
+                0 0 0 3px rgba(6, 182, 212, 0.15);
         }
 
         .clay-btn {
             background-color: var(--bg-color);
-            border-radius: 16px;
+            border-radius: var(--r-md);
             font-weight: 800;
             color: #475569;
             box-shadow: 
-                8px 8px 16px var(--shadow-dark),
-                -8px -8px 16px var(--shadow-light);
+                3px 3px 8px var(--shadow-dark),
+                -3px -3px 8px var(--shadow-light);
             transition: all 0.2s ease;
             cursor: pointer;
         }
         .clay-btn:hover {
             box-shadow: 
-                10px 10px 20px var(--shadow-dark),
-                -10px -10px 20px var(--shadow-light);
+                4px 4px 10px var(--shadow-dark),
+                -4px -4px 10px var(--shadow-light);
             transform: translateY(-1px);
             color: #1e293b;
         }
         .clay-btn:active {
             box-shadow: 
-                inset 6px 6px 12px var(--shadow-dark),
-                inset -6px -6px 12px var(--shadow-light);
-            transform: translateY(2px);
+                inset 3px 3px 6px var(--shadow-dark),
+                inset -3px -3px 6px var(--shadow-light);
+            transform: translateY(1px);
         }
 
         .clay-btn-primary {
             background-color: #64748b;
             color: #f8fafc;
             box-shadow: 
-                8px 8px 16px var(--shadow-dark),
-                -8px -8px 16px var(--shadow-light),
-                inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+                3px 3px 8px var(--shadow-dark),
+                -3px -3px 8px var(--shadow-light),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.2);
         }
         .clay-btn-primary:hover {
             background-color: #475569;
             color: #ffffff;
             box-shadow: 
-                10px 10px 20px var(--shadow-dark),
-                -10px -10px 20px var(--shadow-light);
+                4px 4px 10px var(--shadow-dark),
+                -4px -4px 10px var(--shadow-light);
         }
         .clay-btn-primary:active {
             background-color: #334155;
             box-shadow: 
-                inset 6px 6px 12px #1e293b,
-                inset -6px -6px 12px #64748b;
+                inset 3px 3px 6px #1e293b,
+                inset -3px -3px 6px #64748b;
         }
 
         .clay-pill {
             background-color: var(--bg-color);
-            border-radius: 14px;
+            border-radius: var(--r-md);
             box-shadow: 
-                4px 4px 10px var(--shadow-dark),
-                -4px -4px 10px var(--shadow-light);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+                2px 2px 5px var(--shadow-dark),
+                -2px -2px 5px var(--shadow-light);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             transition: all 0.2s ease;
         }
 
@@ -381,8 +428,8 @@
             border-radius: 50%;
             background-color: var(--bg-color);
             box-shadow: 
-                15px 15px 30px var(--shadow-dark),
-                -15px -15px 30px var(--shadow-light);
+                8px 8px 18px var(--shadow-dark),
+                -8px -8px 18px var(--shadow-light);
             z-index: 0;
         }
 
@@ -682,6 +729,127 @@
             border: none;
             font-size: 0.75rem;
             line-height: 1.5;
+            white-space: pre;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+
+        /* ============================================================
+           MOBILE-FIRST RESPONSIVE LAYOUT (320px → 430px primary, scales up)
+           ============================================================ */
+
+        /* Hide scrollbar helpers */
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* Chat feed: clean typography rhythm, safe spacing */
+        #chat-messages {
+            padding-left: max(0.75rem, var(--sal));
+            padding-right: max(0.75rem, var(--sar));
+            padding-top: calc(var(--sat) + 3.5rem);
+            padding-bottom: 1rem;
+            overscroll-behavior-y: contain;
+        }
+        #chat-messages > div { max-width: 100%; }
+
+        /* Message bubble: readable width, no overflow on 320px */
+        .msg-bubble {
+            max-width: 100%;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        /* Compact mobile header */
+        .app-mobile-header {
+            padding-top: calc(0.35rem + var(--sat));
+            padding-bottom: 0.35rem;
+            padding-left: max(0.6rem, var(--sal));
+            padding-right: max(0.6rem, var(--sar));
+            min-height: calc(var(--header-h) + var(--sat));
+        }
+
+        /* Composer: sticky bottom, keyboard-safe, comfortable one-hand zone */
+        .composer-bar {
+            padding-left: max(0.6rem, var(--sal));
+            padding-right: max(0.6rem, var(--sar));
+            padding-bottom: calc(0.6rem + var(--sab));
+            padding-top: 0.6rem;
+            box-shadow: 0 -1px 0 var(--border-soft);
+            flex-shrink: 0;
+        }
+        #chat-input {
+            font-size: 13px;
+            line-height: 1.45;
+            max-height: 30vh;
+            min-height: 44px;
+            resize: none;
+            overflow-y: auto;
+        }
+        @media (max-width: 640px) {
+            #chat-input { font-size: 16px; } /* prevents Android/iOS zoom-on-focus */
+        }
+
+        /* Welcome card compaction */
+        .welcome-card-shell { max-width: 100%; min-width: 0; }
+        .starter-chip {
+            text-align: left;
+            padding: 0.55rem 0.75rem;
+            border-radius: var(--r-md);
+            font-size: 11.5px;
+            font-weight: 600;
+            line-height: 1.35;
+            border: 1px solid var(--border-soft);
+            background: var(--surface);
+            color: var(--text-2);
+            transition: background 0.15s ease, border-color 0.15s ease;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .starter-chip:active { background: rgba(6, 182, 212, 0.08); border-color: #06b6d4; }
+        html.dark .starter-chip { background: #131b2e; color: #cbd5e1; }
+
+        /* Prevent unintended horizontal scroll anywhere */
+        .overflow-guard { max-width: 100%; min-width: 0; overflow-x: hidden; }
+
+        /* Markdown media: never blow out the bubble */
+        .markdown-content img { max-width: 100%; height: auto; border-radius: var(--r-md); }
+        .markdown-content iframe { max-width: 100%; border: 0; border-radius: var(--r-md); }
+
+        /* ============ TABLET & DESKTOP (≥768px) ============ */
+        @media (min-width: 768px) {
+            #chat-messages {
+                padding: 2rem 2.5rem 1.5rem;
+            }
+            .composer-bar {
+                padding: 1rem 1.5rem calc(1rem + var(--sab));
+            }
+            .app-mobile-header {
+                min-height: 56px;
+                padding-top: 0.6rem;
+                padding-bottom: 0.6rem;
+            }
+            #chat-input { max-height: 180px; }
+        }
+
+        @media (min-width: 1024px) {
+            #chat-messages { padding: 2.25rem 3rem 1.5rem; }
+        }
+
+        /* Very narrow phones (≤359px): squeeze spacing further */
+        @media (max-width: 359px) {
+            #chat-messages { padding-left: 0.6rem; padding-right: 0.6rem; }
+            .composer-bar { padding-left: 0.5rem; padding-right: 0.5rem; }
+            .markdown-content { font-size: 0.78rem; }
+        }
+
+        /* Landscape phones: keep composer + feed usable */
+        @media (max-height: 480px) and (orientation: landscape) {
+            #chat-messages { padding-top: calc(var(--sat) + 3.25rem); padding-bottom: 0.5rem; }
+            #chat-input { max-height: 96px; }
+            .composer-bar { padding-top: 0.4rem; padding-bottom: calc(0.4rem + var(--sab)); }
         }
     </style>
 </head>
@@ -1703,30 +1871,35 @@
             <!-- Chat Area -->
             <main id="chat-main-area" class="flex-1 flex flex-col bg-slate-50/40 dark:bg-[#0b0f19] relative overflow-hidden w-full h-full transition-colors duration-200">
                 
-                <!-- Floating Mobile Header Bar (Menu, Mode, Theme Toggle, Install PWA) -->
-                <div class="md:hidden absolute top-0 inset-x-0 z-30 flex items-center justify-between px-3 py-2 bg-white/90 dark:bg-[#0b0f19]/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 mobile-safe-top">
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="openMobileSidebar(); playTactileSound('click');" id="mobile-sidebar-toggle-btn" class="w-9 h-9 rounded-xl clay-pill bg-white dark:bg-[#1e293b] shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 active:scale-95 transition" title="Open Navigation Menu">
+                <!-- Compact Mobile Header Bar (Menu, Identity, Mode — Voice/Theme right) -->
+                <div class="md:hidden absolute top-0 inset-x-0 z-30 flex items-center justify-between gap-2 bg-white/92 dark:bg-[#0b0f19]/92 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 app-mobile-header">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                        <button type="button" onclick="openMobileSidebar(); playTactileSound('click');" id="mobile-sidebar-toggle-btn" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-200 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 active:scale-95 transition shrink-0" title="Open Navigation Menu">
                             <i class="fa-solid fa-bars text-xs"></i>
                         </button>
-                        <div class="px-2.5 py-1.5 rounded-xl clay-pill bg-white dark:bg-[#1e293b] shadow-2xs border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 text-[10px] font-bold text-slate-800 dark:text-slate-200">
+                        <div class="flex items-center gap-1.5 min-w-0 px-1">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center bg-gradient-to-br from-slate-900 to-black overflow-hidden p-0.5 border border-slate-800/80 shrink-0">
+                                <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
+                            </div>
+                            <span class="text-[11px] font-extrabold text-slate-900 dark:text-white truncate">Alumni AI</span>
+                        </div>
+                        <div class="hidden min-[380px]:flex px-2 py-1 rounded-lg bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 items-center gap-1 text-[9px] font-bold text-slate-700 dark:text-slate-300 shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span id="mobile-mode-badge">Professional</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1 shrink-0">
                         <!-- PWA Install Button (Shown when installable) -->
-                        <button type="button" id="mobile-pwa-install-btn" onclick="triggerPWAInstall(); playTactileSound('click');" class="hidden px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-[10px] font-extrabold flex items-center gap-1.5 shadow-sm active:scale-95 transition" title="Install Alumni AI App">
-                            <i class="fa-solid fa-download text-[10px]"></i>
-                            <span>Install</span>
+                        <button type="button" id="mobile-pwa-install-btn" onclick="triggerPWAInstall(); playTactileSound('click');" class="hidden w-9 h-9 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white flex items-center justify-center shadow-sm active:scale-95 transition" title="Install Alumni AI App">
+                            <i class="fa-solid fa-download text-[11px]"></i>
                         </button>
                         <!-- Mobile May Voice Assistant Quick Launcher -->
-                        <button type="button" onclick="openMayAssistant(); playTactileSound('click');" class="w-9 h-9 rounded-xl clay-pill bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-200/60 dark:border-pink-800/60 flex items-center justify-center transition active:scale-95" title="Voice Assistant May">
-                            <i class="fa-solid fa-microphone text-xs animate-pulse"></i>
+                        <button type="button" onclick="openMayAssistant(); playTactileSound('click');" class="w-9 h-9 rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border border-pink-200/60 dark:border-pink-800/60 flex items-center justify-center transition active:scale-95" title="Voice Assistant May">
+                            <i class="fa-solid fa-microphone text-[11px]"></i>
                         </button>
                         <!-- Mobile Theme Toggle -->
-                        <button type="button" onclick="toggleTheme(); createRipple(event);" class="w-9 h-9 rounded-xl clay-pill bg-white dark:bg-[#1e293b] text-amber-500 dark:text-yellow-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition active:scale-95" title="Toggle Theme">
-                            <i id="mobile-theme-icon" class="fa-solid fa-moon text-xs"></i>
+                        <button type="button" onclick="toggleTheme(); createRipple(event);" class="w-9 h-9 rounded-xl bg-white dark:bg-[#1e293b] text-amber-500 dark:text-yellow-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition active:scale-95" title="Toggle Theme">
+                            <i id="mobile-theme-icon" class="fa-solid fa-moon text-[11px]"></i>
                         </button>
                     </div>
                 </div>
@@ -1742,14 +1915,14 @@
                     </div>
                 </div>
 
-                <!-- Chat Messages Feed (Responsive padding with top clearance for mobile header) -->
-                <div id="chat-messages" class="flex-1 overflow-y-auto p-3 sm:p-4 pt-16 md:pt-6 md:p-8 space-y-4 sm:space-y-6 w-full touch-scroll chat-scroll-touch">
+                <!-- Chat Messages Feed (Mobile-first padding handled in CSS) -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto space-y-3 sm:space-y-4 w-full touch-scroll overflow-guard">
                     <!-- Dynamic messages -->
                 </div>
 
-                <!-- Input Footer Bar (Mobile Safe Area Bottom Padding) -->
-                <div class="w-full p-2.5 sm:p-4 bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200 mobile-safe-bottom">
-                    <div class="max-w-4xl mx-auto">
+                <!-- Input Footer Bar (Composer: sticky bottom, keyboard-safe, safe-area aware) -->
+                <div class="w-full bg-white dark:bg-[#0f172a] border-t border-slate-200 dark:border-slate-800 transition-colors duration-200 composer-bar flex-shrink-0">
+                    <div class="max-w-4xl mx-auto overflow-guard">
 
                         <!-- Attachment Previews Tray -->
                         <div id="attachment-tray" class="hidden mb-2 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -1760,36 +1933,36 @@
                         <div class="relative flex items-center">
                             <!-- Left: Paperclip Button inside Input -->
                             <div class="absolute left-2 z-10 flex items-center">
-                                <button type="button" id="attach-file-btn" onclick="triggerFileInput(); playTactileSound('click');" title="Attach Code, File, or Document (Python, JS, PDF, TXT, JSON, MD, etc.)" class="w-9 h-9 sm:w-8 sm:h-8 rounded-xl clay-pill hover:bg-slate-100 dark:hover:bg-slate-800 text-cyan-600 dark:text-cyan-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 shadow-2xs touch-target-44">
+                                <button type="button" id="attach-file-btn" onclick="triggerFileInput(); playTactileSound('click');" title="Attach Code, File, or Document (Python, JS, PDF, TXT, JSON, MD, etc.)" class="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-cyan-600 dark:text-cyan-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 shadow-xs touch-target-44">
                                     <i class="fa-solid fa-paperclip text-xs"></i>
                                 </button>
                             </div>
 
-                            <textarea id="chat-input" rows="1" placeholder="Ask Alumni AI anything about study, programming, research..." onkeydown="handleChatKeyDown(event)" class="clay-input w-full rounded-2xl pl-12 pr-24 py-3 sm:py-3.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 resize-none max-h-32 bg-slate-50 dark:bg-[#1e293b] border-slate-200 dark:border-slate-700"></textarea>
+                            <textarea id="chat-input" rows="1" placeholder="Ask Alumni AI anything..." onkeydown="handleChatKeyDown(event)" oninput="autoGrowChatInput(this)" enterkeyhint="send" class="clay-input w-full rounded-2xl pl-11 pr-[92px] py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 bg-slate-50 dark:bg-[#1e293b] border-slate-200 dark:border-slate-700"></textarea>
                             
                             <!-- Right: May Assistant Button + Send Button inside Input -->
                             <div class="absolute right-2 z-10 flex items-center gap-1.5">
-                                <button type="button" id="may-input-btn" onclick="openMayAssistant(); playTactileSound('click');" title="Voice Assistant May" class="w-9 h-9 sm:w-8 sm:h-8 rounded-xl clay-pill hover:bg-pink-50 dark:hover:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-pink-200/60 dark:border-pink-800/60 shadow-2xs touch-target-44">
-                                    <i class="fa-solid fa-microphone text-xs animate-pulse"></i>
+                                <button type="button" id="may-input-btn" onclick="openMayAssistant(); playTactileSound('click');" title="Voice Assistant May" class="w-9 h-9 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-950/40 text-pink-600 dark:text-pink-400 flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-pink-200/60 dark:border-pink-800/60 shadow-xs touch-target-44">
+                                    <i class="fa-solid fa-microphone text-xs"></i>
                                 </button>
-                                <button type="button" id="send-msg-btn" onclick="sendUserMessage(); createRipple(event); playTactileSound('send');" title="Send Message" class="clay-btn w-9 h-9 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shadow transition bg-gradient-to-r from-cyan-500 to-blue-500 text-white touch-target-44">
+                                <button type="button" id="send-msg-btn" onclick="sendUserMessage(); createRipple(event); playTactileSound('send');" title="Send Message" class="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition bg-gradient-to-r from-cyan-500 to-blue-500 text-white touch-target-44 active:scale-95">
                                     <i class="fa-solid fa-paper-plane text-xs"></i>
                                 </button>
                             </div>
 
                             <input type="file" id="file-upload-input" multiple onchange="handleFileSelection(event)" class="hidden" accept=".py,.js,.jsx,.ts,.tsx,.html,.css,.json,.md,.txt,.pdf,.csv,.c,.cpp,.h,.java,.rs,.go,.sql,.sh,.bat,.yml,.yaml,.xml,.log,.env">
                         </div>
-                        <div class="flex items-center justify-between mt-2 px-1 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                            <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex items-center justify-between gap-2 mt-1.5 px-1 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                            <div class="flex items-center gap-2 flex-wrap min-w-0">
                                 <div>Mode: <span id="footer-mode-label" class="font-bold text-cyan-600 dark:text-cyan-400">Professional</span></div>
                                 <!-- 2-Tier Web Research Engine Toggle -->
-                                <button type="button" id="web-research-toggle-btn" onclick="toggleWebResearch(); playTactileSound('toggle');" class="px-2 py-0.5 rounded-lg text-[10px] font-bold clay-pill flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1e293b]" title="Toggle 2-Tier Web Research Engine (Research API -> Analysis Engine)">
+                                <button type="button" id="web-research-toggle-btn" onclick="toggleWebResearch(); playTactileSound('toggle');" class="px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1e293b]" title="Toggle 2-Tier Web Research Engine (Research API -> Analysis Engine)">
                                     <i class="fa-solid fa-globe text-cyan-600 dark:text-cyan-400"></i>
-                                    <span>Web Research:</span>
+                                    <span class="hidden min-[400px]:inline">Web Research:</span>
                                     <span id="web-research-status" class="uppercase font-extrabold text-slate-400">OFF</span>
                                 </button>
                             </div>
-                            <div class="hidden sm:block">Press Enter to send, Shift + Enter for new line</div>
+                            <div class="hidden lg:block shrink-0">Enter to send · Shift+Enter for new line</div>
                         </div>
                     </div>
                 </div>
@@ -2724,6 +2897,27 @@
             }
         }
 
+        // Auto-grow composer textarea (multiline support, no overlap with send button)
+        function autoGrowChatInput(el) {
+            if (!el) return;
+            el.style.height = 'auto';
+            const max = Math.min(window.innerHeight * 0.3, 160);
+            el.style.height = Math.min(el.scrollHeight, max) + 'px';
+            el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
+        }
+
+        // Keep chat scrolled to bottom when Android keyboard opens (visualViewport)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const chat = document.getElementById('chat-messages');
+                if (!chat) return;
+                const nearBottom = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 160;
+                if (nearBottom) {
+                    requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+                }
+            });
+        }
+
         // ==========================================
         // 2-Tier Live Web Research & Suggestions Suite
         // Research API -> First API Reasoning Engine
@@ -3212,14 +3406,14 @@
             const chatContainer = document.getElementById('chat-messages');
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'ai-loading-indicator';
-            loadingDiv.className = 'flex items-start gap-3.5 max-w-3xl animate-slide-left';
+            loadingDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
             loadingDiv.innerHTML = `
-                <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
                     <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain animate-pulse">
                 </div>
-                <div class="clay-surface-white p-4 rounded-3xl text-xs text-slate-700 dark:text-slate-200 shadow-md bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
-                    <div class="w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
-                    <span id="ai-loading-text">${useWebResearch ? '🌐 Research API searching overall web & First API synthesizing...' : (attachmentsToSend.length ? `Alumni AI analyzing attached files (${currentMode})...` : `Alumni AI is reasoning (${currentMode})...`)}</span>
+                <div class="msg-bubble clay-surface-white p-3 rounded-2xl text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 flex-1 min-w-0">
+                    <div class="w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin shrink-0"></div>
+                    <span id="ai-loading-text" class="min-w-0 truncate">${useWebResearch ? 'Researching the web & analyzing...' : (attachmentsToSend.length ? `Analyzing attached files (${currentMode})...` : `Alumni AI is reasoning (${currentMode})...`)}</span>
                 </div>
             `;
             chatContainer.appendChild(loadingDiv);
@@ -3429,7 +3623,7 @@
             const messageDiv = document.createElement('div');
 
             if (sender === 'user') {
-                messageDiv.className = 'flex items-start justify-end gap-2 sm:gap-3.5 max-w-3xl ml-auto animate-slide-right';
+                messageDiv.className = 'flex items-start justify-end gap-2 max-w-full sm:max-w-3xl ml-auto animate-slide-right overflow-guard';
                 
                 let attachmentsHtml = '';
                 if (attachments && Array.isArray(attachments) && attachments.length > 0) {
@@ -3451,11 +3645,11 @@
                 }
 
                 messageDiv.innerHTML = `
-                    <div class="clay-surface-white p-3.5 sm:p-4.5 rounded-2xl sm:rounded-3xl text-xs text-slate-900 dark:text-white font-medium shadow-md bg-cyan-50/70 dark:bg-cyan-950/60 border border-cyan-100 dark:border-cyan-800 leading-relaxed markdown-content max-w-[88%] sm:max-w-none">
+                    <div class="msg-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-900 dark:text-white font-medium bg-cyan-50/70 dark:bg-cyan-950/60 border border-cyan-100 dark:border-cyan-800 leading-relaxed markdown-content flex-1 min-w-0">
                         ${attachmentsHtml}
                         ${formatMessageContent(text)}
                     </div>
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl clay-pill flex items-center justify-center text-slate-800 dark:text-slate-100 shrink-0 font-extrabold text-[11px] sm:text-xs shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-slate-800 dark:text-slate-100 font-extrabold text-[11px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         ${(currentUser.username || 'U').charAt(0).toUpperCase()}
                     </div>
                 `;
@@ -3464,7 +3658,7 @@
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             } else {
                 playTactileSound('receive');
-                messageDiv.className = 'flex items-start gap-2 sm:gap-3.5 max-w-3xl animate-slide-left';
+                messageDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
 
                 let youtubeHtml = '';
                 if (youtubeVideo && youtubeVideo.embedUrl) {
@@ -3539,20 +3733,19 @@
                 }
 
                 messageDiv.innerHTML = `
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
                         <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
                     </div>
-                    <div class="clay-surface-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl text-xs text-slate-800 dark:text-slate-100 shadow-md space-y-2.5 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 w-full min-w-0">
-                        <div class="font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-between">
-                            <span class="flex items-center gap-1.5">
+                    <div class="msg-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-800 dark:text-slate-100 space-y-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex-1 min-w-0">
+                        <div class="font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-between gap-2">
+                            <span class="flex items-center gap-1.5 min-w-0 truncate">
                                 <span>Alumni AI (${(mode || currentMode).toUpperCase()})</span>
-                                ${sources && sources.length ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800"><i class="fa-solid fa-globe mr-1"></i>Web Researched</span>' : ''}
+                                ${sources && sources.length ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 shrink-0"><i class="fa-solid fa-globe mr-1"></i>Web</span>' : ''}
                             </span>
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="speakMessageBubble(this)" title="Listen with May (Voice Assistant)" class="text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition text-[11px] px-1.5 py-0.5 rounded-md hover:bg-pink-50 dark:hover:bg-pink-950/40 touch-target-44 flex items-center justify-center">
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="speakMessageBubble(this)" title="Listen with May (Voice Assistant)" class="text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition text-[11px] w-8 h-8 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-950/40 flex items-center justify-center">
                                     <i class="fa-solid fa-volume-high"></i>
                                 </button>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500">Just now</span>
                             </div>
                         </div>
                         <div class="leading-relaxed font-medium overflow-x-auto markdown-content" id="msg-content-${Date.now()}">${formatMessageContent(text)}</div>
@@ -3612,76 +3805,78 @@
             return greetings[Math.floor(Math.random() * greetings.length)];
         }
 
+        // Starter research topics — first batch visible, rest revealed on demand
+        const RESEARCH_TOPICS = [
+            { q: 'What are the latest open-source AI agent frameworks in 2026?', icon: 'fa-globe', color: 'text-cyan-600 dark:text-cyan-400', label: '2026 AI Agent Frameworks' },
+            { q: 'Research real-world performance benchmarks of Python 3.13 free-threading vs Rust concurrency', icon: 'fa-code', color: 'text-pink-500', label: 'Python 3.13 No-GIL vs Rust' },
+            { q: 'What are the latest breakthroughs in topological quantum error correction?', icon: 'fa-atom', color: 'text-purple-500', label: 'Quantum Error Correction' },
+            { q: 'Compare high-concurrency SQLite WAL mode vs PostgreSQL for microservices', icon: 'fa-database', color: 'text-emerald-500', label: 'SQLite WAL vs PostgreSQL' },
+            { q: 'Explain retrieval-augmented generation (RAG) architectures and their trade-offs', icon: 'fa-diagram-project', color: 'text-blue-500', label: 'RAG Architectures Explained' },
+            { q: 'Summarize the current state of on-device LLM inference on Android', icon: 'fa-mobile-screen', color: 'text-amber-500', label: 'On-Device LLMs on Android' }
+        ];
+
         function appendWelcomeMessage() {
             const chatContainer = document.getElementById('chat-messages');
             const welcomeCard = document.createElement('div');
-            welcomeCard.className = 'flex items-start gap-3.5 max-w-2xl animate-slide-left';
+            welcomeCard.className = 'animate-slide-left overflow-guard';
             const greeting = getDynamicPersonalizedGreeting(currentUser.username);
-            const userEmail = currentUser.email || 'guest@alumni.ai';
+            const isGuest = currentUser.loginMethod === 'guest';
+            const accountLabel = isGuest ? 'Guest Mode' : (currentUser.email || 'guest@alumni.ai');
             const sessionCount = window.loadedSessionsCount !== undefined ? window.loadedSessionsCount : 0;
-            const sessionCountText = sessionCount > 0 
-                ? `${sessionCount} saved session${sessionCount === 1 ? '' : 's'} linked to this email`
-                : 'All chats & work automatically auto-saved';
+
+            const topicChip = (t, idx) => `
+                <button type="button" class="starter-chip overflow-guard" onclick="launchResearchPrompt(${JSON.stringify(t.q)}); playTactileSound('click');" ${idx >= 2 ? 'data-extra-topic="1" hidden' : ''}>
+                    <i class="fa-solid ${t.icon} ${t.color} text-[11px] shrink-0"></i>
+                    <span class="min-w-0 truncate">${escapeHTML(t.label)}</span>
+                </button>`;
 
             welcomeCard.innerHTML = `
-                <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
-                    <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
-                </div>
-                <div class="clay-surface-white p-5 rounded-3xl text-xs text-slate-800 dark:text-slate-100 shadow-md space-y-3 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 w-full">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1 border-b border-slate-200/80 dark:border-slate-800">
-                        <div class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 via-blue-600 to-pink-500 text-sm md:text-base">${escapeHTML(greeting)}</div>
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/80 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0">
-                            <i class="${currentUser.loginMethod === 'guest' ? 'fa-solid fa-user-ninja' : 'fa-solid fa-cloud-check'} text-cyan-600 dark:text-cyan-400"></i>
-                            <span class="truncate max-w-[150px] sm:max-w-[200px]" title="${escapeHTML(currentUser.loginMethod === 'guest' ? 'Guest Mode (' + currentUser.username + ')' : userEmail)}">${escapeHTML(currentUser.loginMethod === 'guest' ? 'Guest Mode' : userEmail)}</span>
+                <div class="welcome-card-shell clay-surface-white p-4 sm:p-5 rounded-2xl text-xs text-slate-800 dark:text-slate-100 space-y-3 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-start gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                            <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-extrabold text-slate-900 dark:text-white text-[13px] leading-snug">${escapeHTML(greeting)}</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Your AI workspace for study, programming & research — all chats auto-saved${sessionCount > 0 ? ` · ${sessionCount} session${sessionCount === 1 ? '' : 's'}` : ''}.</div>
+                        </div>
+                        <div class="hidden min-[420px]:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/80 text-[9px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0" title="${escapeHTML(accountLabel)}">
+                            <i class="fa-solid ${isGuest ? 'fa-user-ninja' : 'fa-cloud-check'}"></i>
+                            <span class="truncate max-w-[120px]">${escapeHTML(accountLabel)}</span>
                         </div>
                     </div>
 
-                    <p class="leading-relaxed">I am your <strong>Alumni AI</strong> workspace assistant. Engineered for study, programming, academic research, and Chrome-powered automated browsing. All your chats, code attachments, and sessions persist in SQLite for this account.</p>
-                    
-                    <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                        <span>Active mode: <span class="font-bold text-pink-600 dark:text-pink-400 uppercase">${currentMode}</span></span>
-                        <span>•</span>
-                        <span id="welcome-session-count" class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                            <i class="fa-solid fa-database text-[9px]"></i> ${escapeHTML(sessionCountText)}
-                        </span>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                        <span class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">Mode: ${escapeHTML(currentMode)}</span>
                     </div>
 
-                    <!-- Interactive Starter Research Questions -->
-                    <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800">
-                        <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center justify-between">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-compass text-cyan-600 dark:text-cyan-400"></i> Explore Live Web Research Topics:</span>
-                            <span class="text-[10px] text-cyan-600 dark:text-cyan-400 font-normal">Click to launch 2-Tier AI Research</span>
+                    <!-- Compact Starter Research Chips (2 shown, more on demand) -->
+                    <div class="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 space-y-1.5">
+                        <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center justify-between gap-2">
+                            <span class="flex items-center gap-1.5 min-w-0 truncate"><i class="fa-solid fa-compass text-cyan-600 dark:text-cyan-400"></i> Research topics</span>
+                            <button type="button" id="reveal-topics-btn" onclick="toggleExtraTopics(); playTactileSound('click');" class="text-cyan-600 dark:text-cyan-400 font-bold normal-case shrink-0 px-1 py-0.5">More</button>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button type="button" onclick="launchResearchPrompt('What are the latest open-source AI agent frameworks in 2026?');" class="text-left p-2.5 rounded-2xl clay-pill hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition group bg-white dark:bg-[#1e293b]">
-                                <div class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 mb-0.5 flex items-center gap-1">
-                                    <i class="fa-solid fa-globe text-[9px]"></i> 2026 AI Trends
-                                </div>
-                                <div class="line-clamp-2 text-[11px]">Latest AI Agent Frameworks & Multi-Agent Architectures</div>
-                            </button>
-                            <button type="button" onclick="launchResearchPrompt('Research real-world performance benchmarks of Python 3.13 free-threading vs Rust concurrency');" class="text-left p-2.5 rounded-2xl clay-pill hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition group bg-white dark:bg-[#1e293b]">
-                                <div class="text-[10px] font-bold text-pink-500 mb-0.5 flex items-center gap-1">
-                                    <i class="fa-solid fa-code text-[9px]"></i> Engineering Benchmarks
-                                </div>
-                                <div class="line-clamp-2 text-[11px]">Python 3.13 No-GIL Concurrency vs Rust Throughput</div>
-                            </button>
-                            <button type="button" onclick="launchResearchPrompt('What are the latest breakthroughs in topological quantum error correction?');" class="text-left p-2.5 rounded-2xl clay-pill hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition group bg-white dark:bg-[#1e293b]">
-                                <div class="text-[10px] font-bold text-purple-500 mb-0.5 flex items-center gap-1">
-                                    <i class="fa-solid fa-atom text-[9px]"></i> Quantum Physics
-                                </div>
-                                <div class="line-clamp-2 text-[11px]">Topological Quantum Error Correction & Logical Qubits</div>
-                            </button>
-                            <button type="button" onclick="launchResearchPrompt('Compare high-concurrency SQLite WAL mode vs PostgreSQL for microservices');" class="text-left p-2.5 rounded-2xl clay-pill hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition group bg-white dark:bg-[#1e293b]">
-                                <div class="text-[10px] font-bold text-emerald-500 mb-0.5 flex items-center gap-1">
-                                    <i class="fa-solid fa-database text-[9px]"></i> Systems & Storage
-                                </div>
-                                <div class="line-clamp-2 text-[11px]">High-Concurrency SQLite WAL vs PostgreSQL Architecture</div>
-                            </button>
+                        <div id="welcome-topics-list" class="grid grid-cols-1 gap-1.5 overflow-guard">
+                            ${RESEARCH_TOPICS.map((t, i) => topicChip(t, i)).join('')}
                         </div>
                     </div>
                 </div>
             `;
             chatContainer.appendChild(welcomeCard);
+        }
+
+        function toggleExtraTopics() {
+            const list = document.getElementById('welcome-topics-list');
+            const btn = document.getElementById('reveal-topics-btn');
+            if (!list) return;
+            const hidden = list.querySelectorAll('[data-extra-topic][hidden]');
+            if (hidden.length) {
+                hidden.forEach(el => el.removeAttribute('hidden'));
+                if (btn) btn.textContent = 'Less';
+            } else {
+                list.querySelectorAll('[data-extra-topic]').forEach(el => el.setAttribute('hidden', ''));
+                if (btn) btn.textContent = 'More';
+            }
         }
 
         // ==========================================
