@@ -29,3 +29,9 @@ dump.pm2
 # OS
 .DS_Store
 Thumbs.db
+
+# Vercel link metadata
+.vercel/
+
+.vercel
+.env*
