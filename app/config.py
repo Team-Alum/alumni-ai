@@ -9,12 +9,16 @@ PORT = int(os.getenv("PORT", "8000"))
 HOST = os.getenv("HOST", "127.0.0.1")
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
-# Database Path (used when DATABASE_URL is not set — local SQLite mode)
-DB_PATH = BASE_DIR / os.getenv("DATABASE_PATH", "data/alumni_ai.db")
-DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-
 # Supabase / Postgres connection (set this for production — enables Postgres mode)
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+
+# Database Path (used when DATABASE_URL is not set — local SQLite mode)
+DB_PATH = BASE_DIR / os.getenv("DATABASE_PATH", "data/alumni_ai.db")
+if not DATABASE_URL:
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass  # read-only filesystem (e.g. serverless) — SQLite unavailable there
 
 # Google OAuth Client Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
