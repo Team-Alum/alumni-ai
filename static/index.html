@@ -846,6 +846,13 @@
         }
 
         /* Landscape phones: keep composer + feed usable */
+        /* Penguin logo art is near-black — always give it a light chip so it stays visible in dark mode */
+        .logo-chip,
+        .dark .logo-chip {
+            background: linear-gradient(135deg, #ffffff, #eef2f8) !important;
+            border-color: rgba(148, 163, 184, 0.35) !important;
+        }
+
         @media (max-height: 480px) and (orientation: landscape) {
             #chat-messages { padding-top: calc(var(--sat) + 3.25rem); padding-bottom: 0.5rem; }
             #chat-input { max-height: 96px; }
@@ -858,7 +865,7 @@
     <!-- Splash Screen -->
     <div id="welcome-intro-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-700" style="background-color: var(--bg-color);">
         <div class="text-center animate-fade-scale">
-            <div class="w-24 h-24 mx-auto mb-5 rounded-3xl flex items-center justify-center shadow-xl p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 clay-surface-white">
+            <div class="w-24 h-24 mx-auto mb-5 rounded-3xl flex items-center justify-center shadow-xl p-2.5 logo-chip border border-slate-200 dark:border-slate-800 clay-surface-white">
                 <img src="/logo.png" alt="Team Alum" class="w-full h-full object-contain rounded-2xl drop-shadow-md">
             </div>
             <h1 class="text-3xl md:text-4xl font-black text-slate-800 tracking-tight mb-2">
@@ -1766,7 +1773,7 @@
                 <!-- Sidebar Top Brand Header & Mobile Close Button -->
                 <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-9 h-9 rounded-2xl flex items-center justify-center shadow-sm bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80 shrink-0">
+                        <div class="w-9 h-9 rounded-2xl flex items-center justify-center shadow-sm logo-chip overflow-hidden p-1 border border-slate-800/80 shrink-0">
                             <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain drop-shadow-xs">
                         </div>
                         <div class="min-w-0">
@@ -1878,7 +1885,7 @@
                             <i class="fa-solid fa-bars text-xs"></i>
                         </button>
                         <div class="flex items-center gap-1.5 min-w-0 px-1">
-                            <div class="w-6 h-6 rounded-lg flex items-center justify-center bg-gradient-to-br from-slate-900 to-black overflow-hidden p-0.5 border border-slate-800/80 shrink-0">
+                            <div class="w-6 h-6 rounded-lg flex items-center justify-center logo-chip overflow-hidden p-0.5 border border-slate-800/80 shrink-0">
                                 <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
                             </div>
                             <span class="text-[11px] font-extrabold text-slate-900 dark:text-white truncate">Alumni AI</span>
@@ -3245,6 +3252,72 @@
             return cleaned;
         }
 
+        // Smart video intent detection — only auto-suggest videos for learning-style queries
+        function shouldSuggestVideo(query) {
+            if (!query || query.trim().length < 12) return false;
+            const q = query.toLowerCase();
+            const videoIntents = /\b(tutorial|how to|how do i|how does|learn|teach me|walkthrough|guide|course|lecture|demo|demonstration|introduction to|basics of|beginner|step by step|crash course|full course|explained|overview of)\b/;
+            return videoIntents.test(q);
+        }
+
+        // Build the shared video slot markup (used by auto-suggest and on-demand button)
+        function buildVideoSlotHtml(youtubeVideo) {
+            if (!youtubeVideo || !youtubeVideo.embedUrl) return '';
+            return `
+                <div class="yt-video-slot mt-3.5 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+                    <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center justify-between flex-wrap gap-1.5">
+                        <div class="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+                            <i class="fa-brands fa-youtube text-sm"></i>
+                            <span>Recommended Video</span>
+                        </div>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/80 dark:border-red-900/60 shadow-2xs">
+                            <i class="fa-solid fa-circle-play text-[9px] text-red-500"></i>
+                            <span>${escapeHTML(youtubeVideo.channel || 'Curated Channel')}</span>
+                        </span>
+                    </div>
+                    <div class="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md bg-black aspect-video max-h-72">
+                        <iframe 
+                            src="${youtubeVideo.embedUrl}" 
+                            title="${escapeHTML(youtubeVideo.title || 'YouTube Video Player')}"
+                            class="w-full h-full border-0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allowfullscreen 
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                </div>
+            `;
+        }
+
+        // On-demand video: user clicks the YouTube button on any AI message
+        async function requestVideoForMessage(btn) {
+            const query = window.lastSentUserQuery || '';
+            if (!query) { showToast('No related query found for this message.'); return; }
+            const bubble = btn.closest('.msg-bubble');
+            if (bubble && bubble.querySelector('.yt-video-slot')) { showToast('Video already loaded for this answer.'); return; }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-sm"></i>';
+            try {
+                const video = await Promise.race([
+                    fetchYouTubeVideo(query),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+                ]);
+                if (video && video.embedUrl && bubble) {
+                    bubble.insertAdjacentHTML('beforeend', buildVideoSlotHtml(video));
+                    playTactileSound('receive');
+                } else {
+                    showToast('No video found for this topic.');
+                }
+            } catch (err) {
+                console.warn('On-demand video error:', err);
+                showToast('Video search timed out. Try again.');
+            } finally {
+                btn.innerHTML = '<i class="fa-brands fa-youtube text-sm"></i>';
+                btn.disabled = false;
+            }
+        }
+
         async function fetchYouTubeVideo(userQuery) {
             const cleanQuery = sanitizeYouTubeSearchQuery(userQuery);
             if (!cleanQuery) return null;
@@ -3398,9 +3471,10 @@
 
             const useWebResearch = isWebResearchActive || text.toLowerCase().startsWith('@research') || text.toLowerCase().startsWith('/research');
 
-            // Concurrently kick off YouTube video connector (runs in parallel with AI generation)
+            // Smart video connector: only auto-fetch for learning-style queries (tutorials, how-to, courses)
             const queryForVideo = text || (attachmentsToSend.length ? attachmentsToSend[0].name : '');
-            const videoPromise = queryForVideo ? fetchYouTubeVideo(queryForVideo) : Promise.resolve(null);
+            window.lastSentUserQuery = text || '';
+            const videoPromise = (queryForVideo && shouldSuggestVideo(queryForVideo)) ? fetchYouTubeVideo(queryForVideo) : Promise.resolve(null);
 
             // Show Loading Indicator with Rotating TA Spinner
             const chatContainer = document.getElementById('chat-messages');
@@ -3408,7 +3482,7 @@
             loadingDiv.id = 'ai-loading-indicator';
             loadingDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
             loadingDiv.innerHTML = `
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
                     <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain animate-pulse">
                 </div>
                 <div class="msg-bubble clay-surface-white p-3 rounded-2xl text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 flex-1 min-w-0">
@@ -3660,36 +3734,7 @@
                 playTactileSound('receive');
                 messageDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
 
-                let youtubeHtml = '';
-                if (youtubeVideo && youtubeVideo.embedUrl) {
-                    youtubeHtml = `
-                        <div class="mt-3.5 pt-3 border-t border-slate-200/80 dark:border-slate-800">
-                            <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-2 flex items-center justify-between flex-wrap gap-1.5">
-                                <div class="flex items-center gap-1.5 text-red-600 dark:text-red-400">
-                                    <i class="fa-brands fa-youtube text-sm"></i>
-                                    <span>Recommended Lecture</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/80 dark:border-red-900/60 shadow-2xs">
-                                        <i class="fa-solid fa-circle-play text-[9px] text-red-500"></i>
-                                        <span>${escapeHTML(youtubeVideo.channel || 'Curated Channel')}</span>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="relative w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-md bg-black aspect-video max-h-72">
-                                <iframe 
-                                    src="${youtubeVideo.embedUrl}" 
-                                    title="${escapeHTML(youtubeVideo.title || 'YouTube Video Player')}"
-                                    class="w-full h-full border-0" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                    referrerpolicy="strict-origin-when-cross-origin"
-                                    allowfullscreen 
-                                    loading="lazy">
-                                </iframe>
-                            </div>
-                        </div>
-                    `;
-                }
+                let youtubeHtml = buildVideoSlotHtml(youtubeVideo);
 
                 let sourcesHtml = '';
                 if (sources && Array.isArray(sources) && sources.length > 0) {
@@ -3733,7 +3778,7 @@
                 }
 
                 messageDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
                         <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
                     </div>
                     <div class="msg-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-800 dark:text-slate-100 space-y-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex-1 min-w-0">
@@ -3743,6 +3788,9 @@
                                 ${sources && sources.length ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 shrink-0"><i class="fa-solid fa-globe mr-1"></i>Web</span>' : ''}
                             </span>
                             <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="requestVideoForMessage(this)" title="Find a related video for this topic" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition text-[11px] w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center">
+                                    <i class="fa-brands fa-youtube"></i>
+                                </button>
                                 <button type="button" onclick="speakMessageBubble(this)" title="Listen with May (Voice Assistant)" class="text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition text-[11px] w-8 h-8 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-950/40 flex items-center justify-center">
                                     <i class="fa-solid fa-volume-high"></i>
                                 </button>
@@ -3833,7 +3881,7 @@
             welcomeCard.innerHTML = `
                 <div class="welcome-card-shell clay-surface-white p-4 sm:p-5 rounded-2xl text-xs text-slate-800 dark:text-slate-100 space-y-3 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800">
                     <div class="flex items-start gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-slate-900 to-black overflow-hidden p-1 border border-slate-800/80">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
                             <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
                         </div>
                         <div class="min-w-0 flex-1">
