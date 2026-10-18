@@ -115,6 +115,14 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             );
         """)
+        _exec(cursor, f"""
+            CREATE TABLE IF NOT EXISTS visitor_events (
+                id {pk_auto},
+                visitor_key TEXT NOT NULL,
+                path TEXT DEFAULT '/',
+                created_at TEXT NOT NULL
+            );
+        """)
 
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics_events(created_at);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_analytics_user ON analytics_events(user_id);")
@@ -122,6 +130,7 @@ def init_db():
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_memories_user ON user_memories(user_id);")
+        _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_visitor_created ON visitor_events(created_at);")
         conn.commit()
 
 
@@ -378,6 +387,107 @@ def clear_user_memories(user_id: str) -> int:
         _exec(cursor, "DELETE FROM user_memories WHERE user_id = %s", (user_id,))
         conn.commit()
         return 0
+
+def record_visitor(visitor_key: str, path: str = "/") -> None:
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor,
+            "INSERT INTO visitor_events (visitor_key, path, created_at) VALUES (%s, %s, %s)",
+            ((visitor_key or "unknown")[:64], (path or "/")[:200], now)
+        )
+        conn.commit()
+
+def get_visitor_stats() -> Dict[str, Any]:
+    this_month = datetime.utcnow().strftime("%Y-%m")
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        _exec(cursor, """
+            SELECT substr(created_at, 1, 7) AS month,
+                   COUNT(*) AS hits,
+                   COUNT(DISTINCT visitor_key) AS uniques
+            FROM visitor_events
+            GROUP BY month
+            ORDER BY month DESC
+            LIMIT 12
+        """)
+        monthly = [dict(r) for r in cursor.fetchall()]
+
+        _exec(cursor, """
+            SELECT substr(created_at, 1, 10) AS day,
+                   COUNT(*) AS hits,
+                   COUNT(DISTINCT visitor_key) AS uniques
+            FROM visitor_events
+            GROUP BY day
+            ORDER BY day DESC
+            LIMIT 14
+        """)
+        daily = [dict(r) for r in cursor.fetchall()]
+
+        _exec(cursor, "SELECT COUNT(*) AS hits, COUNT(DISTINCT visitor_key) AS uniques FROM visitor_events")
+        totals_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
+
+        _exec(cursor, """
+            SELECT COUNT(*) AS hits, COUNT(DISTINCT visitor_key) AS uniques
+            FROM visitor_events
+            WHERE substr(created_at, 1, 7) = %s
+        """, (this_month,))
+        month_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
+
+    return {
+        "monthly": monthly,
+        "daily": daily,
+        "totals": {
+            "all_time_hits": int(totals_row.get("hits") or 0),
+            "all_time_uniques": int(totals_row.get("uniques") or 0),
+            "month_hits": int(month_row.get("hits") or 0),
+            "month_uniques": int(month_row.get("uniques") or 0),
+            "current_month": this_month
+        }
+    }
+
+def get_users_admin() -> Dict[str, Any]:
+    this_month = datetime.utcnow().strftime("%Y-%m")
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        _exec(cursor, """
+            SELECT id, username, email, login_method, is_team_alum, created_at
+            FROM users
+            ORDER BY created_at DESC
+        """)
+        users = [dict(r) for r in cursor.fetchall()]
+
+        _exec(cursor, """
+            SELECT substr(created_at, 1, 7) AS month, COUNT(*) AS count
+            FROM users
+            GROUP BY month
+            ORDER BY month DESC
+            LIMIT 12
+        """)
+        signups_by_month = [dict(r) for r in cursor.fetchall()]
+
+        _exec(cursor, "SELECT login_method, COUNT(*) AS count FROM users GROUP BY login_method ORDER BY count DESC")
+        by_login_method = [dict(r) for r in cursor.fetchall()]
+
+        total = len(users)
+        guests = sum(1 for u in users if (u.get("email") or "").endswith("@guest.alumni.ai"))
+        email_accounts = total - guests
+        new_this_month = sum(1 for u in users if (u.get("created_at") or "").startswith(this_month))
+
+    return {
+        "users": users,
+        "signups_by_month": signups_by_month,
+        "by_login_method": by_login_method,
+        "totals": {
+            "total": total,
+            "email_accounts": email_accounts,
+            "guests": guests,
+            "new_this_month": new_this_month,
+            "current_month": this_month
+        }
+    }
 
 def log_analytics_event(
     user_id: str,

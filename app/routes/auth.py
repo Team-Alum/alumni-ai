@@ -12,7 +12,7 @@ from app.database import (
     verify_password
 )
 from app.security import get_current_user
-from app.config import GOOGLE_CLIENT_ID
+from app.config import GOOGLE_CLIENT_ID, is_admin_email
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -22,10 +22,8 @@ class GoogleCredentialRequest(BaseModel):
 
 
 def _is_founder_email(email: str) -> bool:
-    email = (email or "").lower()
-    return email.endswith("@team.alum") or email in (
-        "sudarshan.dev@gmail.com", "sudarshan.deve@gmail.com"
-    )
+    # Delegates to the central allowlist (ADMIN_EMAILS + @team.alum domain).
+    return is_admin_email(email)
 
 
 @router.get("/config")
@@ -71,7 +69,7 @@ def google_oauth_login(payload: GoogleCredentialRequest):
             username=existing.get("username") or display_name,
             email=email,
             login_method="google",
-            is_team_alum=bool(existing.get("is_team_alum")) or _is_founder_email(email),
+            is_team_alum=_is_founder_email(email),
             password=None
         )
     else:
@@ -166,26 +164,53 @@ def login_user(payload: LoginRequest):
     
     if existing_user:
         stored_hash = existing_user.get("password_hash")
-        if payload.login_method != "google" and stored_hash:
+        existing_method = existing_user.get("login_method", payload.login_method)
+
+        if payload.login_method != "google":
+            # Guest rows are not password accounts — refuse password login on them.
+            if existing_method == "guest":
+                raise HTTPException(
+                    status_code=400,
+                    detail="This is a temporary guest session. Please continue as a guest."
+                )
+            # Passwordless (Google-created) accounts must use the Google flow.
+            # Without this check, knowing only a username would grant full
+            # account access because there is no hash to verify against.
+            if not stored_hash:
+                raise HTTPException(
+                    status_code=400,
+                    detail="This account was created with Google Sign-In. Please sign in with Google instead."
+                )
             if not verify_password(stored_hash, password_clean):
                 raise HTTPException(
                     status_code=401,
                     detail="Incorrect password for this account. Please try again."
                 )
 
+        # Never swap emails: a username match with a *different* supplied
+        # email is treated as non-matching credentials (prevents rewriting a
+        # victim row's email to an admin address).
+        if (
+            email_clean
+            and existing_user.get("email")
+            and email_clean != (existing_user.get("email") or "").strip().lower()
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect email/username or password for this account."
+            )
+
         user_id = existing_user["id"]
         username_final = username_clean if username_clean else existing_user["username"]
         email_final = email_clean if email_clean else existing_user["email"]
-        is_founder_domain = (
-            email_final.lower().endswith("@team.alum") or 
-            email_final.lower() in ("sudarshan.dev@gmail.com", "sudarshan.deve@gmail.com")
-        )
-        is_team_alum_final = bool(existing_user["is_team_alum"]) or is_founder_domain
+        # Admin flag is derived ONLY from the verified email allowlist —
+        # legacy/attacker-set DB flags are discarded on every login.
+        is_team_alum_final = is_admin_email(email_final)
         user = save_user(
             user_id=user_id,
             username=username_final,
             email=email_final,
-            login_method=existing_user.get("login_method", payload.login_method),
+            login_method=existing_method,
             is_team_alum=is_team_alum_final,
             password=password_clean if password_clean else None
         )
@@ -196,19 +221,27 @@ def login_user(payload: LoginRequest):
         if not username_clean:
             raw_prefix = email_clean.split("@")[0]
             username_clean = raw_prefix.replace(".", " ").replace("_", " ").title() if raw_prefix else "Scholar"
-        
+
+        # SECURITY: an allowlisted admin address can never be claimed through
+        # unverified password registration (email ownership is only proven by
+        # Google Sign-In). This prevents anyone from pre-registering
+        # teamalumorg@gmail.com with a password of their choice.
+        if is_admin_email(email_clean):
+            raise HTTPException(
+                status_code=403,
+                detail="This email address must be registered via Google Sign-In."
+            )
+
         user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email_clean.lower()))
-        is_founder_domain = (
-            email_clean.lower().endswith("@team.alum") or 
-            email_clean.lower() in ("sudarshan.dev@gmail.com", "sudarshan.deve@gmail.com")
-        )
-        is_team_alum_new = bool(payload.is_team_alum or is_founder_domain)
+        # SECURITY: client-supplied payload.is_team_alum is IGNORED.
+        # New password accounts are never admin; admin status is granted only
+        # when an allowlisted email is proven through Google OAuth.
         user = save_user(
             user_id=user_id,
             username=username_clean,
             email=email_clean,
             login_method=payload.login_method,
-            is_team_alum=is_team_alum_new,
+            is_team_alum=False,
             password=password_clean if password_clean else None
         )
     

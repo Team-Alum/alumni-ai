@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional
 from fastapi import Header, HTTPException, Depends
 from app.database import get_user_by_token
+from app.config import is_admin_email
 
 # In-memory sliding window rate limiter: user_id -> list of timestamps
 _RATE_LIMIT_BUCKET: Dict[str, List[float]] = defaultdict(list)
@@ -20,7 +21,12 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
     user = get_user_by_token(token)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid or expired session. Please sign in again.")
-    
+
+    # Admin normalization: the email allowlist is the SINGLE source of truth.
+    # Client-supplied or legacy DB is_team_alum flags are discarded here —
+    # a user only carries admin rights if their verified email is allowlisted.
+    user["is_team_alum"] = 1 if is_admin_email(user.get("email")) else 0
+
     # Check rate limit
     now = time.time()
     user_id = user["id"]

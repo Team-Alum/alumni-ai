@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +23,27 @@ if not DATABASE_URL:
 
 # Google OAuth Client Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+
+# -------------------------------------------------------------
+# ADMIN ACCESS CONTROL — single source of truth.
+# Only these verified emails (plus the controlled @team.alum domain)
+# ever receive admin/analytics access. NEVER trust client-supplied
+# is_team_alum flags — only this allowlist (verified via Google OAuth
+# or an existing password on the exact account).
+# Restrict to exactly one address with:  ADMIN_EMAILS=teamalumorg@gmail.com
+# -------------------------------------------------------------
+ADMIN_EMAILS = {
+    e.strip().lower()
+    for e in os.getenv(
+        "ADMIN_EMAILS",
+        "teamalumorg@gmail.com,sudarshan.dev@gmail.com,sudarshan.deve@gmail.com"
+    ).split(",")
+    if e.strip()
+}
+
+def is_admin_email(email: Optional[str] = None) -> bool:
+    e = (email or "").strip().lower()
+    return bool(e) and (e in ADMIN_EMAILS or e.endswith("@team.alum"))
 
 
 # -------------------------------------------------------------

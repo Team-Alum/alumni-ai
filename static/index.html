@@ -1426,6 +1426,12 @@
                 <button id="analytics-btn-stream" onclick="switchAnalyticsTab('stream')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
                     <i class="fa-solid fa-stream mr-1"></i> Live Activity Stream
                 </button>
+                <button id="analytics-btn-users" onclick="switchAnalyticsTab('users')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                    <i class="fa-solid fa-envelope-open-text mr-1"></i> Users & Emails
+                </button>
+                <button id="analytics-btn-visitors" onclick="switchAnalyticsTab('visitors')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
+                    <i class="fa-solid fa-eye mr-1"></i> Visitors
+                </button>
             </div>
 
             <!-- TAB 1: OVERVIEW -->
@@ -1492,7 +1498,7 @@
                             </div>
                             <div class="flex items-center justify-between text-xs">
                                 <span class="text-slate-500">Primary Model</span>
-                                <span class="font-mono text-[11px] text-cyan-600 dark:text-cyan-400">space-bunny-free / gemini-3.8-flash</span>
+                                <span class="font-mono text-[11px] text-cyan-600 dark:text-cyan-400">groq qwen3.8-27b → gemini-flash-lite</span>
                             </div>
                         </div>
                     </div>
@@ -1518,6 +1524,152 @@
                         </thead>
                         <tbody id="analytics-events-table-body">
                             <tr><td colspan="5" class="text-center py-6 text-slate-400">Loading live query stream...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: USERS & EMAIL CAMPAIGNS -->
+            <div id="analytics-tab-users" class="hidden space-y-5">
+                <!-- Users KPIs -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-violet-50/80 to-purple-50/40 dark:from-violet-950/30 dark:to-purple-950/20 border border-violet-100 dark:border-violet-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400 mb-1">Email Accounts</div>
+                        <div id="au-email-accounts" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Mailable registrations</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-50/80 to-gray-50/40 dark:from-slate-800/50 dark:to-slate-900/40 border border-slate-200 dark:border-slate-700/50">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Guests</div>
+                        <div id="au-guests" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">No email on file</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">New This Month</div>
+                        <div id="au-new-month" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1" id="au-current-month">Current cycle</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-50/80 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-100 dark:border-cyan-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">Total Accounts</div>
+                        <div id="au-total" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Everyone registered</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Signup growth -->
+                    <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column text-violet-500"></i> Signup Growth (Last 8 Months)
+                        </h4>
+                        <div id="au-signups-chart" class="flex items-end justify-between gap-2 h-32 pt-2">
+                            <div class="text-slate-400 text-xs">Loading...</div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800 space-y-2">
+                            <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Registration Method</div>
+                            <div id="au-login-methods" class="space-y-2"><div class="text-slate-400 text-xs">Loading...</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Email campaign composer -->
+                    <div class="p-4 rounded-2xl bg-gradient-to-r from-violet-50/60 via-purple-50/40 to-fuchsia-50/40 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-fuchsia-950/20 border border-violet-100 dark:border-violet-900/40 space-y-2.5">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-paper-plane text-violet-500"></i> Welcome / Offer Email Campaign
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="campaign-template" onchange="applyCampaignTemplate()" class="clay-input rounded-xl px-2.5 py-2 text-[11px] text-slate-900 dark:text-white cursor-pointer">
+                                <option value="welcome">🎓 Welcome to Team Alum Family</option>
+                                <option value="offer">🎁 Exclusive Offer</option>
+                                <option value="custom">✏️ Custom</option>
+                            </select>
+                            <button type="button" onclick="copyAllEmails()" class="clay-btn py-2 text-[11px] font-bold"><i class="fa-solid fa-copy mr-1"></i> Copy All Emails</button>
+                        </div>
+                        <input type="text" id="campaign-subject" placeholder="Subject..." class="clay-input w-full rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white">
+                        <textarea id="campaign-body" rows="6" placeholder="Email body..." class="clay-input w-full rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white resize-none"></textarea>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="exportUsersCsv()" class="clay-btn flex-1 py-2 text-[11px] font-bold"><i class="fa-solid fa-file-csv mr-1"></i> Export CSV</button>
+                            <button type="button" onclick="openEmailCampaign()" class="flex-[2] py-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 text-white text-[11px] font-extrabold shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+                                <i class="fa-solid fa-envelope-circle-check"></i> Send via Gmail (BCC)
+                            </button>
+                        </div>
+                        <div id="campaign-chunk-status" class="text-[10px] text-slate-500 dark:text-slate-400 text-center hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Registered emails table -->
+                <div class="space-y-2.5">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="au-search" oninput="renderAnalyticsUsersTable()" placeholder="Search email, name, or method..." class="clay-input flex-1 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white">
+                        <span id="au-count-pill" class="text-[10px] font-extrabold px-2 py-1 rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-800 shrink-0">0</span>
+                    </div>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800 max-h-72 overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-slate-50 dark:bg-slate-900/95 text-[10px] font-extrabold uppercase text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
+                                    <th class="py-2.5 px-3">Email</th>
+                                    <th class="py-2.5 px-3">Username</th>
+                                    <th class="py-2.5 px-3">Method</th>
+                                    <th class="py-2.5 px-3">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="au-users-table-body">
+                                <tr><td colspan="4" class="text-center py-6 text-slate-400">Loading registered users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: VISITORS -->
+            <div id="analytics-tab-visitors" class="hidden space-y-5">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-fuchsia-50/80 to-pink-50/40 dark:from-fuchsia-950/30 dark:to-pink-950/20 border border-fuchsia-100 dark:border-fuchsia-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400 mb-1">Visits This Month</div>
+                        <div id="av-month-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1" id="av-current-month">Current cycle</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-100 dark:border-purple-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Visitors This Month</div>
+                        <div id="av-month-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Unique browsers</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-50/80 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-100 dark:border-cyan-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">All-Time Visits</div>
+                        <div id="av-total-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Page loads recorded</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">All-Time Visitors</div>
+                        <div id="av-total-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Distinct browsers ever</div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column text-fuchsia-500"></i> Monthly Traffic Record
+                        </h4>
+                        <span class="flex items-center gap-3 text-[10px] text-slate-400">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-500"></span> Visits</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-purple-500"></span> Unique Visitors</span>
+                        </span>
+                    </div>
+                    <div id="av-monthly-chart" class="flex items-end justify-between gap-1.5 h-40 pt-2 overflow-x-auto">
+                        <div class="text-slate-400 text-xs">Loading...</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/80 text-[10px] font-extrabold uppercase text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
+                                <th class="py-2.5 px-3">Day</th>
+                                <th class="py-2.5 px-3">Visits</th>
+                                <th class="py-2.5 px-3">Unique Visitors</th>
+                            </tr>
+                        </thead>
+                        <tbody id="av-daily-table-body">
+                            <tr><td colspan="3" class="text-center py-6 text-slate-400">Loading daily record...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -2035,7 +2187,38 @@
         }
 
         // Initialize App on DOM Load
+        // Anonymous visitor beacon — powers the founder-only Visitors dashboard.
+        // Records a random per-browser key + current path; server enforces a
+        // per-key cooldown. Never throws and carries no personal data.
+        function trackVisitorBeacon() {
+            try {
+                let vk = localStorage.getItem('alumni_visitor_key');
+                if (!vk) {
+                    vk = (window.crypto && crypto.randomUUID)
+                        ? crypto.randomUUID()
+                        : 'vk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+                    localStorage.setItem('alumni_visitor_key', vk);
+                }
+                const payload = JSON.stringify({
+                    visitor_key: vk,
+                    path: ((location.pathname + location.search) || '/').slice(0, 200)
+                });
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/analytics/track',
+                        new Blob([payload], { type: 'application/json' }));
+                } else {
+                    fetch('/api/analytics/track', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: payload,
+                        keepalive: true
+                    }).catch(() => {});
+                }
+            } catch (e) { /* telemetry must never break the app */ }
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
+            trackVisitorBeacon();
             initPreferences();
             const savedToken = localStorage.getItem('alumni_token');
             if (savedToken) {
@@ -5110,6 +5293,9 @@
         // System Analytics & Data Pulse Controller
         // ==========================================
         let currentAnalyticsData = null;
+        let currentAnalyticsUsers = null;
+        let currentAnalyticsVisitors = null;
+        let campaignChunkIndex = 0;
 
         async function openAnalyticsModal() {
             if (!currentUser || !currentUser.isTeamAlum) {
@@ -5138,12 +5324,14 @@
 
             try {
                 const headers = getAuthHeaders();
-                const [overviewRes, eventsRes] = await Promise.all([
+                const [overviewRes, eventsRes, usersRes, visitorsRes] = await Promise.all([
                     fetch('/api/analytics/overview', { headers }),
-                    fetch('/api/analytics/events?limit=30', { headers })
+                    fetch('/api/analytics/events?limit=30', { headers }),
+                    fetch('/api/analytics/users', { headers }),
+                    fetch('/api/analytics/visitors', { headers })
                 ]);
 
-                if (overviewRes.status === 403 || eventsRes.status === 403) {
+                if ([overviewRes, eventsRes, usersRes, visitorsRes].some(r => r.status === 403)) {
                     closeAnalyticsModal();
                     showToast('Access restricted: Team Alum Founders only.', 'error');
                     return;
@@ -5159,6 +5347,24 @@
                     const events = await eventsRes.json();
                     if (currentAnalyticsData) currentAnalyticsData.recent_events = events;
                     renderAnalyticsEvents(events);
+                }
+
+                if (usersRes.ok) {
+                    currentAnalyticsUsers = await usersRes.json();
+                    if (currentAnalyticsData) currentAnalyticsData.registered_users = currentAnalyticsUsers;
+                    renderAnalyticsUsers(currentAnalyticsUsers);
+                } else {
+                    const tb = document.getElementById('au-users-table-body');
+                    if (tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">Could not load registered users.</td></tr>';
+                }
+
+                if (visitorsRes.ok) {
+                    currentAnalyticsVisitors = await visitorsRes.json();
+                    if (currentAnalyticsData) currentAnalyticsData.visitor_stats = currentAnalyticsVisitors;
+                    renderAnalyticsVisitors(currentAnalyticsVisitors);
+                } else {
+                    const db = document.getElementById('av-daily-table-body');
+                    if (db) db.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">Could not load visitor records.</td></tr>';
                 }
             } catch (err) {
                 console.error("Failed to load telemetry:", err);
@@ -5189,12 +5395,21 @@
                 let i = 0;
 
                 const friendlyNames = {
-                    'opencode_zen': 'OpenCode Zen (space-bunny-free)',
+                    'opencode_zen': 'OpenCode Zen (fast cooldown fail)',
+                    'openrouter_free': 'OpenRouter (Free Tier)',
+                    'groq': 'Groq (qwen3.8-27b)',
+                    'qwen': 'Alibaba Qwen',
+                    'ollama': 'Local Ollama (disabled in prod)',
+                    'gemini_free': 'Google Gemini (flash-lite)',
+                    'cerebras': 'Cerebras',
+                    'mistral': 'Mistral',
+                    'github_models': 'GitHub Models',
                     'voice_may': 'May Voice Assistant (Sarvam Bulbul)',
-                    'gemini_free': 'Google Gemini (gemini-3.8-flash)',
                     'offline_brain': 'Alumni AI Neural Brain (Offline)',
                     'research_pipeline+opencode_zen': 'Deep Research Engine + OpenCode Zen',
-                    'research_pipeline+offline_brain': 'Deep Research + Neural Brain'
+                    'research_pipeline+offline_brain': 'Deep Research + Neural Brain',
+                    'web_research+opencode_zen': 'Web Research + OpenCode Zen',
+                    'web_research+offline_brain': 'Web Research + Neural Brain'
                 };
 
                 const entries = Object.entries(providers);
@@ -5291,23 +5506,289 @@
             });
         }
 
-        function switchAnalyticsTab(tabName) {
-            const tabOverview = document.getElementById('analytics-tab-overview');
-            const tabStream = document.getElementById('analytics-tab-stream');
-            const btnOverview = document.getElementById('analytics-btn-overview');
-            const btnStream = document.getElementById('analytics-btn-stream');
+        function setStatText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = String(value ?? 0);
+        }
 
-            if (tabName === 'overview') {
-                if (tabOverview) tabOverview.classList.remove('hidden');
-                if (tabStream) tabStream.classList.add('hidden');
-                if (btnOverview) btnOverview.className = 'px-3 py-1.5 rounded-xl font-bold text-xs bg-cyan-500 text-white shadow-sm transition';
-                if (btnStream) btnStream.className = 'px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
-            } else {
-                if (tabOverview) tabOverview.classList.add('hidden');
-                if (tabStream) tabStream.classList.remove('hidden');
-                if (btnStream) btnStream.className = 'px-3 py-1.5 rounded-xl font-bold text-xs bg-cyan-500 text-white shadow-sm transition';
-                if (btnOverview) btnOverview.className = 'px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+        // ---- Tab 3: Registered users & email campaigns ----
+        function renderAnalyticsUsers(data) {
+            const t = data.totals || {};
+            setStatText('au-email-accounts', t.email_accounts ?? 0);
+            setStatText('au-guests', t.guests ?? 0);
+            setStatText('au-new-month', t.new_this_month ?? 0);
+            setStatText('au-total', t.total ?? 0);
+            const cm = document.getElementById('au-current-month');
+            if (cm && t.current_month) cm.textContent = 'Month of ' + t.current_month;
+
+            const chart = document.getElementById('au-signups-chart');
+            if (chart) {
+                const months = (data.signups_by_month || []).slice(0, 8).reverse();
+                if (months.length === 0) {
+                    chart.innerHTML = '<div class="text-slate-400 text-xs">No signups yet.</div>';
+                } else {
+                    const max = Math.max(...months.map(m => Number(m.count) || 0), 1);
+                    chart.innerHTML = months.map(m => {
+                        const c = Number(m.count) || 0;
+                        const h = Math.max(6, Math.round((c / max) * 100));
+                        return `
+                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHtml(m.month)}: ${c} signups">
+                            <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${c}</span>
+                            <div class="w-full max-w-[26px] rounded-t-md bg-gradient-to-t from-violet-500 to-purple-400" style="height: ${h}%"></div>
+                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHtml(String(m.month).slice(2))}</span>
+                        </div>`;
+                    }).join('');
+                }
             }
+
+            const lm = document.getElementById('au-login-methods');
+            if (lm) {
+                const rows = data.by_login_method || [];
+                if (rows.length === 0) {
+                    lm.innerHTML = '<div class="text-slate-400 text-xs">No data.</div>';
+                } else {
+                    const total = rows.reduce((a, r) => a + (Number(r.count) || 0), 0) || 1;
+                    const colors = ['bg-violet-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500'];
+                    lm.innerHTML = rows.map((r, i) => {
+                        const c = Number(r.count) || 0;
+                        const pct = Math.round((c / total) * 100);
+                        return `
+                        <div>
+                            <div class="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                                <span class="capitalize">${escapeHtml(r.login_method || 'unknown')}</span>
+                                <span class="font-mono">${c} (${pct}%)</span>
+                            </div>
+                            <div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 mt-1 overflow-hidden">
+                                <div class="${colors[i % colors.length]} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            campaignChunkIndex = 0;
+            renderAnalyticsUsersTable();
+            updateCampaignChunkStatus();
+        }
+
+        function renderAnalyticsUsersTable() {
+            const tableBody = document.getElementById('au-users-table-body');
+            if (!tableBody) return;
+            const all = (currentAnalyticsUsers && currentAnalyticsUsers.users) || [];
+            const q = ((document.getElementById('au-search') || {}).value || '').trim().toLowerCase();
+            const rows = q ? all.filter(u =>
+                (u.email || '').toLowerCase().includes(q) ||
+                (u.username || '').toLowerCase().includes(q) ||
+                (u.login_method || '').toLowerCase().includes(q)) : all;
+
+            const pill = document.getElementById('au-count-pill');
+            if (pill) pill.textContent = rows.length + ' / ' + all.length;
+
+            if (rows.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">${all.length === 0 ? 'No registered users yet.' : 'No match for your search.'}</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = rows.map(u => {
+                const email = u.email || '—';
+                const isGuest = email.endsWith('@guest.alumni.ai');
+                const joined = u.created_at ? String(u.created_at).slice(0, 10) : '—';
+                const methodTag = isGuest
+                    ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">guest</span>'
+                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${u.login_method === 'google' ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">${escapeHtml(u.login_method || 'password')}</span>`;
+                return `
+                <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 text-xs transition">
+                    <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 truncate max-w-[210px]" title="${escapeHtml(email)}">${escapeHtml(email)}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(u.username || '—')}</td>
+                    <td class="py-2 px-3">${methodTag}</td>
+                    <td class="py-2 px-3 font-mono text-slate-400 text-[11px]">${escapeHtml(joined)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        const CAMPAIGN_TEMPLATES = {
+            welcome: {
+                subject: 'Welcome to the Team Alum Family! 🎓',
+                body: `Hi there,\n\nWelcome to the Team Alum family! We're thrilled to have you aboard.\n\nAlumni AI is your personal AI companion built for students and alumni — instant answers, smart notes, placement prep, and much more, all in one place.\n\nGetting started:\n• Open Alumni AI and ask your first question\n• Turn on Memory Mode so it remembers what matters to you\n• Try Research Mode for deep, cited answers\n\nIf you ever need help, just reply to this email — a real human from the Team Alum crew will get back to you.\n\nHere's to everything you'll build with us.\n\nWarmly,\nSudarshan & Soham\nTeam Alum — Alumni AI\nhttps://alumni-ai-teamalum.vercel.app`
+            },
+            offer: {
+                subject: 'An Exclusive Offer, Just for You 🎁',
+                body: `Hi there,\n\nBecause you're part of the Team Alum community, we've got something special reserved just for you.\n\nAs a registered member of Alumni AI you get exclusive early access to upcoming features, founder-level offers, and priority invites to everything we ship next.\n\nClaim it in two clicks:\n1. Sign in to Alumni AI\n2. Explore everything waiting for you\n\nThis offer is tied to your registered account and won't last forever — jump in while it's live.\n\nCheers,\nSudarshan & Soham\nTeam Alum — Alumni AI\nhttps://alumni-ai-teamalum.vercel.app`
+            }
+        };
+
+        function applyCampaignTemplate() {
+            const sel = document.getElementById('campaign-template');
+            const subj = document.getElementById('campaign-subject');
+            const bodyEl = document.getElementById('campaign-body');
+            if (!sel || !subj || !bodyEl) return;
+            const tpl = CAMPAIGN_TEMPLATES[sel.value];
+            if (tpl) {
+                subj.value = tpl.subject;
+                bodyEl.value = tpl.body;
+            }
+            campaignChunkIndex = 0;
+            updateCampaignChunkStatus();
+        }
+
+        function getAdminEmailList() {
+            const users = (currentAnalyticsUsers && currentAnalyticsUsers.users) || [];
+            return users
+                .map(u => (u.email || '').trim().toLowerCase())
+                .filter(e => e && e.includes('@') && !e.endsWith('@guest.alumni.ai'));
+        }
+
+        async function copyAllEmails() {
+            const emails = getAdminEmailList();
+            if (emails.length === 0) {
+                showToast('No registered email accounts yet.', 'warning');
+                return;
+            }
+            const text = emails.join(', ');
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+            }
+            showToast('Copied ' + emails.length + ' email addresses to clipboard.', 'success');
+        }
+
+        function exportUsersCsv() {
+            const users = (currentAnalyticsUsers && currentAnalyticsUsers.users) || [];
+            if (users.length === 0) {
+                showToast('No registered users to export yet.', 'warning');
+                return;
+            }
+            const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+            const lines = ['email,username,login_method,joined'];
+            users.forEach(u => lines.push([
+                esc(u.email), esc(u.username), esc(u.login_method),
+                esc(String(u.created_at || '').slice(0, 10))
+            ].join(',')));
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'alumni_ai_registered_users_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(a.href);
+            a.remove();
+            showToast('Exported ' + users.length + ' users to CSV.', 'success');
+        }
+
+        function getCampaignChunks() {
+            const emails = getAdminEmailList();
+            const size = 100;
+            const chunks = [];
+            for (let i = 0; i < emails.length; i += size) chunks.push(emails.slice(i, i + size));
+            return chunks;
+        }
+
+        function updateCampaignChunkStatus() {
+            const statusEl = document.getElementById('campaign-chunk-status');
+            const btn = document.querySelector('button[onclick="openEmailCampaign()"]');
+            const chunks = getCampaignChunks();
+            if (!statusEl) return;
+            if (chunks.length <= 1) {
+                statusEl.classList.add('hidden');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-envelope-circle-check"></i> Send via Gmail (BCC)';
+                return;
+            }
+            statusEl.classList.remove('hidden');
+            const next = Math.min(campaignChunkIndex + 1, chunks.length);
+            statusEl.textContent = chunks.length + ' batches of \u2264100 recipients \u2014 batch ' + next + ' ready (Gmail BCC cap).';
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-envelope-circle-check"></i> Send batch ' + next + ' of ' + chunks.length;
+        }
+
+        function openEmailCampaign() {
+            const chunks = getCampaignChunks();
+            if (chunks.length === 0) {
+                showToast('No registered email accounts yet.', 'warning');
+                return;
+            }
+            if (campaignChunkIndex >= chunks.length) campaignChunkIndex = 0;
+            const subject = ((document.getElementById('campaign-subject') || {}).value || '').trim();
+            const bodyTxt = ((document.getElementById('campaign-body') || {}).value || '').trim();
+            const url = 'https://mail.google.com/mail/?view=cm&fs=1&bcc='
+                + encodeURIComponent(chunks[campaignChunkIndex].join(','))
+                + '&su=' + encodeURIComponent(subject)
+                + '&body=' + encodeURIComponent(bodyTxt);
+            window.open(url, '_blank');
+            campaignChunkIndex += 1;
+            if (campaignChunkIndex >= chunks.length) {
+                showToast('All ' + chunks.length + ' batches opened in Gmail. Re-run to start over.', 'success');
+                campaignChunkIndex = 0;
+            }
+            updateCampaignChunkStatus();
+        }
+
+        // ---- Tab 4: Visitor traffic record ----
+        function renderAnalyticsVisitors(data) {
+            const t = data.totals || {};
+            setStatText('av-month-hits', t.month_hits ?? 0);
+            setStatText('av-month-uniques', t.month_uniques ?? 0);
+            setStatText('av-total-hits', t.all_time_hits ?? 0);
+            setStatText('av-total-uniques', t.all_time_uniques ?? 0);
+            const cm = document.getElementById('av-current-month');
+            if (cm && t.current_month) cm.textContent = 'Month of ' + t.current_month;
+
+            const chart = document.getElementById('av-monthly-chart');
+            if (chart) {
+                const months = (data.monthly || []).slice(0, 12).reverse();
+                if (months.length === 0) {
+                    chart.innerHTML = '<div class="text-slate-400 text-xs">No visits recorded yet \u2014 traffic starts counting from today.</div>';
+                } else {
+                    const max = Math.max(...months.map(m => Math.max(Number(m.hits) || 0, Number(m.uniques) || 0)), 1);
+                    chart.innerHTML = months.map(m => {
+                        const hits = Number(m.hits) || 0;
+                        const uns = Number(m.uniques) || 0;
+                        const hh = Math.max(4, Math.round((hits / max) * 100));
+                        const uh = Math.max(4, Math.round((uns / max) * 100));
+                        return `
+                        <div class="flex-1 min-w-[34px] flex flex-col items-center gap-1" title="${escapeHtml(m.month)}: ${hits} visits / ${uns} unique visitors">
+                            <span class="text-[9px] font-extrabold text-slate-600 dark:text-slate-300">${hits}</span>
+                            <div class="w-full flex items-end justify-center gap-0.5" style="height: 70%">
+                                <div class="w-[42%] max-w-[13px] rounded-t bg-cyan-500" style="height: ${hh}%"></div>
+                                <div class="w-[42%] max-w-[13px] rounded-t bg-purple-500" style="height: ${uh}%"></div>
+                            </div>
+                            <span class="text-[9px] font-bold text-slate-400">${escapeHtml(String(m.month).slice(2))}</span>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            const dailyBody = document.getElementById('av-daily-table-body');
+            if (dailyBody) {
+                const rows = data.daily || [];
+                if (rows.length === 0) {
+                    dailyBody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">No daily traffic recorded yet.</td></tr>';
+                } else {
+                    dailyBody.innerHTML = rows.map(d => `
+                        <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
+                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200">${escapeHtml(d.day || '—')}</td>
+                            <td class="py-2 px-3 font-extrabold text-cyan-600 dark:text-cyan-400">${Number(d.hits) || 0}</td>
+                            <td class="py-2 px-3 font-extrabold text-purple-600 dark:text-purple-400">${Number(d.uniques) || 0}</td>
+                        </tr>`).join('');
+                }
+            }
+        }
+
+        // ---- Generic analytics tab switcher (overview / stream / users / visitors) ----
+        function switchAnalyticsTab(tabName) {
+            const tabs = ['overview', 'stream', 'users', 'visitors'];
+            if (tabs.indexOf(tabName) === -1) tabName = 'overview';
+            tabs.forEach(t => {
+                const pane = document.getElementById('analytics-tab-' + t);
+                const btn = document.getElementById('analytics-btn-' + t);
+                if (pane) pane.classList.toggle('hidden', t !== tabName);
+                if (btn) btn.className = t === tabName
+                    ? 'px-3 py-1.5 rounded-xl font-bold text-xs bg-cyan-500 text-white shadow-sm transition'
+                    : 'px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+            });
         }
 
         function exportAnalyticsSnapshot() {
