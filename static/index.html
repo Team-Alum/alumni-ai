@@ -1646,6 +1646,31 @@
                     </div>
                 </div>
 
+                <!-- 3.5 Memory Mode -->
+                <div id="settings-memory-card" class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs"><i class="fa-solid fa-brain text-purple-600"></i> Memory Mode</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">AI carries your facts & context into every reply</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="setting-memory-mode" checked class="sr-only peer" onchange="toggleMemoryMode(this.checked)">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex gap-2 pt-1">
+                        <input type="text" id="memory-add-input" maxlength="500" placeholder="e.g. I'm building a notes app with React" class="clay-input flex-1 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white" onkeydown="if(event.key === 'Enter') addMemory();">
+                        <button type="button" onclick="addMemory(); playTactileSound('click');" class="clay-btn px-3.5 py-2.5 text-xs font-bold whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+                    </div>
+                    <div id="memory-list" class="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                        <div class="text-[11px] text-slate-400 italic p-1.5">Loading memories...</div>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                        <span class="text-[10px] text-slate-400">Say <b>"remember that..."</b> in chat to auto-save</span>
+                        <button type="button" onclick="clearAllMemories(); playTactileSound('click');" class="text-[10px] font-bold text-red-500 hover:text-red-600 flex items-center gap-1"><i class="fa-solid fa-trash"></i> Clear All</button>
+                    </div>
+                </div>
+
                 <!-- 4. Data & Chat Actions -->
                 <div class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
                     <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
@@ -1848,6 +1873,17 @@
                     <button onclick="setMode('sarcastic'); if(window.innerWidth < 768) closeMobileSidebar(); createRipple(event); playTactileSound('click');" id="mode-btn-sarcastic" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-between">
                         <span><i class="fa-solid fa-face-grin-tongue-wink mr-1.5"></i> Sarcastic</span>
                         <span class="text-[10px] opacity-80">Witty</span>
+                    </button>
+                </div>
+
+                <!-- Memory Mode Toggle -->
+                <div class="flex gap-1.5 mb-3">
+                    <button type="button" id="memory-mode-btn" onclick="toggleMemoryMode(); playTactileSound('click');" title="Memory Mode: Alumni AI remembers facts about you across sessions" class="flex-1 min-w-0 px-3 py-2 rounded-2xl clay-pill text-xs font-bold flex items-center justify-between transition bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                        <span class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-brain text-purple-500"></i> Memory Mode</span>
+                        <span id="memory-mode-state" class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shrink-0">ON</span>
+                    </button>
+                    <button type="button" onclick="openSettingsModal(); setTimeout(() => { const el = document.getElementById('settings-memory-card'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 120); playTactileSound('click');" title="Manage your memories" class="w-10 shrink-0 rounded-2xl clay-pill flex items-center justify-center transition bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
                     </button>
                 </div>
 
@@ -3038,6 +3074,38 @@
             if (input) input.click();
         }
 
+        function compressImageForVision(file) {
+            return new Promise((resolve, reject) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const maxDim = 1280;
+                        let w = img.width, h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            const r = Math.min(maxDim / w, maxDim / h);
+                            w = Math.round(w * r);
+                            h = Math.round(h * r);
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.drawImage(img, 0, 0, w, h);
+                        URL.revokeObjectURL(url);
+                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                    } catch (e) {
+                        URL.revokeObjectURL(url);
+                        reject(e);
+                    }
+                };
+                img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+                img.src = url;
+            });
+        }
+
         async function handleFileSelection(event) {
             const files = event.target.files;
             if (!files || !files.length) return;
@@ -3079,13 +3147,27 @@
                             continue;
                         }
                         const extracted = await resp.json();
-                        currentAttachments.push({
+                        const attEntry = {
                             name: extracted.name,
                             type: extracted.type,
                             size: extracted.size,
                             pages: extracted.pages,
                             text: extracted.text
-                        });
+                        };
+                        if (isImage) {
+                            let imageDataUrl = null;
+                            if (base64Content.length <= 500000) {
+                                imageDataUrl = base64Content;
+                            } else {
+                                try {
+                                    imageDataUrl = await compressImageForVision(file);
+                                } catch (ce) {
+                                    console.warn('Vision compress skipped:', ce);
+                                }
+                            }
+                            if (imageDataUrl) attEntry.image_data = imageDataUrl;
+                        }
+                        currentAttachments.push(attEntry);
                         showToast(isImage ? `Attached image ${file.name}` : `Extracted ${extracted.pages} pages from ${file.name}`);
                     } catch (err) {
                         console.error('File processing error:', err);
@@ -3523,10 +3605,11 @@
                     depth: 'deep'
                 } : {
                     session_id: currentSessionId,
-                    message: text || (attachmentsToSend.length ? `Please thoroughly analyze, explain, and review the attached file: ${attachmentsToSend[0].name}` : ''),
+                    message: text || (attachmentsToSend.length ? `Provide a complete solution for the attached file${attachmentsToSend.length > 1 ? 's' : ''}: ${attachmentsToSend[0].name}${attachmentsToSend.length > 1 ? ` (+${attachmentsToSend.length - 1} more)` : ''} — analyze it and give exact fixes, steps, commands, or answers.` : ''),
                     mode: currentMode,
                     custom_api_key: customKey,
                     web_research: false,
+                    use_memory: isMemoryModeEnabled(),
                     attachments: attachmentsToSend.length ? attachmentsToSend : undefined
                 };
 
@@ -3555,7 +3638,7 @@
                         console.warn('YouTube video resolution warning:', ytErr);
                     }
 
-                    appendMessage(responseText, 'ai', currentMode, data.sources, data.suggested_questions, null, youtubeVideo);
+                    appendMessage(responseText, 'ai', currentMode, data.sources, data.suggested_questions, null, youtubeVideo, !!data.memory_used);
                     loadRecentSessions();
                 } else if (resp.status === 429) {
                     appendMessage("⚠️ Rate limit reached (too many requests in a short time). Please wait a few seconds and try again.", 'ai', currentMode);
@@ -3712,7 +3795,7 @@
             });
         }
 
-        function appendMessage(text, sender, mode = currentMode, sources = null, suggestedQuestions = null, attachments = null, youtubeVideo = null) {
+        function appendMessage(text, sender, mode = currentMode, sources = null, suggestedQuestions = null, attachments = null, youtubeVideo = null, memoryUsed = false) {
             const chatContainer = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
 
@@ -3785,6 +3868,7 @@
                         <div class="font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-between gap-2">
                             <span class="flex items-center gap-1.5 min-w-0 truncate">
                                 <span>Alumni AI (${(mode || currentMode).toUpperCase()})</span>
+                                ${memoryUsed ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shrink-0" title="Your saved memory was applied to this reply"><i class="fa-solid fa-brain mr-1"></i>Memory</span>' : ''}
                                 ${sources && sources.length ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 shrink-0"><i class="fa-solid fa-globe mr-1"></i>Web</span>' : ''}
                             </span>
                             <div class="flex items-center gap-1 shrink-0">
@@ -4794,6 +4878,109 @@
             showToast(checked ? 'Typewriter streaming FX enabled.' : 'Typewriter streaming FX disabled.');
         }
 
+        // ==========================================
+        // Memory Mode Controller
+        // ==========================================
+        function isMemoryModeEnabled() {
+            return localStorage.getItem('alumni_pref_memory_mode') !== 'false';
+        }
+
+        function applyMemoryModeUI() {
+            const enabled = isMemoryModeEnabled();
+            const statePill = document.getElementById('memory-mode-state');
+            const sideBtn = document.getElementById('memory-mode-btn');
+            if (statePill) {
+                statePill.textContent = enabled ? 'ON' : 'OFF';
+                statePill.className = enabled
+                    ? 'text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shrink-0'
+                    : 'text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 shrink-0';
+            }
+            if (sideBtn) {
+                sideBtn.classList.toggle('opacity-60', !enabled);
+            }
+            const checkbox = document.getElementById('setting-memory-mode');
+            if (checkbox) checkbox.checked = enabled;
+        }
+
+        function toggleMemoryMode(checked) {
+            const enabled = (typeof checked === 'boolean') ? checked : !isMemoryModeEnabled();
+            localStorage.setItem('alumni_pref_memory_mode', enabled ? 'true' : 'false');
+            applyMemoryModeUI();
+            playTactileSound('toggle');
+            showToast(enabled ? 'Memory Mode ON — AI will use what it knows about you.' : 'Memory Mode OFF — AI answers without saved context.');
+        }
+
+        async function loadMemories() {
+            const list = document.getElementById('memory-list');
+            if (!list) return;
+            try {
+                const resp = await fetch('/api/memory', { headers: getAuthHeaders() });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const data = await resp.json();
+                const memories = data.memories || [];
+                if (!memories.length) {
+                    list.innerHTML = '<div class="text-[11px] text-slate-400 italic p-1.5">No memories yet — add one above or say "remember that..." in chat.</div>';
+                    return;
+                }
+                list.innerHTML = memories.map(m => `
+                    <div class="flex items-start gap-2 p-2 rounded-xl bg-white dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700">
+                        <i class="fa-solid ${m.source === 'auto' ? 'fa-wand-magic-sparkles' : 'fa-thumbtack'} text-[10px] text-purple-500 mt-1 shrink-0"></i>
+                        <span class="flex-1 min-w-0 text-[11px] text-slate-700 dark:text-slate-200 break-words">${escapeHTML(m.content)}</span>
+                        <button type="button" onclick="deleteMemory(${m.id})" title="Forget this" class="text-slate-300 hover:text-red-500 transition shrink-0 px-1"><i class="fa-solid fa-xmark text-[11px]"></i></button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = '<div class="text-[11px] text-red-400 italic p-1.5">Could not load memories.</div>';
+            }
+        }
+
+        async function addMemory() {
+            const input = document.getElementById('memory-add-input');
+            if (!input) return;
+            const content = (input.value || '').trim();
+            if (!content) { showToast('Type a memory first.', 'error'); return; }
+            try {
+                const resp = await fetch('/api/memory', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ content, source: 'manual' })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    showToast(err.detail || 'Could not save memory.', 'error');
+                    return;
+                }
+                input.value = '';
+                playTactileSound('receive');
+                showToast('Memory saved.');
+                await loadMemories();
+            } catch (e) {
+                showToast('Could not save memory.', 'error');
+            }
+        }
+
+        async function deleteMemory(id) {
+            try {
+                await fetch(`/api/memory/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+                playTactileSound('click');
+                await loadMemories();
+            } catch (e) {
+                showToast('Could not delete memory.', 'error');
+            }
+        }
+
+        async function clearAllMemories() {
+            if (!confirm('Forget ALL saved memories? This cannot be undone.')) return;
+            try {
+                await fetch('/api/memory', { method: 'DELETE', headers: getAuthHeaders() });
+                playTactileSound('click');
+                showToast('All memories cleared.');
+                await loadMemories();
+            } catch (e) {
+                showToast('Could not clear memories.', 'error');
+            }
+        }
+
         function setCreativity(level) {
             const valid = ['precise', 'balanced', 'creative'];
             if (!valid.includes(level)) level = 'balanced';
@@ -4898,6 +5085,8 @@
 
             const modeSelect = document.getElementById('settings-mode-select');
             if (modeSelect) modeSelect.value = currentMode;
+
+            applyMemoryModeUI();
         }
 
         function openSettingsModal() {
@@ -4909,6 +5098,7 @@
                 if (eDisp) eDisp.textContent = currentUser.email || 'user@alum.ai';
             }
             updateEngineStatusBadge();
+            loadMemories();
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 

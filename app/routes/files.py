@@ -37,13 +37,13 @@ async def extract_file_content(payload: FileExtractRequest, user: dict = Depends
     pages = 1
 
     if is_image:
-        # Image files: extract basic metadata instead of raw binary decode
-        # (no OCR/vision pipeline yet — report type, size, and a clean note)
+        # Image files: metadata descriptor here; real pixel analysis happens at chat
+        # time — the attachment observer runs Gemini vision over the image bytes.
         ext = lower_name.rsplit(".", 1)[-1] if "." in lower_name else "image"
         extracted_text = (
             f"[Attached image: {name} — format: {ext.upper()}, size: {file_size} bytes. "
-            f"Vision analysis of image pixels is not enabled in this build; "
-            f"describe the image content in your message if specific analysis is needed.]"
+            f"Full pixel-level vision analysis (OCR, UI/screenshot reading, diagram parsing) is "
+            f"performed automatically when this image is sent in chat.]"
         )
     elif is_pdf:
         try:

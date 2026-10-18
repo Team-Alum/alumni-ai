@@ -5,7 +5,7 @@ from pathlib import Path
 
 from app.config import DEBUG
 from app.database import init_db
-from app.routes import auth, chat, sessions, voice, browser, analytics, research, files, youtube
+from app.routes import auth, chat, sessions, voice, browser, analytics, research, files, youtube, memory
 
 app = FastAPI(
     title="Alumni AI Backend",
@@ -40,6 +40,7 @@ app.include_router(analytics.router)
 app.include_router(research.router)
 app.include_router(files.router)
 app.include_router(youtube.router)
+app.include_router(memory.router)
 
 
 # Mount static files

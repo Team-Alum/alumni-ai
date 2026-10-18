@@ -67,7 +67,8 @@ BASE_SYSTEM_INSTRUCTION = (
     "3. ACTIONABLE DEPTH: Prefer complete, working solutions over partial hints. For code, provide runnable, well-commented examples with correct syntax. For explanations, go from core concept to practical application. For comparisons, use clear structure (tables where helpful).\n"
     "4. HONESTY & PRECISION: If you are uncertain about a specific fact, version number, or API detail, say so plainly and give the most reliable answer you can, noting what should be verified. Never fabricate specifics like exact benchmarks, citations, or version numbers.\n"
     "5. CONCISE BUT COMPLETE: Eliminate filler and pleasantries, but never sacrifice necessary detail for brevity. Answer the actual question asked directly first, then expand.\n"
-    "6. INSTRUCTION FOLLOWING: Adhere strictly to any format, length, or style constraints the user specifies in their message."
+    "6. INSTRUCTION FOLLOWING: Adhere strictly to any format, length, or style constraints the user specifies in their message.\n"
+    "7. ATTACHMENT SOLUTIONS: When the message includes attachments (code, documents, images, PDFs), deliver a complete ACTIONABLE SOLUTION — diagnose concrete issues, give exact fixes, steps, commands, or the computed answer, quoting specific parts of the attachment as evidence. Never reply with only a description of what the file contains, and never claim you cannot see the attachment: its extracted content and an analysis dossier are provided in the prompt."
 )
 
 MODE_INSTRUCTIONS = {
@@ -284,6 +285,54 @@ async def _call_gemini(
             continue
             
     raise RuntimeError(f"All Gemini candidate models failed. Last error: {last_err}")
+
+async def _call_gemini_vision(
+    api_key: str,
+    model_name: str,
+    prompt: str,
+    system_instruction: str,
+    image_data_urls: List[str]
+) -> str:
+    """Gemini vision call: prompt + inline images (data URLs) -> analyzed dossier."""
+    if not HAS_GENAI:
+        raise RuntimeError("google.generativeai package not available")
+    import base64 as _b64
+    genai.configure(api_key=api_key)
+
+    parts: List[Any] = [prompt]
+    appended = 0
+    for durl in image_data_urls:
+        try:
+            header, b64data = durl.split(",", 1)
+            mime = header.split(";")[0].replace("data:", "") or "image/png"
+            parts.append({"mime_type": mime, "data": _b64.b64decode(b64data)})
+            appended += 1
+        except Exception as pe:
+            logger.warning(f"[Vision] Skipping malformed image data: {pe}")
+    if appended == 0:
+        raise RuntimeError("No valid image parts could be decoded for vision analysis")
+
+    candidate_models = [model_name]
+    for m_cand in ["gemini-3.5-flash", "gemini-3.7-flash", "gemini-flash-lite-latest"]:
+        if m_cand not in candidate_models:
+            candidate_models.append(m_cand)
+
+    last_err = None
+    for cand in candidate_models:
+        try:
+            model = genai.GenerativeModel(model_name=cand, system_instruction=system_instruction)
+            loop = asyncio.get_running_loop()
+            response = await loop.run_in_executor(None, lambda m=model: m.generate_content(parts))
+            if response and response.text:
+                cleaned = clean_ai_response(response.text)
+                if cleaned:
+                    logger.info(f"[Vision] Image analysis OK via '{cand}' ({len(image_data_urls)} image(s))")
+                    return cleaned
+        except Exception as e:
+            last_err = e
+            logger.warning(f"[Vision] model '{cand}' notice: {e}. Trying next candidate...")
+            continue
+    raise RuntimeError(f"All Gemini vision candidate models failed. Last error: {last_err}")
 
 # -------------------------------------------------------------
 # Tier 10: High-Capability Built-in Neural Brain (Offline Heuristic Engine)
@@ -706,12 +755,9 @@ async def observe_and_analyze_attachments(
     if not attachments:
         return None
 
-    obs_key = OPENCODE_ATTACHMENT_KEY or OPENCODE_FALLBACK_KEY or OPENCODE_KEY_3
-    if not obs_key:
-        return None
-
     # Build structured file snippets for observation
     file_summaries = []
+    image_data_urls = []
     for att in attachments:
         fname = att.get("name", "Document")
         ftype = att.get("type", "text/plain")
@@ -720,6 +766,9 @@ async def observe_and_analyze_attachments(
         page_str = f" ({pages} pages)" if pages and pages > 1 else ""
         safe_text = ftext[:20000]
         file_summaries.append(f"ATTACHED FILE: {fname} [Type: {ftype}{page_str}]\n```\n{safe_text}\n```")
+        img = att.get("image_data")
+        if isinstance(img, str) and img.startswith("data:image"):
+            image_data_urls.append(img)
 
     files_block = "\n\n".join(file_summaries)
 
@@ -730,45 +779,77 @@ async def observe_and_analyze_attachments(
         "1. FILE METADATA & COMPONENT ARCHITECTURE: Identify the purpose, structure, imports, classes, and components.\n"
         "2. LOGIC, WORKFLOW & STATE: Summarize core functions, algorithms, data flows, and dependencies.\n"
         "3. DEEP OBSERVATIONS & CRITICAL NUANCES: Note edge cases, potential bugs, syntax intricacies, and key findings relevant to the user query.\n"
+        "4. IMAGES: If images are attached, read ALL visible text exactly (OCR), describe UI/screenshots/diagrams precisely, and note errors, warnings, or stack traces visible in them.\n"
         "Be concise, precise, and highly technical. Do not output conversational preamble or pleasantries."
     )
 
     obs_user_prompt = (
         f"USER GOAL / QUERY:\n{user_query or 'Analyze and observe these attachments.'}\n\n"
-        f"ATTACHMENTS TO OBSERVE:\n{files_block}"
+        f"ATTACHMENTS TO OBSERVE:\n{files_block or '(see attached images)'}"
     )
 
-    try:
-        obs_report = await _call_openai_compatible(
-            endpoint=OPENCODE_ENDPOINT,
-            api_key=obs_key,
-            model=OPENCODE_MODEL,
-            prompt=obs_user_prompt,
-            system_instruction=obs_system_prompt,
-            timeout=timeout,
-            max_tokens=1536
-        )
-        if obs_report and len(obs_report.strip()) > 20:
-            return obs_report.strip()
-    except Exception as e:
-        logger.warning(f"[Attachment Observer (Key No. 3) notice]: {e}. Attempting Gemini fallback observer...")
-        if GEMINI_API_KEY and HAS_GENAI:
-            try:
-                obs_report = await _call_gemini(
-                    api_key=GEMINI_API_KEY,
-                    model_name=GEMINI_MODEL,
-                    prompt=obs_user_prompt,
-                    system_instruction=obs_system_prompt
-                )
-                if obs_report and len(obs_report.strip()) > 20:
-                    return obs_report.strip()
-            except Exception as ge:
-                logger.warning(f"[Attachment Observer Gemini fallback notice]: {ge}")
+    # Path A: images attached -> Gemini VISION analyzes real image bytes (works, Tier 5 provider)
+    if image_data_urls and GEMINI_API_KEY and HAS_GENAI:
+        try:
+            obs_report = await _call_gemini_vision(
+                api_key=GEMINI_API_KEY,
+                model_name=GEMINI_MODEL,
+                prompt=obs_user_prompt,
+                system_instruction=obs_system_prompt,
+                image_data_urls=image_data_urls
+            )
+            if obs_report and len(obs_report.strip()) > 20:
+                return obs_report.strip()
+        except Exception as e:
+            logger.warning(f"[Attachment Observer vision notice]: {e}. Falling back to text observers...")
+
+    # Path B: text dossier via OpenCode observer key, Gemini text fallback
+    obs_key = OPENCODE_ATTACHMENT_KEY or OPENCODE_FALLBACK_KEY or OPENCODE_KEY_3
+    if obs_key:
+        try:
+            obs_report = await _call_openai_compatible(
+                endpoint=OPENCODE_ENDPOINT,
+                api_key=obs_key,
+                model=OPENCODE_MODEL,
+                prompt=obs_user_prompt,
+                system_instruction=obs_system_prompt,
+                timeout=timeout,
+                max_tokens=1536
+            )
+            if obs_report and len(obs_report.strip()) > 20:
+                return obs_report.strip()
+        except Exception as e:
+            logger.warning(f"[Attachment Observer (Key No. 3) notice]: {e}. Attempting Gemini fallback observer...")
+
+    if GEMINI_API_KEY and HAS_GENAI:
+        try:
+            obs_report = await _call_gemini(
+                api_key=GEMINI_API_KEY,
+                model_name=GEMINI_MODEL,
+                prompt=obs_user_prompt,
+                system_instruction=obs_system_prompt
+            )
+            if obs_report and len(obs_report.strip()) > 20:
+                return obs_report.strip()
+        except Exception as ge:
+            logger.warning(f"[Attachment Observer Gemini fallback notice]: {ge}")
     return None
 
 # -------------------------------------------------------------
 # Multi-Provider Auto Fallback Engine (Prioritizing Free Platforms)
 # -------------------------------------------------------------
+
+def _is_cooldown_error(e: Exception) -> bool:
+    """Cooldown/rate-limit class errors -> retry SAME key with Big Pickle.
+    Policy errors (403 free-tier gate, 401, 400 model-disabled) -> skip to next key."""
+    resp = getattr(e, "response", None)
+    status = getattr(resp, "status_code", None)
+    if isinstance(status, int):
+        return status in (429, 503, 529)
+    if isinstance(e, (httpx.TimeoutException, httpx.TransportError)):
+        return True
+    s = str(e).lower()
+    return "rate limit" in s or "cooldown" in s or "timeout" in s or "timed out" in s
 
 async def generate_ai_response(
     prompt: str,
@@ -776,9 +857,18 @@ async def generate_ai_response(
     custom_api_key: Optional[str] = None,
     conversation_history: Optional[List[Dict[str, str]]] = None,
     custom_system_instruction: Optional[str] = None,
-    deadline: Optional[float] = None
+    deadline: Optional[float] = None,
+    memory_context: Optional[str] = None
 ) -> AIResponse:
     system_instruction = custom_system_instruction or get_system_instruction(mode)
+    if memory_context:
+        system_instruction = (
+            f"{system_instruction}\n\n"
+            "PERSISTENT MEMORY ABOUT THE USER (Memory Mode):\n"
+            f"{memory_context}\n"
+            "Weave these facts naturally into your answer — their name, projects, goals, preferences, and past context. "
+            "Personalize when relevant, but do not recite the list or mention that you are reading memory."
+        )
     fallback_count = 0
 
     # Deadline guard: the platform kills functions at 60s (504). The chain must
@@ -837,10 +927,14 @@ async def generate_ai_response(
                 return AIResponse(content, provider=provider_name, fallback_count=fallback_count, status="success")
             except Exception as e:
                 fallback_count += 1
-                if _model != BIG_PICKLE_MODEL:
-                    logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' failed]: {e}. Trying Big Pickle cooldown fallback for this key...")
-                else:
+                if _model == BIG_PICKLE_MODEL:
                     logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} Big Pickle cooldown fallback failed]: {e}. Moving to next key/tier...")
+                elif _is_cooldown_error(e) and BIG_PICKLE_MODEL != OPENCODE_MODEL:
+                    logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' cooldown/rate-limited]: {e}. Retrying this key with Big Pickle...")
+                    continue
+                else:
+                    logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' policy failure]: {e}. Skipping Big Pickle (not a cooldown), next key...")
+                    break
 
     if zen_keys:
         logger.warning("[Tier 1: OpenCode Zen] All keys exhausted. Failing over to Tier 2...")

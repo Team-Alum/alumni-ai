@@ -105,11 +105,23 @@ def init_db():
             );
         """)
 
+        _exec(cursor, f"""
+            CREATE TABLE IF NOT EXISTS user_memories (
+                id {pk_auto},
+                user_id TEXT NOT NULL,
+                content TEXT NOT NULL,
+                source TEXT DEFAULT 'manual',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+            );
+        """)
+
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_analytics_created ON analytics_events(created_at);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_analytics_user ON analytics_events(user_id);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_analytics_provider ON analytics_events(provider_used);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);")
         _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id);")
+        _exec(cursor, "CREATE INDEX IF NOT EXISTS idx_memories_user ON user_memories(user_id);")
         conn.commit()
 
 
@@ -315,6 +327,57 @@ def get_messages_by_session(session_id: str) -> List[Dict[str, Any]]:
                     pass
             result.append(d)
         return result
+
+MEMORY_MAX_PER_USER = 60
+
+def get_user_memories(user_id: str) -> List[Dict[str, Any]]:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "SELECT id, content, source, created_at FROM user_memories WHERE user_id = %s ORDER BY id ASC", (user_id,))
+        return [dict(r) for r in cursor.fetchall()]
+
+def add_user_memory(user_id: str, content: str, source: str = "manual") -> Optional[Dict[str, Any]]:
+    content = (content or "").strip()
+    if not content:
+        return None
+    if len(content) > 500:
+        content = content[:500]
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "SELECT id FROM user_memories WHERE user_id = %s AND content = %s", (user_id, content))
+        if cursor.fetchone():
+            return None
+        _exec(cursor, "SELECT COUNT(*) AS cnt FROM user_memories WHERE user_id = %s", (user_id,))
+        cnt_row = cursor.fetchone()
+        cnt = int(dict(cnt_row)["cnt"]) if cnt_row else 0
+        if cnt >= MEMORY_MAX_PER_USER:
+            return None
+        _exec(cursor,
+            "INSERT INTO user_memories (user_id, content, source, created_at) VALUES (%s, %s, %s, %s) RETURNING id",
+            (user_id, content, source, now)
+        )
+        row = cursor.fetchone()
+        mem_id = row["id"] if row else None
+        conn.commit()
+    return {"id": mem_id, "user_id": user_id, "content": content, "source": source, "created_at": now}
+
+def delete_user_memory(user_id: str, memory_id: int) -> bool:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "SELECT id FROM user_memories WHERE id = %s AND user_id = %s", (memory_id, user_id))
+        if not cursor.fetchone():
+            return False
+        _exec(cursor, "DELETE FROM user_memories WHERE id = %s AND user_id = %s", (memory_id, user_id))
+        conn.commit()
+        return True
+
+def clear_user_memories(user_id: str) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "DELETE FROM user_memories WHERE user_id = %s", (user_id,))
+        conn.commit()
+        return 0
 
 def log_analytics_event(
     user_id: str,

@@ -56,6 +56,7 @@ class ChatRequest(BaseModel):
     custom_api_key: Optional[str] = None
     web_research: Optional[bool] = False
     attachments: Optional[List[Dict[str, Any]]] = None
+    use_memory: Optional[bool] = True
 
 class ChatResponse(BaseModel):
     session_id: str
@@ -63,6 +64,7 @@ class ChatResponse(BaseModel):
     ai_message: ChatMessage
     sources: Optional[List[Dict[str, str]]] = None
     suggested_questions: Optional[List[str]] = None
+    memory_used: Optional[bool] = False
 
 class ResearchQueryRequest(BaseModel):
     query: str = Field(..., max_length=1000, description="Topic or query to research across the web")

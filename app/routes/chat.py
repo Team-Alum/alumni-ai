@@ -8,7 +8,9 @@ from app.database import (
     get_messages_by_session,
     get_session_by_id_and_user,
     create_session,
-    log_analytics_event
+    log_analytics_event,
+    get_user_memories,
+    add_user_memory
 )
 from app.services.ai_service import generate_ai_response, clean_ai_response, observe_and_analyze_attachments
 from app.services.research_service import (
@@ -62,6 +64,27 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
     response_deadline = start_time + 46.0
     sources = None
     suggested_questions = None
+
+    # 2b. Memory Mode: inject stored facts into the AI system instruction (fast DB read, ~0ms)
+    memory_used = False
+    memory_context = None
+    if payload.use_memory is not False:
+        try:
+            mem_rows = get_user_memories(user["id"])
+            if mem_rows:
+                memory_context = "\n".join(f"- {m['content']}" for m in mem_rows[:40])
+                memory_used = True
+            # Zero-latency explicit capture: "/remember X", "remember that ...", "my name is ..."
+            for pat in (
+                r"^\s*(?:\/remember|remember\s+that|remember\s*[:,])\s*(.+)$",
+                r"\b(my name is|i am called|call me|i'?m working on|i am working on|my project is|i study|i am currently(?: a| learning)|i'm currently(?: a| learning))\b[^.!?\n]{2,220}"
+            ):
+                for m in re.findall(pat, clean_msg, flags=re.IGNORECASE):
+                    if isinstance(m, tuple):
+                        m = m[0]
+                    add_user_memory(user["id"], m.strip().rstrip("."), source="auto")
+        except Exception as mem_err:
+            print(f"[Memory] capture/inject notice: {mem_err}")
 
     # Build effective prompt with file attachment context if provided
     effective_prompt = clean_msg
@@ -119,7 +142,8 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
             mode=payload.mode,
             custom_api_key=payload.custom_api_key,
             conversation_history=history,
-            deadline=response_deadline
+            deadline=response_deadline,
+            memory_context=memory_context
         )
         provider_used = getattr(ai_content, "provider", "offline_brain")
         fallback_count = getattr(ai_content, "fallback_count", 0)
@@ -158,6 +182,7 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
         "user_message": user_msg,
         "ai_message": ai_msg,
         "sources": sources,
-        "suggested_questions": suggested_questions
+        "suggested_questions": suggested_questions,
+        "memory_used": memory_used
     }
 
