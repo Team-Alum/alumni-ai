@@ -36,9 +36,14 @@ OPENCODE_MODEL = os.getenv("OPENCODE_MODEL", "space-bunny-free").strip()
 OPENCODE_ATTACHMENT_KEY = os.getenv("OPENCODE_ATTACHMENT_KEY", "").strip()
 OPENCODE_FALLBACK_KEY = os.getenv("OPENCODE_FALLBACK_KEY", "").strip()
 
+# Key No. 4: OpenCode Zen extra rotation key (Team Alum backup brain)
+OPENCODE_KEY_3 = os.getenv("OPENCODE_KEY_3", "").strip()
+
+# Big Pickle: cooldown fallback model — retried with every key when its primary
+# model is cooling down / rate-limited, before moving to the next key
 BIG_PICKLE_API_KEY = OPENCODE_API_KEY
 BIG_PICKLE_ENDPOINT = OPENCODE_ENDPOINT
-BIG_PICKLE_MODEL = OPENCODE_MODEL
+BIG_PICKLE_MODEL = os.getenv("BIG_PICKLE_MODEL", "big-pickle").strip()
 
 # Tier 2: OpenRouter Free Models (qwen/qwen-2.5-72b-instruct:free, etc.)
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()

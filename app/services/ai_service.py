@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import asyncio
 import logging
 from typing import Optional, AsyncGenerator, List, Dict, Any, Tuple
@@ -7,7 +8,7 @@ import httpx
 
 from app.config import (
     OPENCODE_API_KEY, OPENCODE_ENDPOINT, OPENCODE_MODEL,
-    OPENCODE_ATTACHMENT_KEY, OPENCODE_FALLBACK_KEY,
+    OPENCODE_ATTACHMENT_KEY, OPENCODE_FALLBACK_KEY, OPENCODE_KEY_3,
     OPENROUTER_API_KEY, OPENROUTER_MODEL,
     BIG_PICKLE_API_KEY, BIG_PICKLE_ENDPOINT, BIG_PICKLE_MODEL,
     QWEN_API_KEY, QWEN_ENDPOINT, QWEN_MODEL,
@@ -695,7 +696,7 @@ def fallback_generate(prompt: str, mode: str, conversation_history: Optional[Lis
 async def observe_and_analyze_attachments(
     attachments: List[Dict[str, Any]],
     user_query: str = "",
-    timeout: float = 25.0
+    timeout: float = 8.0
 ) -> Optional[str]:
     """
     Dedicated Attachment Observer & Code Analyzer (Key No. 3).
@@ -705,7 +706,7 @@ async def observe_and_analyze_attachments(
     if not attachments:
         return None
 
-    obs_key = OPENCODE_ATTACHMENT_KEY or OPENCODE_FALLBACK_KEY
+    obs_key = OPENCODE_ATTACHMENT_KEY or OPENCODE_FALLBACK_KEY or OPENCODE_KEY_3
     if not obs_key:
         return None
 
@@ -717,7 +718,7 @@ async def observe_and_analyze_attachments(
         ftext = att.get("text") or att.get("content") or ""
         pages = att.get("pages")
         page_str = f" ({pages} pages)" if pages and pages > 1 else ""
-        safe_text = ftext[:30000]
+        safe_text = ftext[:20000]
         file_summaries.append(f"ATTACHED FILE: {fname} [Type: {ftype}{page_str}]\n```\n{safe_text}\n```")
 
     files_block = "\n\n".join(file_summaries)
@@ -774,55 +775,79 @@ async def generate_ai_response(
     mode: str = "professional",
     custom_api_key: Optional[str] = None,
     conversation_history: Optional[List[Dict[str, str]]] = None,
-    custom_system_instruction: Optional[str] = None
+    custom_system_instruction: Optional[str] = None,
+    deadline: Optional[float] = None
 ) -> AIResponse:
     system_instruction = custom_system_instruction or get_system_instruction(mode)
     fallback_count = 0
 
+    # Deadline guard: the platform kills functions at 60s (504). The chain must
+    # finish with response serialization time to spare, so every tier is clamped.
+    chain_start = time.time()
+    chain_deadline = deadline if deadline else (chain_start + 42.0)
+
+    def _rem() -> float:
+        return chain_deadline - time.time()
+
+    def _to(cap: float, reserve: float = 4.0) -> float:
+        return max(3.0, min(cap, _rem() - reserve))
+
+    def _can(min_needed: float = 7.0) -> bool:
+        return _rem() >= min_needed
+
+    def _fast_path_open() -> bool:
+        # Once ~16s is spent on failing tiers, skip straight to the working tiers
+        return (time.time() - chain_start) < 16.0
+
     # User custom key passed directly from client
     client_key = (custom_api_key or "").strip()
 
-    # Tier 1: OpenCode Zen (Free High-Performance Reasoning & Thinking Brain - Key No. 1)
-    opencode_key = client_key if (client_key and client_key.startswith("oc_sk_")) else (OPENCODE_API_KEY or client_key)
-    if opencode_key:
-        try:
-            content = await _call_openai_compatible(
-                endpoint=OPENCODE_ENDPOINT,
-                api_key=opencode_key,
-                model=OPENCODE_MODEL,
-                prompt=prompt,
-                system_instruction=system_instruction,
-                conversation_history=conversation_history,
-                timeout=35.0
-            )
-            return AIResponse(content, provider="opencode_zen", fallback_count=fallback_count, status="success")
-        except Exception as e:
-            logger.warning(f"[Tier 1: OpenCode Zen Primary Key failed]: {e}. Attempting Fallback Key (Key No. 3)...")
-            fallback_count += 1
+    # Tier 1: OpenCode Zen key rotation (Keys No. 1, 3 & 4). Each key first tries its
+    # primary model; on failure/cooldown the SAME key retries once with the Big Pickle
+    # cooldown fallback model before moving to the next key.
+    zen_keys = []
+    if client_key and client_key.startswith("oc_sk_"):
+        zen_keys.append(client_key)
+    for _zk in (OPENCODE_API_KEY, OPENCODE_FALLBACK_KEY, OPENCODE_KEY_3):
+        if _zk and _zk not in zen_keys:
+            zen_keys.append(_zk)
+    if not zen_keys and client_key:
+        zen_keys.append(client_key)
 
-            # Tier 1 Fallback: OpenCode Zen Fallback Key (Key No. 3)
-            fallback_zen_key = OPENCODE_FALLBACK_KEY
-            if fallback_zen_key and fallback_zen_key != opencode_key:
-                try:
-                    content = await _call_openai_compatible(
-                        endpoint=OPENCODE_ENDPOINT,
-                        api_key=fallback_zen_key,
-                        model=OPENCODE_MODEL,
-                        prompt=prompt,
-                        system_instruction=system_instruction,
-                        conversation_history=conversation_history,
-                        timeout=35.0
-                    )
-                    return AIResponse(content, provider="opencode_zen_fallback", fallback_count=fallback_count, status="success")
-                except Exception as e2:
-                    logger.warning(f"[Tier 1: OpenCode Zen Fallback Key failed]: {e2}. Failing over to Tier 2...")
-                    fallback_count += 1
-            else:
-                logger.warning("[Tier 1: OpenCode Zen]: Failing over to Tier 2...")
+    for _zi, zen_key in enumerate(zen_keys):
+        if not _can(7.0) or (time.time() - chain_start) > 14.0:
+            break
+        for _model in (OPENCODE_MODEL, BIG_PICKLE_MODEL):
+            if not _can(7.0) or (time.time() - chain_start) > 14.0:
+                break
+            try:
+                content = await _call_openai_compatible(
+                    endpoint=OPENCODE_ENDPOINT,
+                    api_key=zen_key,
+                    model=_model,
+                    prompt=prompt,
+                    system_instruction=system_instruction,
+                    conversation_history=conversation_history,
+                    timeout=_to(10.0)
+                )
+                if _model == BIG_PICKLE_MODEL and _model != OPENCODE_MODEL:
+                    provider_name = f"opencode_big_pickle_key{_zi + 1}"
+                else:
+                    provider_name = "opencode_zen" if _zi == 0 else f"opencode_zen_key{_zi + 1}"
+                return AIResponse(content, provider=provider_name, fallback_count=fallback_count, status="success")
+            except Exception as e:
+                fallback_count += 1
+                if _model != BIG_PICKLE_MODEL:
+                    logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' failed]: {e}. Trying Big Pickle cooldown fallback for this key...")
+                else:
+                    logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} Big Pickle cooldown fallback failed]: {e}. Moving to next key/tier...")
+
+    if zen_keys:
+        logger.warning("[Tier 1: OpenCode Zen] All keys exhausted. Failing over to Tier 2...")
 
     # Tier 2: OpenRouter Free Models (qwen/qwen-2.5-72b-instruct:free, gemini:free, llama:free)
     or_key = client_key or OPENROUTER_API_KEY
-    if or_key:
+    if or_key and _can() and _fast_path_open():
         try:
             content = await _call_openai_compatible(
                 endpoint="https://openrouter.ai/api/v1/chat/completions",
@@ -831,16 +856,17 @@ async def generate_ai_response(
                 prompt=prompt,
                 system_instruction=system_instruction,
                 conversation_history=conversation_history,
-                extra_headers={"HTTP-Referer": "https://alumni.ai", "X-Title": "Alumni AI"}
+                extra_headers={"HTTP-Referer": "https://alumni.ai", "X-Title": "Alumni AI"},
+                timeout=_to(12.0)
             )
             return AIResponse(content, provider="openrouter_free", fallback_count=fallback_count, status="success")
         except Exception as e:
-            logger.warning(f"[Tier 2: OpenRouter Free failed]: {e}. Failing over to Tier 3...")
+            logger.warning(f"[Tier 2: OpenRouter free failed]: {e}. Failing over to Tier 3...")
             fallback_count += 1
 
     # Tier 3: Qwen (Alibaba DashScope / Compatible Endpoint)
     qwen_key = client_key or QWEN_API_KEY
-    if qwen_key:
+    if qwen_key and _can() and _fast_path_open():
         try:
             content = await _call_openai_compatible(
                 endpoint=QWEN_ENDPOINT,
@@ -848,7 +874,8 @@ async def generate_ai_response(
                 model=QWEN_MODEL,
                 prompt=prompt,
                 system_instruction=system_instruction,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
             )
             return AIResponse(content, provider="qwen", fallback_count=fallback_count, status="success")
         except Exception as e:
@@ -856,7 +883,7 @@ async def generate_ai_response(
             fallback_count += 1
 
     # Tier 4: Ollama (100% Free Local or Nest-hosted Server)
-    if ENABLE_OLLAMA:
+    if ENABLE_OLLAMA and _can(5.0) and _fast_path_open():
         try:
             content = await _call_ollama(
                 base_url=OLLAMA_BASE_URL,
@@ -873,14 +900,17 @@ async def generate_ai_response(
 
     # Tier 5: Google Gemini (Free Tier via Google AI Studio)
     gem_key = GEMINI_API_KEY if (not client_key or client_key.startswith("oc_sk_")) else client_key
-    if gem_key and HAS_GENAI:
+    if gem_key and HAS_GENAI and _can(8.0):
         try:
-            content = await _call_gemini(
-                api_key=gem_key,
-                model_name=GEMINI_MODEL,
-                prompt=prompt,
-                system_instruction=system_instruction,
-                conversation_history=conversation_history
+            content = await asyncio.wait_for(
+                _call_gemini(
+                    api_key=gem_key,
+                    model_name=GEMINI_MODEL,
+                    prompt=prompt,
+                    system_instruction=system_instruction,
+                    conversation_history=conversation_history
+                ),
+                timeout=max(5.0, min(_rem() - 3.0, 40.0))
             )
             return AIResponse(content, provider="gemini_free", fallback_count=fallback_count, status="success")
         except Exception as e:
@@ -888,7 +918,7 @@ async def generate_ai_response(
             fallback_count += 1
 
     # Tier 6: Groq Cloud (Ultra-Fast Free Tier: Llama 3.3 70B / Llama 3.1 8B)
-    if GROQ_API_KEY:
+    if GROQ_API_KEY and _can():
         try:
             content = await _call_openai_compatible(
                 endpoint="https://api.groq.com/openai/v1/chat/completions",
@@ -896,7 +926,8 @@ async def generate_ai_response(
                 model=GROQ_MODEL,
                 prompt=prompt,
                 system_instruction=system_instruction,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
             )
             return AIResponse(content, provider="groq", fallback_count=fallback_count, status="success")
         except Exception as e:
@@ -904,7 +935,7 @@ async def generate_ai_response(
             fallback_count += 1
 
     # Tier 7: Cerebras Cloud (Ultra-Fast Free Tier: Llama 3.1 8B)
-    if CEREBRAS_API_KEY:
+    if CEREBRAS_API_KEY and _can():
         try:
             content = await _call_openai_compatible(
                 endpoint="https://api.cerebras.ai/v1/chat/completions",
@@ -912,7 +943,8 @@ async def generate_ai_response(
                 model=CEREBRAS_MODEL,
                 prompt=prompt,
                 system_instruction=system_instruction,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
             )
             return AIResponse(content, provider="cerebras", fallback_count=fallback_count, status="success")
         except Exception as e:
@@ -920,7 +952,7 @@ async def generate_ai_response(
             fallback_count += 1
 
     # Tier 8: Mistral AI (Free Tier: mistral-small / open-mistral-nemo)
-    if MISTRAL_API_KEY:
+    if MISTRAL_API_KEY and _can():
         try:
             content = await _call_openai_compatible(
                 endpoint="https://api.mistral.ai/v1/chat/completions",
@@ -928,7 +960,8 @@ async def generate_ai_response(
                 model=MISTRAL_MODEL,
                 prompt=prompt,
                 system_instruction=system_instruction,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
             )
             return AIResponse(content, provider="mistral", fallback_count=fallback_count, status="success")
         except Exception as e:
@@ -936,7 +969,7 @@ async def generate_ai_response(
             fallback_count += 1
 
     # Tier 9: GitHub Models / Azure AI (Free Tier via Personal Access Token)
-    if GITHUB_TOKEN:
+    if GITHUB_TOKEN and _can():
         try:
             content = await _call_openai_compatible(
                 endpoint="https://models.inference.ai.azure.com/chat/completions",
@@ -944,7 +977,8 @@ async def generate_ai_response(
                 model=GITHUB_MODEL,
                 prompt=prompt,
                 system_instruction=system_instruction,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                timeout=_to(8.0)
             )
             return AIResponse(content, provider="github_models", fallback_count=fallback_count, status="success")
         except Exception as e:

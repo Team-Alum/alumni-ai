@@ -3562,6 +3562,8 @@
                 } else if (resp.status === 401) {
                     showToast("Session expired. Please sign in again.", "error");
                     logoutApp();
+                } else if (resp.status === 504 || resp.status === 503) {
+                    appendMessage("⏱️ The request timed out — the AI took too long to respond. Please try again; large attachments may take a few extra seconds.", 'ai', currentMode);
                 } else {
                     appendMessage("Communication error with backend. Please try again.", 'ai', currentMode);
                 }

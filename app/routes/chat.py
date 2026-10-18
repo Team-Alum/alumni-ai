@@ -58,6 +58,8 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
     history = get_messages_by_session(session_id)
     
     start_time = time.time()
+    # Absolute deadline so the AI chain always finishes inside the 60s platform limit
+    response_deadline = start_time + 46.0
     sources = None
     suggested_questions = None
 
@@ -76,7 +78,7 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
             ftext = att.get("text") or att.get("content") or ""
             pages = att.get("pages")
             page_info = f" ({pages} pages)" if pages and pages > 1 else ""
-            safe_ftext = ftext[:40000]
+            safe_ftext = ftext[:24000]
             file_contexts.append(f"📁 [ATTACHED FILE: {fname}{page_info}]\n```\n{safe_ftext}\n```")
         
         file_banner = "\n\n".join(file_contexts)
@@ -116,7 +118,8 @@ async def handle_chat_message(payload: ChatRequest, user: dict = Depends(get_cur
             prompt=effective_prompt,
             mode=payload.mode,
             custom_api_key=payload.custom_api_key,
-            conversation_history=history
+            conversation_history=history,
+            deadline=response_deadline
         )
         provider_used = getattr(ai_content, "provider", "offline_brain")
         fallback_count = getattr(ai_content, "fallback_count", 0)
