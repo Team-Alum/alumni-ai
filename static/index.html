@@ -2730,8 +2730,8 @@
             }
 
             appendWelcomeMessage();
-            const loginGreeting = getDynamicPersonalizedGreeting(currentUser.username);
-            showToast(loginGreeting);
+            const loginResult = getDynamicPersonalizedGreeting(currentUser.username);
+            showToast(loginResult.greeting);
             loadRecentSessions();
             initDragAndDrop();
         }
@@ -3775,26 +3775,6 @@
                     `;
                 }
 
-                let suggestionsHtml = '';
-                if (suggestedQuestions && Array.isArray(suggestedQuestions) && suggestedQuestions.length > 0) {
-                    suggestionsHtml = `
-                        <div class="mt-3.5 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
-                            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                                <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                                <span>Suggested Follow-Up Questions:</span>
-                            </div>
-                            <div class="flex flex-col sm:flex-row flex-wrap gap-2">
-                                ${suggestedQuestions.map(q => `
-                                    <button type="button" onclick="sendQuickPrompt(${JSON.stringify(q)});" class="text-left px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-cyan-50/80 hover:bg-cyan-100 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/60 text-cyan-800 dark:text-cyan-200 border border-cyan-200/80 dark:border-cyan-800/80 transition flex items-center gap-2 group shadow-2xs">
-                                        <i class="fa-solid fa-sparkles text-[10px] text-cyan-600 dark:text-cyan-400 group-hover:rotate-12 transition-transform"></i>
-                                        <span>${escapeHTML(q)}</span>
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
-
                 messageDiv.innerHTML = `
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
                         <img src="/logo.png" alt="Alumni AI" class="w-full h-full object-contain">
@@ -3817,7 +3797,6 @@
                         <div class="leading-relaxed font-medium overflow-x-auto markdown-content" id="msg-content-${Date.now()}">${formatMessageContent(text)}</div>
                         ${youtubeHtml}
                         ${sourcesHtml}
-                        ${suggestionsHtml}
                     </div>
                 `;
                 chatContainer.appendChild(messageDiv);
@@ -3839,36 +3818,30 @@
 
         function getDynamicPersonalizedGreeting(username) {
             const rawName = (username || '').trim();
-            const displayName = rawName ? (rawName.charAt(0).toUpperCase() + rawName.slice(1)) : 'Scholar';
+            const displayName = rawName ? (rawName.charAt(0).toUpperCase() + rawName.slice(1)) : 'Pal';
+            const now = new Date();
+            const hour = now.getHours();
+            const day = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
             
-            const greetings = [
-                // back xyz patterns
-                `Welcome back, ${displayName}! Ready to dive back in? 🚀`,
-                `Back ${displayName}! Great to see you back in Alumni AI. 🌟`,
-                `Welcome back, ${displayName}! Your workspace is synced and ready. ✨`,
-                
-                // what today xyz patterns
-                `What today, ${displayName}? Let's build something extraordinary! 💡`,
-                `What are we tackling today, ${displayName}? Research, code, or study? 🔬`,
-                `What today, ${displayName}? Tell me what you'd like to explore! 🧭`,
-
-                // hello xyz patterns
-                `Hello, ${displayName}! Hope you're ready for breakthrough work. 👋`,
-                `Hey ${displayName}! Your AI study companion is standing by. ⚡`,
-                `Hello ${displayName}! How can I empower your thinking today? 🎯`,
-
-                // ahh you back nice patterns
-                `Ahh, you back nice! Let's get right into the flow, ${displayName}. 🔥`,
-                `Ahh you back, nice! Pick up right where you left off, ${displayName}. 📚`,
-                `Ahh, you back nice! Ready to knock out some goals, ${displayName}? 💎`,
-
-                // yooo pal lets continue new work patterns
-                `Yooo pal, let's continue new work, ${displayName}! 🛠️`,
-                `Yooo pal, let's crack some tough problems together, ${displayName}! 🧠`,
-                `Yooo pal ${displayName}, let's continue new work and level up today! 🚀`
+            let timeGreeting, timeEmoji;
+            if (hour >= 5 && hour < 12) { timeGreeting = 'Morning'; timeEmoji = '🌅'; }
+            else if (hour >= 12 && hour < 17) { timeGreeting = 'Afternoon'; timeEmoji = '☀️'; }
+            else if (hour >= 17 && hour < 21) { timeGreeting = 'Evening'; timeEmoji = '🌆'; }
+            else { timeGreeting = 'Late night'; timeEmoji = '🌙'; }
+            
+            const patterns = [
+                `${timeGreeting}, ${displayName}! ${timeEmoji} Let's crack it.`,
+                `Wassup, ${displayName}? ${timeEmoji} ${timeGreeting} grind hits different.`,
+                `Back Pal! ${displayName}, ${timeGreeting} it is. ${timeEmoji} Let's get it.`,
+                `${timeGreeting} ${displayName}! ${timeEmoji} What are we building today?`,
+                `Hey ${displayName}, ${timeGreeting.toLowerCase()} vibes. ${timeEmoji} Ready?`,
+                `${timeGreeting} ${displayName}! ${timeEmoji} Time to make moves.`,
+                `Yo ${displayName}, ${timeGreeting.toLowerCase()}! ${timeEmoji} Let's cook.`,
+                `${timeGreeting} shift, ${displayName}. ${timeEmoji} What's the mission?`
             ];
             
-            return greetings[Math.floor(Math.random() * greetings.length)];
+            const greeting = patterns[Math.floor(Math.random() * patterns.length)];
+            return { greeting, day };
         }
 
         // Starter research topics — first batch visible, rest revealed on demand
@@ -3885,7 +3858,11 @@
             const chatContainer = document.getElementById('chat-messages');
             const welcomeCard = document.createElement('div');
             welcomeCard.className = 'animate-slide-left overflow-guard';
-            const greeting = getDynamicPersonalizedGreeting(currentUser.username);
+            const greetingData = getDynamicPersonalizedGreeting(currentUser.username);
+            const greeting = greetingData.greeting;
+            const day = greetingData.day;
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             const isGuest = currentUser.loginMethod === 'guest';
             const accountLabel = isGuest ? 'Guest Mode' : (currentUser.email || 'guest@alumni.ai');
             const sessionCount = window.loadedSessionsCount !== undefined ? window.loadedSessionsCount : 0;
@@ -3904,7 +3881,7 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="font-extrabold text-slate-900 dark:text-white text-[13px] leading-snug">${escapeHTML(greeting)}</div>
-                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">Your AI workspace for study, programming & research — all chats auto-saved${sessionCount > 0 ? ` · ${sessionCount} session${sessionCount === 1 ? '' : 's'}` : ''}.</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">${escapeHTML(day)} · ${escapeHTML(time)} · ${sessionCount > 0 ? `${sessionCount} session${sessionCount === 1 ? '' : 's'} saved` : 'All chats auto-saved'}</div>
                         </div>
                         <div class="hidden min-[420px]:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800/80 text-[9px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0" title="${escapeHTML(accountLabel)}">
                             <i class="fa-solid ${isGuest ? 'fa-user-ninja' : 'fa-cloud-check'}"></i>
