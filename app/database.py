@@ -3,7 +3,7 @@ import sqlite3
 import secrets
 from contextlib import contextmanager
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.config import DB_PATH, DATABASE_URL
 
 _IS_PG = DATABASE_URL.startswith(("postgres://", "postgresql://"))
@@ -546,6 +546,14 @@ def get_analytics_summary() -> Dict[str, Any]:
         _exec(cursor, "SELECT COUNT(*) AS c FROM sessions")
         total_sessions = cursor.fetchone()["c"]
 
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        _exec(cursor, "SELECT COUNT(*) AS c FROM analytics_events WHERE substr(created_at, 1, 10) = %s", (today,))
+        queries_today = cursor.fetchone()["c"]
+
+        week_cutoff = (datetime.utcnow() - timedelta(days=7)).isoformat()
+        _exec(cursor, "SELECT COUNT(DISTINCT user_id) AS c FROM analytics_events WHERE created_at >= %s", (week_cutoff,))
+        active_users_7d = cursor.fetchone()["c"]
+
         _exec(cursor, """
             SELECT provider_used, COUNT(*) as count 
             FROM analytics_events 
@@ -582,6 +590,8 @@ def get_analytics_summary() -> Dict[str, Any]:
             "total_queries": total_queries,
             "total_users": total_users,
             "total_sessions": total_sessions,
+            "queries_today": queries_today,
+            "active_users_7d": active_users_7d,
             "avg_latency_ms": avg_latency,
             "provider_distribution": providers,
             "mode_distribution": modes,

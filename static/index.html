@@ -1401,8 +1401,9 @@
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Telemetry
                             </span>
+                            <span id="analytics-last-updated" class="text-[10px] font-mono text-slate-400 dark:text-slate-500">Syncing...</span>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Real-time user traffic, AI provider routing, and conversation intelligence</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Live data from your database — traffic, provider routing, latency and query health</p>
                     </div>
                 </div>
 
@@ -1441,25 +1442,25 @@
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-50/80 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-100 dark:border-cyan-900/40">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">Total Users</div>
                         <div id="analytics-total-users" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Deterministic email & guests</div>
+                        <div id="analytics-users-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/80 to-purple-50/40 dark:from-indigo-950/30 dark:to-purple-950/20 border border-indigo-100 dark:border-indigo-900/40">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Total Sessions</div>
                         <div id="analytics-total-sessions" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Organized workspaces</div>
+                        <div id="analytics-sessions-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Total Queries</div>
                         <div id="analytics-total-queries" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Autonomous inferences</div>
+                        <div id="analytics-queries-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 to-orange-50/40 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-100 dark:border-amber-900/40">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Avg Response Latency</div>
                         <div id="analytics-avg-latency" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Sub-second streaming ready</div>
+                        <div id="analytics-latency-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
                 </div>
 
@@ -1471,36 +1472,61 @@
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                                 <i class="fa-solid fa-microchip text-indigo-500"></i> AI Provider Distribution
                             </h4>
-                            <span class="text-[10px] text-slate-400 font-mono">10-Tier Fallback</span>
+                            <span id="analytics-providers-count" class="text-[10px] text-slate-400 font-mono">-- providers</span>
                         </div>
                         <div id="analytics-providers-list" class="space-y-3 pt-1">
                             <div class="text-slate-400 text-xs">Loading telemetry...</div>
                         </div>
                     </div>
 
-                    <!-- Workspace Modes & Engine Health -->
+                    <!-- Workspace Modes & Query Health (live) -->
                     <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                                 <i class="fa-solid fa-brain text-cyan-500"></i> Workspace Mode Usage
                             </h4>
-                            <span class="text-[10px] text-slate-400 font-mono">Active Modes</span>
+                            <span id="analytics-modes-count" class="text-[10px] text-slate-400 font-mono">-- modes</span>
                         </div>
                         <div id="analytics-modes-list" class="space-y-2 pt-1">
                             <div class="text-slate-400 text-xs">Loading modes...</div>
                         </div>
 
                         <div class="mt-4 pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2">
-                            <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Engine Uptime & Integrity</div>
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-500">Fallback Availability</span>
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">100% Guaranteed</span>
+                            <div class="flex items-center justify-between">
+                                <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Query Health (Live)</div>
+                                <span id="analytics-success-rate" class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">--</span>
                             </div>
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="text-slate-500">Primary Model</span>
-                                <span class="font-mono text-[11px] text-cyan-600 dark:text-cyan-400">groq qwen3.8-27b → gemini-flash-lite</span>
+                            <div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                                <div id="analytics-success-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 pt-1">
+                                <div class="rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 px-2 py-1.5">
+                                    <div id="analytics-success-count" class="text-sm font-black text-emerald-700 dark:text-emerald-300">--</div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">Success</div>
+                                </div>
+                                <div class="rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 px-2 py-1.5">
+                                    <div id="analytics-error-count" class="text-sm font-black text-rose-700 dark:text-rose-300">--</div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-rose-600/80 dark:text-rose-400/80">Failed</div>
+                                </div>
+                                <div class="rounded-xl bg-cyan-50/70 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/40 px-2 py-1.5">
+                                    <div id="analytics-today-count" class="text-sm font-black text-cyan-700 dark:text-cyan-300">--</div>
+                                    <div class="text-[9px] font-bold uppercase tracking-wider text-cyan-600/80 dark:text-cyan-400/80">Today</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Daily query volume (live) -->
+                <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-simple text-emerald-500"></i> Daily Query Volume (Last 7 Days)
+                        </h4>
+                        <span id="analytics-volume-total" class="text-[10px] text-slate-400 font-mono">--</span>
+                    </div>
+                    <div id="analytics-daily-chart" class="flex items-end justify-between gap-2 h-32 pt-2">
+                        <div class="text-slate-400 text-xs">Loading volume...</div>
                     </div>
                 </div>
             </div>
@@ -5319,6 +5345,7 @@
         let campaignChunkIndex = 0;
 
         let _analyticsAutoRefresh = null;
+        let _analyticsInFlight = false;
 
         async function openAnalyticsModal() {
             if (!currentUser || !currentUser.isTeamAlum) {
@@ -5355,17 +5382,21 @@
                 showToast('Access restricted: Team Alum Founders only.', 'error');
                 return;
             }
+            if (_analyticsInFlight) return;
+            _analyticsInFlight = true;
 
             const refreshIcon = document.getElementById('analytics-refresh-icon');
             if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
             try {
                 const headers = getAuthHeaders();
+                const slow = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined;
+                const opts = (extra) => Object.assign({ headers, signal: slow }, extra || {});
                 const [overviewRes, eventsRes, usersRes, visitorsRes] = await Promise.all([
-                    fetch('/api/analytics/overview', { headers }),
-                    fetch('/api/analytics/events?limit=30', { headers }),
-                    fetch('/api/analytics/users', { headers }),
-                    fetch('/api/analytics/visitors', { headers })
+                    fetch('/api/analytics/overview', opts()),
+                    fetch('/api/analytics/events?limit=30', opts()),
+                    fetch('/api/analytics/users', opts()),
+                    fetch('/api/analytics/visitors', opts())
                 ]);
 
                 if ([overviewRes, eventsRes, usersRes, visitorsRes].some(r => r.status === 403)) {
@@ -5378,12 +5409,20 @@
                     const overview = await overviewRes.json();
                     currentAnalyticsData = overview;
                     renderAnalyticsOverview(overview);
+                    const stamp = document.getElementById('analytics-last-updated');
+                    if (stamp) stamp.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                } else {
+                    renderAnalyticsOverviewError('Could not load overview metrics.');
+                    const stamp = document.getElementById('analytics-last-updated');
+                    if (stamp) stamp.textContent = 'Sync failed';
                 }
 
                 if (eventsRes.ok) {
                     const events = await eventsRes.json();
                     if (currentAnalyticsData) currentAnalyticsData.recent_events = events;
                     renderAnalyticsEvents(events);
+                } else {
+                    renderAnalyticsEventsError('Could not load the live activity stream.');
                 }
 
                 if (usersRes.ok) {
@@ -5392,7 +5431,7 @@
                     renderAnalyticsUsers(currentAnalyticsUsers);
                 } else {
                     const tb = document.getElementById('au-users-table-body');
-                    if (tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">Could not load registered users.</td></tr>';
+                    if (tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-rose-500 text-xs">Could not load registered users.</td></tr>';
                 }
 
                 if (visitorsRes.ok) {
@@ -5401,33 +5440,93 @@
                     renderAnalyticsVisitors(currentAnalyticsVisitors);
                 } else {
                     const db = document.getElementById('av-daily-table-body');
-                    if (db) db.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">Could not load visitor records.</td></tr>';
+                    if (db) db.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-rose-500 text-xs">Could not load visitor records.</td></tr>';
                 }
             } catch (err) {
                 console.error("Failed to load telemetry:", err);
+                renderAnalyticsOverviewError('Network error while loading telemetry.');
+                renderAnalyticsEventsError('Network error while loading the live stream.');
+                const stamp = document.getElementById('analytics-last-updated');
+                if (stamp) stamp.textContent = 'Offline';
                 showToast("Could not load latest telemetry data.", "error");
             } finally {
+                _analyticsInFlight = false;
                 if (refreshIcon) refreshIcon.classList.remove('animate-spin');
             }
         }
 
+        function renderAnalyticsOverviewError(message) {
+            ['analytics-total-users', 'analytics-total-sessions', 'analytics-total-queries', 'analytics-avg-latency'].forEach(id => setStatText(id, '—'));
+            ['analytics-users-sub', 'analytics-sessions-sub', 'analytics-queries-sub', 'analytics-latency-sub'].forEach(id => setStatText(id, 'Unavailable'));
+            setStatText('analytics-success-rate', 'Unavailable');
+            setStatText('analytics-providers-count', '— providers');
+            setStatText('analytics-modes-count', '— modes');
+            setStatText('analytics-volume-total', '—');
+            const pc = document.getElementById('analytics-providers-list');
+            if (pc) pc.innerHTML = `<div class="text-rose-500 text-xs">${escapeHTML(message)}</div>`;
+            const mc = document.getElementById('analytics-modes-list');
+            if (mc) mc.innerHTML = `<div class="text-rose-500 text-xs">${escapeHTML(message)}</div>`;
+            const dc = document.getElementById('analytics-daily-chart');
+            if (dc) dc.innerHTML = `<div class="text-rose-500 text-xs">${escapeHTML(message)}</div>`;
+        }
+
+        function renderAnalyticsEventsError(message) {
+            const tableBody = document.getElementById('analytics-events-table-body');
+            if (tableBody) tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-rose-500 text-xs">${escapeHTML(message)}</td></tr>`;
+        }
+
         function renderAnalyticsOverview(data) {
+            data = data || {};
+            const totalUsers = Number(data.total_users) || 0;
+            const totalSessions = Number(data.total_sessions) || 0;
+            const totalQueries = Number(data.total_queries) || 0;
+            const avgLatency = Number(data.avg_latency_ms) || 0;
+            const queriesToday = Number(data.queries_today) || 0;
+            const activeUsers7d = Number(data.active_users_7d);
+
             const elUsers = document.getElementById('analytics-total-users');
             const elSessions = document.getElementById('analytics-total-sessions');
             const elQueries = document.getElementById('analytics-total-queries');
             const elLatency = document.getElementById('analytics-avg-latency');
 
-            if (elUsers) elUsers.textContent = data.total_users || 0;
-            if (elSessions) elSessions.textContent = data.total_sessions || 0;
-            if (elQueries) elQueries.textContent = data.total_queries || 0;
-            if (elLatency) elLatency.textContent = (data.avg_latency_ms || 0) + ' ms';
+            if (elUsers) elUsers.textContent = totalUsers;
+            if (elSessions) elSessions.textContent = totalSessions;
+            if (elQueries) elQueries.textContent = totalQueries;
+            if (elLatency) elLatency.textContent = Math.round(avgLatency) + ' ms';
+
+            // Live query health derived from real status_distribution
+            const statuses = data.status_distribution || {};
+            const successCount = Number(statuses.success) || 0;
+            const failedCount = Object.entries(statuses).reduce(
+                (acc, [status, count]) => (status === 'success' ? acc : acc + (Number(count) || 0)), 0
+            );
+            const totalStatus = successCount + failedCount;
+            const successRate = totalStatus ? Math.round((successCount / totalStatus) * 100) : 0;
+
+            setStatText('analytics-users-sub', Number.isFinite(activeUsers7d) ? `${activeUsers7d} active in last 7 days` : 'Registered accounts');
+            setStatText('analytics-sessions-sub', `${totalSessions} saved workspace${totalSessions === 1 ? '' : 's'}`);
+            setStatText('analytics-queries-sub', `${successCount} succeeded · ${failedCount} failed`);
+            setStatText('analytics-latency-sub', totalQueries ? `Average across ${totalQueries} queries` : 'No queries recorded yet');
+
+            setStatText('analytics-success-rate', totalStatus ? successRate + '% success' : 'No data yet');
+            setStatText('analytics-success-count', successCount);
+            setStatText('analytics-error-count', failedCount);
+            setStatText('analytics-today-count', queriesToday);
+            const successBar = document.getElementById('analytics-success-bar');
+            if (successBar) {
+                successBar.style.width = (totalStatus ? successRate : 0) + '%';
+                const barColor = successRate >= 95 ? 'bg-emerald-500' : (successRate >= 80 ? 'bg-amber-500' : 'bg-rose-500');
+                successBar.className = barColor + ' h-2 rounded-full transition-all duration-500';
+            }
 
             // Provider distribution bars
             const providerContainer = document.getElementById('analytics-providers-list');
+            const providers = data.provider_distribution || {};
+            const providerEntries = Object.entries(providers).sort((a, b) => Number(b[1]) - Number(a[1]));
+            setStatText('analytics-providers-count', providerEntries.length + ' provider' + (providerEntries.length === 1 ? '' : 's') + ' active');
             if (providerContainer) {
                 providerContainer.innerHTML = '';
-                const providers = data.provider_distribution || {};
-                const total = Object.values(providers).reduce((a, b) => a + b, 0) || 1;
+                const total = providerEntries.reduce((sum, [, count]) => sum + (Number(count) || 0), 0) || 1;
                 const colors = ['bg-cyan-500', 'bg-purple-500', 'bg-emerald-500', 'bg-amber-500', 'bg-pink-500', 'bg-blue-500'];
                 let i = 0;
 
@@ -5445,24 +5544,26 @@
                     'offline_brain': 'Alumni AI Neural Brain (Offline)',
                     'research_pipeline+opencode_zen': 'Deep Research Engine + OpenCode Zen',
                     'research_pipeline+offline_brain': 'Deep Research + Neural Brain',
+                    'research_pipeline+groq': 'Deep Research + Groq',
+                    'research_pipeline+gemini_free': 'Deep Research + Gemini',
                     'web_research+opencode_zen': 'Web Research + OpenCode Zen',
                     'web_research+offline_brain': 'Web Research + Neural Brain'
                 };
 
-                const entries = Object.entries(providers);
-                if (entries.length === 0) {
+                if (providerEntries.length === 0) {
                     providerContainer.innerHTML = '<div class="text-slate-400 text-xs">Zero queries recorded yet.</div>';
                 } else {
-                    for (const [provider, count] of entries) {
-                        const pct = Math.round((count / total) * 100);
+                    for (const [provider, count] of providerEntries) {
+                        const numericCount = Number(count) || 0;
+                        const pct = Math.round((numericCount / total) * 100);
                         const color = colors[i % colors.length];
                         const label = friendlyNames[provider] || provider;
                         const el = document.createElement('div');
                         el.className = 'space-y-1';
                         el.innerHTML = `
                             <div class="flex justify-between items-center text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                <span class="truncate pr-2">${escapeHtml(label)}</span>
-                                <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px] shrink-0">${count} (${pct}%)</span>
+                                <span class="truncate pr-2">${escapeHTML(label)}</span>
+                                <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px] shrink-0">${numericCount} (${pct}%)</span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                                 <div class="${color} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
@@ -5476,33 +5577,57 @@
 
             // Mode distribution
             const modeContainer = document.getElementById('analytics-modes-list');
+            const modes = data.mode_distribution || {};
+            const modeEntries = Object.entries(modes).sort((a, b) => Number(b[1]) - Number(a[1]));
+            setStatText('analytics-modes-count', modeEntries.length + ' mode' + (modeEntries.length === 1 ? '' : 's') + ' active');
             if (modeContainer) {
                 modeContainer.innerHTML = '';
-                const modes = data.mode_distribution || {};
-                const totalModes = Object.values(modes).reduce((a, b) => a + b, 0) || 1;
+                const totalModes = modeEntries.reduce((sum, [, count]) => sum + (Number(count) || 0), 0) || 1;
                 const modeColors = {
                     'professional': 'bg-cyan-500',
                     'basic': 'bg-emerald-500',
                     'sarcastic': 'bg-pink-500'
                 };
-                const entries = Object.entries(modes);
-                if (entries.length === 0) {
+                if (modeEntries.length === 0) {
                     modeContainer.innerHTML = '<div class="text-slate-400 text-xs">Zero modes active yet.</div>';
                 } else {
-                    for (const [mode, count] of entries) {
-                        const pct = Math.round((count / totalModes) * 100);
-                        const color = modeColors[mode.toLowerCase()] || 'bg-blue-500';
+                    for (const [mode, count] of modeEntries) {
+                        const numericCount = Number(count) || 0;
+                        const pct = Math.round((numericCount / totalModes) * 100);
+                        const color = modeColors[String(mode).toLowerCase()] || 'bg-blue-500';
                         const el = document.createElement('div');
                         el.className = 'flex items-center justify-between text-xs py-1.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0';
                         el.innerHTML = `
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 rounded-full ${color}"></span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200 capitalize">${escapeHtml(mode)}</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200 capitalize">${escapeHTML(mode)}</span>
                             </div>
-                            <span class="font-mono text-slate-500 dark:text-slate-400 text-xs">${count} (${pct}%)</span>
+                            <span class="font-mono text-slate-500 dark:text-slate-400 text-xs">${numericCount} (${pct}%)</span>
                         `;
                         modeContainer.appendChild(el);
                     }
+                }
+            }
+
+            // Daily query volume (last 7 days, oldest first)
+            const dailyChart = document.getElementById('analytics-daily-chart');
+            const days = (data.daily_volume || []).slice().reverse();
+            setStatText('analytics-volume-total', totalQueries + ' total queries');
+            if (dailyChart) {
+                if (days.length === 0) {
+                    dailyChart.innerHTML = '<div class="text-slate-400 text-xs">No query volume recorded yet.</div>';
+                } else {
+                    const max = Math.max(...days.map(d => Number(d.count) || 0), 1);
+                    dailyChart.innerHTML = days.map(d => {
+                        const count = Number(d.count) || 0;
+                        const height = Math.max(6, Math.round((count / max) * 100));
+                        return `
+                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHTML(d.day)}: ${count} queries">
+                            <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${count}</span>
+                            <div class="w-full max-w-[38px] rounded-t-md bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-500" style="height: ${height}%"></div>
+                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHTML(String(d.day || '').slice(5))}</span>
+                        </div>`;
+                    }).join('');
                 }
             }
         }
@@ -5526,14 +5651,14 @@
                 const latency = ev.latency_ms ? `${Math.round(ev.latency_ms)}ms` : '0ms';
                 const statusTag = ev.status === 'success' 
                     ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Success</span>`
-                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">${escapeHtml(ev.status)}</span>`;
+                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">${escapeHTML(ev.status)}</span>`;
 
                 tr.innerHTML = `
                     <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">${dt}</td>
-                    <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-white truncate max-w-[120px]">${escapeHtml(userDisplay)}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-white truncate max-w-[120px]">${escapeHTML(userDisplay)}</td>
                     <td class="py-2.5 px-3">
                         <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 truncate max-w-[150px] inline-block">
-                            ${escapeHtml(ev.provider_used || 'engine')}
+                            ${escapeHTML(ev.provider_used || 'engine')}
                         </span>
                     </td>
                     <td class="py-2.5 px-3 font-mono text-cyan-600 dark:text-cyan-400">${latency}</td>
@@ -5569,10 +5694,10 @@
                         const c = Number(m.count) || 0;
                         const h = Math.max(6, Math.round((c / max) * 100));
                         return `
-                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHtml(m.month)}: ${c} signups">
+                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHTML(m.month)}: ${c} signups">
                             <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${c}</span>
                             <div class="w-full max-w-[26px] rounded-t-md bg-gradient-to-t from-violet-500 to-purple-400" style="height: ${h}%"></div>
-                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHtml(String(m.month).slice(2))}</span>
+                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHTML(String(m.month).slice(2))}</span>
                         </div>`;
                     }).join('');
                 }
@@ -5592,7 +5717,7 @@
                         return `
                         <div>
                             <div class="flex justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                                <span class="capitalize">${escapeHtml(r.login_method || 'unknown')}</span>
+                                <span class="capitalize">${escapeHTML(r.login_method || 'unknown')}</span>
                                 <span class="font-mono">${c} (${pct}%)</span>
                             </div>
                             <div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 mt-1 overflow-hidden">
@@ -5631,13 +5756,13 @@
                 const joined = u.created_at ? String(u.created_at).slice(0, 10) : '—';
                 const methodTag = isGuest
                     ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">guest</span>'
-                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${u.login_method === 'google' ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">${escapeHtml(u.login_method || 'password')}</span>`;
+                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${u.login_method === 'google' ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">${escapeHTML(u.login_method || 'password')}</span>`;
                 return `
                 <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 text-xs transition">
-                    <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 truncate max-w-[210px]" title="${escapeHtml(email)}">${escapeHtml(email)}</td>
-                    <td class="py-2 px-3 font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHtml(u.username || '—')}</td>
+                    <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 truncate max-w-[210px]" title="${escapeHTML(email)}">${escapeHTML(email)}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHTML(u.username || '—')}</td>
                     <td class="py-2 px-3">${methodTag}</td>
-                    <td class="py-2 px-3 font-mono text-slate-400 text-[11px]">${escapeHtml(joined)}</td>
+                    <td class="py-2 px-3 font-mono text-slate-400 text-[11px]">${escapeHTML(joined)}</td>
                 </tr>`;
             }).join('');
         }
@@ -5786,13 +5911,13 @@
                         const hh = Math.max(4, Math.round((hits / max) * 100));
                         const uh = Math.max(4, Math.round((uns / max) * 100));
                         return `
-                        <div class="flex-1 min-w-[34px] flex flex-col items-center gap-1" title="${escapeHtml(m.month)}: ${hits} visits / ${uns} unique visitors">
+                        <div class="flex-1 min-w-[34px] flex flex-col items-center gap-1" title="${escapeHTML(m.month)}: ${hits} visits / ${uns} unique visitors">
                             <span class="text-[9px] font-extrabold text-slate-600 dark:text-slate-300">${hits}</span>
                             <div class="w-full flex items-end justify-center gap-0.5" style="height: 70%">
                                 <div class="w-[42%] max-w-[13px] rounded-t bg-cyan-500" style="height: ${hh}%"></div>
                                 <div class="w-[42%] max-w-[13px] rounded-t bg-purple-500" style="height: ${uh}%"></div>
                             </div>
-                            <span class="text-[9px] font-bold text-slate-400">${escapeHtml(String(m.month).slice(2))}</span>
+                            <span class="text-[9px] font-bold text-slate-400">${escapeHTML(String(m.month).slice(2))}</span>
                         </div>`;
                     }).join('');
                 }
@@ -5806,7 +5931,7 @@
                 } else {
                     dailyBody.innerHTML = rows.map(d => `
                         <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
-                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200">${escapeHtml(d.day || '—')}</td>
+                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200">${escapeHTML(d.day || '—')}</td>
                             <td class="py-2 px-3 font-extrabold text-cyan-600 dark:text-cyan-400">${Number(d.hits) || 0}</td>
                             <td class="py-2 px-3 font-extrabold text-purple-600 dark:text-purple-400">${Number(d.uniques) || 0}</td>
                         </tr>`).join('');
@@ -5828,10 +5953,10 @@
                         <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
                             <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 whitespace-nowrap">
                                 ${isToday ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>' : ''}
-                                ${escapeHtml(t)}
+                                ${escapeHTML(t)}
                             </td>
-                            <td class="py-2 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400" title="${escapeHtml(vk)}">${escapeHtml(shortVk)}</td>
-                            <td class="py-2 px-3 font-mono text-cyan-600 dark:text-cyan-400">${escapeHtml(r.path || '/')}</td>
+                            <td class="py-2 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400" title="${escapeHTML(vk)}">${escapeHTML(shortVk)}</td>
+                            <td class="py-2 px-3 font-mono text-cyan-600 dark:text-cyan-400">${escapeHTML(r.path || '/')}</td>
                         </tr>`;
                     }).join('');
                 }

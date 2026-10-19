@@ -125,6 +125,8 @@ class AnalyticsSummaryResponse(BaseModel):
     total_queries: int
     total_users: int
     total_sessions: int
+    queries_today: Optional[int] = 0
+    active_users_7d: Optional[int] = 0
     avg_latency_ms: float
     provider_distribution: Dict[str, int]
     mode_distribution: Dict[str, int]
