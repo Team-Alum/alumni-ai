@@ -1660,6 +1660,27 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                    <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-satellite-dish text-cyan-500"></i> Live Visitor Feed
+                        </h4>
+                        <span class="text-[10px] text-slate-400">Last 30 page loads</span>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900/80 text-[10px] font-extrabold uppercase text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
+                                <th class="py-2.5 px-3">Time</th>
+                                <th class="py-2.5 px-3">Visitor ID</th>
+                                <th class="py-2.5 px-3">Path</th>
+                            </tr>
+                        </thead>
+                        <tbody id="av-recent-table-body">
+                            <tr><td colspan="3" class="text-center py-6 text-slate-400">Loading feed...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-900/80 text-[10px] font-extrabold uppercase text-slate-400 border-b border-slate-200/80 dark:border-slate-800">
@@ -5297,6 +5318,8 @@
         let currentAnalyticsVisitors = null;
         let campaignChunkIndex = 0;
 
+        let _analyticsAutoRefresh = null;
+
         async function openAnalyticsModal() {
             if (!currentUser || !currentUser.isTeamAlum) {
                 showToast('Access restricted: Team Alum Founders only.', 'error');
@@ -5305,11 +5328,25 @@
             const modal = document.getElementById('analytics-modal');
             if (modal) modal.classList.remove('hidden');
             await refreshAnalyticsData();
+            if (_analyticsAutoRefresh) clearInterval(_analyticsAutoRefresh);
+            _analyticsAutoRefresh = setInterval(() => {
+                const m = document.getElementById('analytics-modal');
+                if (m && m.classList.contains('hidden')) {
+                    clearInterval(_analyticsAutoRefresh);
+                    _analyticsAutoRefresh = null;
+                    return;
+                }
+                refreshAnalyticsData();
+            }, 15000);
         }
 
         function closeAnalyticsModal() {
             const modal = document.getElementById('analytics-modal');
             if (modal) modal.classList.add('hidden');
+            if (_analyticsAutoRefresh) {
+                clearInterval(_analyticsAutoRefresh);
+                _analyticsAutoRefresh = null;
+            }
         }
 
         async function refreshAnalyticsData() {
@@ -5773,6 +5810,30 @@
                             <td class="py-2 px-3 font-extrabold text-cyan-600 dark:text-cyan-400">${Number(d.hits) || 0}</td>
                             <td class="py-2 px-3 font-extrabold text-purple-600 dark:text-purple-400">${Number(d.uniques) || 0}</td>
                         </tr>`).join('');
+                }
+            }
+
+            const recentBody = document.getElementById('av-recent-table-body');
+            if (recentBody) {
+                const rows = data.recent || [];
+                if (rows.length === 0) {
+                    recentBody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">No visits recorded yet.</td></tr>';
+                } else {
+                    recentBody.innerHTML = rows.map(r => {
+                        const vk = String(r.visitor_key || '');
+                        const shortVk = vk.length > 12 ? vk.slice(0, 8) + '…' + vk.slice(-4) : vk;
+                        const t = r.created_at ? new Date(r.created_at).toLocaleString() : '—';
+                        const isToday = r.created_at && String(r.created_at).slice(0, 10) === new Date().toISOString().slice(0, 10);
+                        return `
+                        <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
+                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                                ${isToday ? '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>' : ''}
+                                ${escapeHtml(t)}
+                            </td>
+                            <td class="py-2 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400" title="${escapeHtml(vk)}">${escapeHtml(shortVk)}</td>
+                            <td class="py-2 px-3 font-mono text-cyan-600 dark:text-cyan-400">${escapeHtml(r.path || '/')}</td>
+                        </tr>`;
+                    }).join('');
                 }
             }
         }

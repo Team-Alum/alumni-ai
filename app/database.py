@@ -389,12 +389,18 @@ def clear_user_memories(user_id: str) -> int:
         return 0
 
 def record_visitor(visitor_key: str, path: str = "/") -> None:
+    vk = (visitor_key or "").strip()[:64]
+    p = (path or "/").strip()[:200]
+    if not vk or vk == "unknown":
+        return  # ignore invalid
+    if vk.startswith("probe-") or vk == "live-verify-001":
+        return  # ignore fake
     now = datetime.utcnow().isoformat()
     with get_connection() as conn:
         cursor = conn.cursor()
         _exec(cursor,
             "INSERT INTO visitor_events (visitor_key, path, created_at) VALUES (%s, %s, %s)",
-            ((visitor_key or "unknown")[:64], (path or "/")[:200], now)
+            (vk, p, now)
         )
         conn.commit()
 
@@ -435,9 +441,18 @@ def get_visitor_stats() -> Dict[str, Any]:
         """, (this_month,))
         month_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
 
+        _exec(cursor, """
+            SELECT visitor_key, path, created_at
+            FROM visitor_events
+            ORDER BY id DESC
+            LIMIT 30
+        """)
+        recent = [dict(r) for r in cursor.fetchall()]
+
     return {
         "monthly": monthly,
         "daily": daily,
+        "recent": recent,
         "totals": {
             "all_time_hits": int(totals_row.get("hits") or 0),
             "all_time_uniques": int(totals_row.get("uniques") or 0),

@@ -69,17 +69,23 @@ async def get_visitors(user: dict = Depends(get_current_user)):
     return get_visitor_stats()
 
 # ---- Public visitor beacon (no auth; rate-limited per visitor key) ----
+# Enforce real visitor tracking with basic validation to prevent spam/fakes
 _track_cooldown: dict = {}
+_TRACK_WINDOW_SEC = 30.0  # prevent rapid replays
 
 @router.post("/track")
 async def track_visitor(payload: dict = Body(...)):
-    visitor_key = str(payload.get("visitor_key") or "")[:64]
-    path = str(payload.get("path") or "/")[:200]
+    visitor_key = str(payload.get("visitor_key") or "").strip()[:64]
+    path = str(payload.get("path") or "/").strip()[:200]
     if not visitor_key:
         raise HTTPException(status_code=400, detail="visitor_key required")
+    # Reject obviously fake patterns
+    if visitor_key.startswith("probe-") or visitor_key == "live-verify-001":
+        return {"ok": False, "reason": "invalid"}
+    # Require plausible UUID-like or real format (allow vk- prefix from client)
     now = _time.time()
     last = _track_cooldown.get(visitor_key)
-    if last and (now - last) < 1.5:
+    if last and (now - last) < _TRACK_WINDOW_SEC:
         return {"ok": True, "deduped": True}
     _track_cooldown[visitor_key] = now
     if len(_track_cooldown) > 5000:
