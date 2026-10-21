@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -43,8 +44,38 @@ app.include_router(youtube.router)
 app.include_router(memory.router)
 
 
-# Mount static files
+# SEO & LLM Manifest endpoints
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+
+@app.get("/robots.txt", include_in_schema=False)
+async def get_robots_txt():
+    robots_path = STATIC_DIR / "robots.txt"
+    if robots_path.exists():
+        return FileResponse(robots_path, media_type="text/plain; charset=utf-8")
+    return FileResponse(STATIC_DIR / "index.html")
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def get_sitemap_xml():
+    sitemap_path = STATIC_DIR / "sitemap.xml"
+    if sitemap_path.exists():
+        return FileResponse(sitemap_path, media_type="application/xml; charset=utf-8")
+    return FileResponse(STATIC_DIR / "index.html")
+
+@app.get("/llms.txt", include_in_schema=False)
+async def get_llms_txt():
+    llms_path = STATIC_DIR / "llms.txt"
+    if llms_path.exists():
+        return FileResponse(llms_path, media_type="text/plain; charset=utf-8")
+    return FileResponse(STATIC_DIR / "index.html")
+
+@app.get("/llms-full.txt", include_in_schema=False)
+async def get_llms_full_txt():
+    llms_full_path = STATIC_DIR / "llms-full.txt"
+    if llms_full_path.exists():
+        return FileResponse(llms_full_path, media_type="text/plain; charset=utf-8")
+    return FileResponse(STATIC_DIR / "index.html")
+
+# Mount static files
 if STATIC_DIR.exists():
     app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 

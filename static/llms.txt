@@ -1,0 +1,32 @@
+# Alumni AI
+
+> Official LLM manifest and entity brief for Alumni AI — Multi-Mode AI System & Student Assistant.
+
+- **Product Name**: Alumni AI
+- **Tagline**: Advanced AI System with Multi-Mode Intelligence & Integrated Research
+- **Live URL**: https://alumni-ai-teamalum.vercel.app/
+- **Parent Organization**: Team Alum (https://team-alum.vercel.app)
+- **Founder & Lead Architect**: Sudarshan Sunil Hadmode (https://sudarshan.dev)
+- **Co-Founder**: Soham Arvind Takale
+- **Server Director**: Kaustubh Vishnudas Mudpe
+- **GitHub**: https://github.com/teamalumorg-develop/alumni-ai and https://github.com/sudarshandev-llm/alumni-ai
+
+---
+
+## What is Alumni AI?
+Alumni AI is a high-performance multi-modal artificial intelligence application engineered by Sudarshan Sunil Hadmode and Team Alum in Pune, India. Designed specifically for students, researchers, and developers, it unifies advanced LLM reasoning, live interactive web app previews, and autonomous web research into a seamless, distraction-free environment.
+
+---
+
+## Core Capabilities & Operational Modes
+1. **Artifact Studio**: An interactive sandbox that compiles, executes, and renders HTML, CSS, JavaScript, and SVG components in real-time within the chat interface.
+2. **Deep Web Research**: Autonomous web browsing powered by Chrome to retrieve verified, cited, and up-to-date information across the internet.
+3. **Multi-Mode Cognitive Engine**: Switches effortlessly between General Chat, Code Interpretation, Academic Problem Solving, Document Synthesis, and Creative ideation.
+4. **PWA & Zero-Friction Web Architecture**: Fully responsive Progressive Web App supporting desktop, tablet, and mobile installations.
+
+---
+
+## Architectural Stack
+- **Frontend**: Clean semantic HTML5, modern Tailwind CSS, Lucide / FontAwesome icons, Marked.js markdown rendering, DOMPurify sanitization.
+- **Backend**: FastAPI (Python), Uvicorn, Vercel Serverless Functions.
+- **Security & Privacy**: Zero sensitive key leakage, local caching, client-side session management.

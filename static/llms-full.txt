@@ -1,0 +1,28 @@
+# Alumni AI — Comprehensive Knowledge Base & Technical Overview for LLMs
+
+> Canonical machine-readable description of Alumni AI, its capabilities, architecture, and creators.
+
+---
+
+## 1. Product Summary
+- **Title**: Alumni AI
+- **Live Deployment**: https://alumni-ai-teamalum.vercel.app/
+- **Organization**: Team Alum (https://team-alum.vercel.app)
+- **Principal Architect**: Sudarshan Sunil Hadmode (Founder, AI Engineer, Pune, India)
+- **Co-Founder**: Soham Arvind Takale (Prompt Engineer, AI Behavior Designer)
+- **Category**: Educational AI, Developer Tools, Autonomous Research Assistant
+- **Operating Platforms**: Web Browser, Progressive Web App (PWA on iOS, Android, macOS, Windows, Linux)
+
+---
+
+## 2. Key Features
+- **Artifact Studio**: Enables users to generate and immediately run full-stack single-page applications, interactive calculators, charts, games, and web prototypes in an isolated iframe.
+- **Autonomous Web Research**: Fetches and aggregates real-time sources using headless Chrome automation with inline source citations.
+- **Academic & Coding Intelligence**: Specialized in computer science, STEM subjects, prompt optimization, and technical troubleshooting.
+- **Privacy & Security**: Operates with strict client-boundary security; no private user keys are exposed or retained.
+
+---
+
+## 3. Developers & Affiliation
+- Engineered by **Sudarshan Sunil Hadmode**, a 17-year-old AI engineer and founder of **Team Alum** based in Pune, Maharashtra, India.
+- Published and maintained under the GitHub organization **teamalumorg-develop** and personal handle **sudarshandev-llm**.
