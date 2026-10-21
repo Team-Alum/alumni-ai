@@ -858,6 +858,254 @@
             #chat-input { max-height: 96px; }
             .composer-bar { padding-top: 0.4rem; padding-bottom: calc(0.4rem + var(--sab)); }
         }
+
+        /* ============================================================
+           ARTIFACT STUDIO — AI-generated app/code preview workspace
+           Mobile-first: full-screen on phones, large panel on desktop.
+           ============================================================ */
+        /* Guarantee show/hide works regardless of Tailwind cascade order */
+        #artifact-studio-modal.hidden { display: none !important; }
+        #artifact-studio-modal .hidden { display: none !important; }
+        .studio-overlay {
+            position: fixed;
+            inset: 0;
+            height: 100dvh;
+            z-index: 70;
+            display: flex;
+            flex-direction: column;
+            background: rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        @media (min-width: 768px) {
+            .studio-overlay { align-items: center; justify-content: center; padding: 2.5vh 2vw; }
+        }
+        .studio-panel {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background: var(--surface);
+            color: var(--text-1);
+            border: 1px solid var(--border-soft);
+            overflow: hidden;
+            padding-top: var(--sat);
+            padding-bottom: var(--sab);
+        }
+        @media (min-width: 768px) {
+            .studio-panel {
+                height: 95vh;
+                max-width: 1120px;
+                border-radius: var(--r-xl);
+                box-shadow: var(--sh-lg);
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+        }
+        .studio-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid var(--border-soft);
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+        .studio-title {
+            font-weight: 800;
+            font-size: 0.8rem;
+            min-width: 0;
+            max-width: 42%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .studio-badge {
+            font-size: 0.58rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.12rem 0.45rem;
+            border-radius: 999px;
+            background: rgba(8, 145, 178, 0.12);
+            color: var(--cyan);
+            border: 1px solid rgba(8, 145, 178, 0.3);
+            flex-shrink: 0;
+        }
+        .studio-iconbtn {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--border-soft);
+            background: var(--surface);
+            color: var(--text-2);
+            font-size: 0.78rem;
+            transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+        .studio-iconbtn:hover { color: var(--cyan); border-color: var(--cyan); }
+        .studio-iconbtn:active { transform: scale(0.94); }
+        .studio-iconbtn.active { background: rgba(8, 145, 178, 0.12); color: var(--cyan); border-color: var(--cyan); }
+        .studio-select {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-1);
+            background: var(--surface);
+            border: 1px solid var(--border-soft);
+            border-radius: var(--r-sm);
+            padding: 0.28rem 0.45rem;
+            max-width: 42%;
+        }
+        .studio-tabs {
+            display: flex;
+            gap: 0.2rem;
+            padding: 0 0.55rem;
+            border-bottom: 1px solid var(--border-soft);
+            overflow-x: auto;
+            flex-shrink: 0;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .studio-tabs::-webkit-scrollbar { display: none; }
+        .studio-tab {
+            padding: 0.5rem 0.65rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-3);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: transparent;
+        }
+        .studio-tab:hover { color: var(--text-1); }
+        .studio-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+        .studio-body {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            background: var(--surface-2);
+        }
+        .studio-pane { position: absolute; inset: 0; }
+        .studio-frame { width: 100%; height: 100%; border: 0; background: #ffffff; display: block; }
+        .studio-errorbar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            background: rgba(190, 18, 60, 0.96);
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-family: 'Fira Code', monospace;
+            padding: 0.45rem 0.7rem;
+            max-height: 32%;
+            overflow: auto;
+            display: none;
+            white-space: pre-wrap;
+        }
+        #studio-code-pane { display: flex; flex-direction: column; }
+        .studio-file-tabs {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.35rem 0.5rem;
+            border-bottom: 1px solid #1e293b;
+            background: #0b1120;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .studio-file-tab {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: #64748b;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .studio-file-tab.active { color: #22d3ee; background: #1e293b; }
+        .studio-code-scroll { flex: 1; min-height: 0; position: relative; }
+        .studio-code {
+            position: absolute;
+            inset: 0;
+            overflow: auto;
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 0.9rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.76rem;
+            line-height: 1.55;
+            white-space: pre;
+            tab-size: 2;
+            border: 0;
+        }
+        .studio-code-code { font-family: inherit; color: inherit; }
+        #studio-code-edit {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            resize: none;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 0;
+            outline: 0;
+            padding: 0.9rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.76rem;
+            line-height: 1.55;
+            white-space: pre;
+            tab-size: 2;
+        }
+        .studio-md { position: absolute; inset: 0; overflow: auto; padding: 1rem 1.15rem; background: var(--surface); }
+        .studio-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--text-3);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 2rem;
+        }
+        .artifact-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+            color: #ffffff;
+            border: 1px solid #22d3ee;
+            flex-shrink: 0;
+        }
+        .artifact-chip:active { transform: scale(0.95); }
+        .open-studio-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.22rem 0.55rem;
+            border-radius: 0.5rem;
+            font-size: 0.66rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+            color: #ffffff;
+            border: 0;
+            margin-right: 0.4rem;
+        }
+        .open-studio-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="h-full w-full flex flex-col overflow-hidden" style="background-color: var(--bg-color);">
@@ -2209,6 +2457,62 @@
         <footer class="w-full bg-slate-50 dark:bg-[#080d1a] border-t border-slate-200 dark:border-slate-800 py-1.5 px-4 text-center text-[10px] text-slate-500 dark:text-slate-400 transition-colors duration-200">
             Startup & Founder of Team Alum, Sudarshan & Soham • All Rights Reserved
         </footer>
+    </div>
+
+    <!-- Artifact Studio Modal (AI-generated app/code preview workspace) -->
+    <div id="artifact-studio-modal" class="studio-overlay hidden" onclick="if(event.target===this) closeArtifactStudio();">
+        <div class="studio-panel">
+            <div class="studio-header">
+                <button type="button" class="studio-iconbtn" onclick="closeArtifactStudio(); playTactileSound('click');" title="Close Studio">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <span class="studio-badge" id="studio-type-badge">code</span>
+                <span class="studio-title" id="studio-title">Artifact</span>
+                <select id="studio-artifact-select" class="studio-select hidden" onchange="switchStudioArtifact(this.value)"></select>
+                <div class="flex-1 min-w-0"></div>
+                <button type="button" class="studio-iconbtn" onclick="refreshStudioPreview()" title="Re-run preview">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button type="button" class="studio-iconbtn" onclick="copyStudioArtifact()" title="Copy code">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+                <button type="button" class="studio-iconbtn" onclick="downloadStudioArtifact()" title="Download">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <button type="button" class="studio-iconbtn" id="studio-fullscreen-btn" onclick="toggleStudioFullscreen()" title="Fullscreen">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+            <div class="studio-tabs" id="studio-tabs"></div>
+            <div class="studio-body">
+                <div class="studio-pane hidden" id="studio-preview-pane">
+                    <iframe id="studio-iframe" class="studio-frame" sandbox="allow-scripts allow-forms allow-modals allow-popups" referrerpolicy="no-referrer" title="Artifact preview"></iframe>
+                    <div class="studio-errorbar" id="studio-errorbar"></div>
+                </div>
+                <div class="studio-pane hidden" id="studio-code-pane">
+                    <div class="studio-file-tabs hidden" id="studio-file-tabs"></div>
+                    <div class="studio-code-scroll">
+                        <pre class="studio-code" id="studio-code-pre"><code class="studio-code-code" id="studio-code-view"></code></pre>
+                        <textarea id="studio-code-edit" class="hidden" spellcheck="false"></textarea>
+                    </div>
+                </div>
+                <div class="studio-md hidden" id="studio-md-pane">
+                    <div class="markdown-content" id="studio-md-view"></div>
+                </div>
+                <div class="studio-empty hidden" id="studio-empty-pane">
+                    <i class="fa-solid fa-cube text-2xl"></i>
+                    <span id="studio-empty-text">No preview available.</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 p-2 flex-shrink-0" style="border-top: 1px solid var(--border-soft);">
+                <button type="button" class="clay-btn px-3 py-2 text-[11px] flex items-center gap-1.5 flex-1 justify-center" onclick="editStudioArtifactWithAI()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Edit with AI
+                </button>
+                <button type="button" class="clay-btn px-3 py-2 text-[11px] flex items-center gap-1.5" id="studio-edit-toggle" onclick="toggleStudioEditMode()">
+                    <i class="fa-solid fa-pen"></i> <span>Edit</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -4006,6 +4310,17 @@
                     </button>
                 `;
 
+                // Artifact Studio: add a "Studio" button for previewable code blocks
+                if (window.ARTIFACT_STUDIO && window.ARTIFACT_STUDIO.canPreview(lang)) {
+                    const studioBtn = document.createElement('button');
+                    studioBtn.type = 'button';
+                    studioBtn.className = 'open-studio-btn';
+                    studioBtn.innerHTML = '<i class="fa-solid fa-play"></i> Studio';
+                    studioBtn.title = 'Open this code in Artifact Studio';
+                    studioBtn.onclick = (ev) => { if (ev) ev.stopPropagation(); window.ARTIFACT_STUDIO.openFromCode(codeText, lang); };
+                    header.insertBefore(studioBtn, header.querySelector('.copy-code-btn'));
+                }
+
                 const copyBtn = header.querySelector('.copy-code-btn');
                 copyBtn.onclick = async () => {
                     try {
@@ -4117,6 +4432,9 @@
                 `;
                 chatContainer.appendChild(messageDiv);
                 enhanceMessageCodeBlocks(messageDiv);
+                if (window.ARTIFACT_STUDIO) {
+                    try { window.ARTIFACT_STUDIO.attach(messageDiv, text); } catch (e) { console.warn('Artifact attach:', e); }
+                }
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
                 // Auto-speak if enabled in Workspace Preferences
@@ -6055,6 +6373,451 @@
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
         }
+
+        /* ============================================================
+           ARTIFACT STUDIO — AI-generated app/code preview workspace
+           Client-side only (no backend changes). Mobile-first.
+           To remove: delete this module + the #artifact-studio-modal
+           markup + the studio/artifact-chip/open-studio-btn CSS +
+           the two ARTIFACT_STUDIO hooks in enhanceMessageCodeBlocks
+           and appendMessage.
+           ============================================================ */
+        const ARTIFACT_STUDIO = (function () {
+            const PREVIEW_LANGS = ['html', 'htm', 'svg', 'xhtml', 'xml', 'css', 'scss', 'sass', 'less', 'js', 'javascript', 'mjs', 'cjs', 'ts', 'typescript', 'md', 'markdown'];
+            const state = { artifacts: [], index: 0, tab: 'code', fileIndex: 0, editing: false };
+
+            function el(id) { return document.getElementById(id); }
+            function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+            function safeScript(s) { return String(s == null ? '' : s).replace(/<\/(script)/gi, '<\\/$1'); }
+
+            function parseFences(text) {
+                const out = [];
+                const re = /```([a-zA-Z0-9_+\-.# ]*)[ \t]*\r?\n([\s\S]*?)```/g;
+                let m;
+                while ((m = re.exec(text)) !== null) {
+                    const lang = ((m[1] || '').trim().toLowerCase().split(/[\s{]/)[0]) || '';
+                    const content = m[2].replace(/\s+$/, '');
+                    if (!content.trim()) continue;
+                    out.push({ lang: lang, content: content });
+                }
+                return out;
+            }
+
+            function classifyBlock(block) {
+                const lang = (block.lang || '').toLowerCase();
+                const c = block.content.trim();
+                if (['html', 'htm', 'svg', 'xhtml', 'xml', 'vue', 'svelte'].indexOf(lang) !== -1) return 'html';
+                if (['css', 'scss', 'sass', 'less'].indexOf(lang) !== -1) return 'css';
+                if (['js', 'javascript', 'mjs', 'cjs', 'ts', 'typescript'].indexOf(lang) !== -1) return 'javascript';
+                if (['jsx', 'tsx', 'react'].indexOf(lang) !== -1) return 'react';
+                if (['md', 'markdown'].indexOf(lang) !== -1) return 'markdown';
+                if (!lang) {
+                    const low = c.toLowerCase();
+                    if (low.indexOf('<!doctype') === 0 || low.indexOf('<html') === 0 || /<\/body>|<\/html>/.test(low)) return 'html';
+                    if (/\{[^}]*[:;][^}]*\}/.test(c) && /[.#@]/.test(c) && !/\b(function|const|let|var|=>|import)\b/.test(c)) return 'css';
+                    if (/\b(function|const|let|var)\b|=>|document\.|window\.|console\./.test(c)) return 'javascript';
+                    return 'code';
+                }
+                return 'code';
+            }
+
+            function nameForType(type, i) {
+                i = i || 0;
+                if (type === 'html') return i ? 'page' + (i + 1) + '.html' : 'index.html';
+                if (type === 'css') return i ? 'style' + (i + 1) + '.css' : 'style.css';
+                if (type === 'javascript') return i ? 'script' + (i + 1) + '.js' : 'script.js';
+                if (type === 'react') return 'App.jsx';
+                if (type === 'markdown') return 'document.md';
+                return 'snippet.txt';
+            }
+
+            function titleFor(type, content) {
+                content = content || '';
+                if (type === 'html') {
+                    const t = content.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+                    if (t && t[1].trim()) return t[1].trim().slice(0, 60);
+                    const h = content.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+                    if (h) { const txt = h[1].replace(/<[^>]+>/g, '').trim(); if (txt) return txt.slice(0, 60); }
+                    return 'Web Preview';
+                }
+                if (type === 'markdown') return 'Markdown Document';
+                if (type === 'react') return 'React Component';
+                if (type === 'css') return 'Stylesheet';
+                if (type === 'javascript') return 'Script';
+                return 'Code Snippet';
+            }
+
+            function singleArtifact(block, type) {
+                return {
+                    type: type,
+                    primaryLang: block.lang || (type === 'code' ? 'text' : type),
+                    title: titleFor(type, block.content),
+                    files: [{ name: nameForType(type), lang: block.lang || type, kind: (type === 'javascript' ? 'js' : type), content: block.content }],
+                    previewable: (type === 'html' || type === 'markdown' || type === 'css' || type === 'javascript')
+                };
+            }
+
+            function webArtifact(htmlBlocks, cssBlocks, jsBlocks) {
+                const files = [];
+                htmlBlocks.forEach(function (b, i) { files.push({ name: nameForType('html', i), lang: 'html', kind: 'html', content: b.content }); });
+                cssBlocks.forEach(function (b, i) { files.push({ name: nameForType('css', i), lang: 'css', kind: 'css', content: b.content }); });
+                jsBlocks.forEach(function (b, i) { files.push({ name: nameForType('javascript', i), lang: 'javascript', kind: 'js', content: b.content }); });
+                return { type: 'html', primaryLang: 'html', title: titleFor('html', files[0] ? files[0].content : ''), files: files, previewable: true };
+            }
+
+            function detect(text) {
+                if (!text) return [];
+                const blocks = parseFences(text);
+                if (!blocks.length) return [];
+                const typed = blocks.map(function (b) { return { block: b, type: classifyBlock(b) }; });
+                const htmls = typed.filter(function (x) { return x.type === 'html'; });
+                const cssAll = typed.filter(function (x) { return x.type === 'css'; });
+                const jsAll = typed.filter(function (x) { return x.type === 'javascript'; });
+                const others = typed.filter(function (x) { return ['html', 'css', 'javascript'].indexOf(x.type) === -1; });
+                const arts = [];
+                if (htmls.length) {
+                    arts.push(webArtifact([htmls[0].block], cssAll.map(function (x) { return x.block; }), jsAll.map(function (x) { return x.block; })));
+                    htmls.slice(1).forEach(function (x) { arts.push(singleArtifact(x.block, 'html')); });
+                } else if (cssAll.length) {
+                    arts.push(webArtifact([], cssAll.map(function (x) { return x.block; }), jsAll.map(function (x) { return x.block; })));
+                } else if (jsAll.length) {
+                    jsAll.forEach(function (x) { arts.push(singleArtifact(x.block, 'javascript')); });
+                }
+                others.forEach(function (x) { arts.push(singleArtifact(x.block, x.type)); });
+                return arts;
+            }
+
+            function errorBridge() {
+                return '<script>window.addEventListener("error",function(e){try{parent.postMessage({__studioError:(e.message||"Script error")+" ("+(e.filename||"")+":"+(e.lineno||"")+")"},"*")}catch(x){}});window.addEventListener("unhandledrejection",function(e){try{parent.postMessage({__studioError:"Unhandled promise rejection: "+(e.reason&&e.reason.message?e.reason.message:String(e.reason))},"*")}catch(x){}});<\/script>';
+            }
+
+            function injectBridge(html) {
+                const b = errorBridge();
+                if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, function (m) { return m + b; });
+                if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, function (m) { return m + b; });
+                return b + html;
+            }
+
+            function buildPreview(a) {
+                if (!a) return '';
+                if (a.type === 'html') {
+                    const htmlFile = a.files.filter(function (f) { return f.kind === 'html'; })[0];
+                    const css = a.files.filter(function (f) { return f.kind === 'css'; }).map(function (f) { return f.content; }).join('\n\n');
+                    const js = a.files.filter(function (f) { return f.kind === 'js'; }).map(function (f) { return f.content; }).join('\n\n');
+                    let html = htmlFile ? htmlFile.content : '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><div id="app"></div></body></html>';
+                    const headInject = css ? '<style>\n' + safeScript(css) + '\n</style>' : '';
+                    const bodyInject = js ? '<script>\n' + safeScript(js) + '\n<\/script>' : '';
+                    if (/<\/head>/i.test(html)) html = html.replace(/<\/head>/i, headInject + '</head>');
+                    else if (headInject) html = '<head>' + headInject + '</head>' + html;
+                    if (/<\/body>/i.test(html)) html = html.replace(/<\/body>/i, bodyInject + '</body>');
+                    else html = html + bodyInject;
+                    return injectBridge(html);
+                }
+                if (a.type === 'javascript') {
+                    const js = safeScript(a.files.map(function (f) { return f.content; }).join('\n\n'));
+                    return injectBridge('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:ui-sans-serif,system-ui,sans-serif;padding:14px;background:#fff;color:#0f172a} #__out{margin-top:12px;padding:10px;background:#0f172a;color:#a7f3d0;border-radius:10px;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;min-height:22px}</style></head><body><div id="app"></div><pre id="__out"></pre><script>(function(){var o=document.getElementById("__out");var l=console.log.bind(console);console.log=function(){var a=[].slice.call(arguments).map(function(x){try{return typeof x==="object"?JSON.stringify(x):String(x)}catch(e){return String(x)}});o.textContent+="\\u203a "+a.join(" ")+"\\n";l.apply(null,arguments);};})();try{\n' + js + '\n}catch(e){console.log("Error: "+e.message);}<\/script></body></html>');
+                }
+                if (a.type === 'css') {
+                    const css = safeScript(a.files.map(function (f) { return f.content; }).join('\n'));
+                    return injectBridge('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>' + css + '\nbody{font-family:ui-sans-serif,system-ui,sans-serif;padding:16px;color:#0f172a}</style></head><body><h1>Heading 1</h1><h2>Heading 2</h2><p>Paragraph with a <a href="#">link</a> and <strong>bold</strong> text.</p><p><button>Button</button> <button disabled>Disabled</button></p><ul><li>List item one</li><li>List item two</li></ul><div class="card">.card sample</div><div class="box">.box sample</div></body></html>');
+                }
+                return '';
+            }
+
+            function tabsFor(a) {
+                const tabs = [];
+                if (a.previewable || a.type === 'markdown') tabs.push('preview');
+                tabs.push('code');
+                return tabs;
+            }
+
+            function open(artifacts, index) {
+                if (!artifacts || !artifacts.length) return;
+                state.artifacts = artifacts;
+                state.index = index || 0;
+                state.fileIndex = 0;
+                state.editing = false;
+                state.tab = tabsFor(artifacts[state.index])[0];
+                const modal = el('artifact-studio-modal');
+                modal.classList.remove('hidden');
+                try { document.body.style.overflow = 'hidden'; } catch (e) {}
+                renderSelect();
+                renderMeta();
+                renderTabs();
+                renderPane();
+            }
+
+            function openFromCode(code, lang) {
+                const fence = '```' + (lang || '') + '\n' + code + '\n```';
+                open(detect(fence), 0);
+            }
+
+            function close() {
+                el('artifact-studio-modal').classList.add('hidden');
+                try { document.body.style.overflow = ''; } catch (e) {}
+                el('studio-iframe').removeAttribute('srcdoc');
+                hideError();
+            }
+
+            function canPreview(lang) {
+                lang = (lang || '').toLowerCase().split(/[\s{]/)[0];
+                return PREVIEW_LANGS.indexOf(lang) !== -1;
+            }
+
+            function renderSelect() {
+                const sel = el('studio-artifact-select');
+                if (state.artifacts.length > 1) {
+                    sel.classList.remove('hidden');
+                    sel.innerHTML = state.artifacts.map(function (a, i) {
+                        return '<option value="' + i + '"' + (i === state.index ? ' selected' : '') + '>' + escHtml(a.title + ' \u00b7 ' + a.type) + '</option>';
+                    }).join('');
+                } else {
+                    sel.classList.add('hidden');
+                    sel.innerHTML = '';
+                }
+            }
+
+            function renderMeta() {
+                const a = state.artifacts[state.index];
+                el('studio-title').textContent = a.title || 'Artifact';
+                el('studio-type-badge').textContent = a.type;
+            }
+
+            function renderTabs() {
+                const a = state.artifacts[state.index];
+                const tabs = tabsFor(a);
+                el('studio-tabs').innerHTML = tabs.map(function (t) {
+                    const label = t === 'preview' ? (a.type === 'markdown' ? 'Markdown' : 'Preview') : 'Code';
+                    const icon = t === 'preview' ? 'fa-eye' : 'fa-code';
+                    return '<button type="button" class="studio-tab' + (state.tab === t ? ' active' : '') + '"><i class="fa-solid ' + icon + '"></i> ' + label + '</button>';
+                }).join('');
+                Array.prototype.forEach.call(el('studio-tabs').children, function (btn, i) { btn.onclick = function () { setTab(tabs[i]); }; });
+            }
+
+            function setTab(t) { state.tab = t; state.editing = false; renderTabs(); renderPane(); }
+
+            function renderPane() {
+                const a = state.artifacts[state.index];
+                el('studio-preview-pane').classList.add('hidden');
+                el('studio-code-pane').classList.add('hidden');
+                el('studio-md-pane').classList.add('hidden');
+                el('studio-empty-pane').classList.add('hidden');
+                el('studio-edit-toggle').classList.add('hidden');
+                hideError();
+                if (state.tab === 'preview') {
+                    if (a.type === 'markdown') {
+                        el('studio-md-pane').classList.remove('hidden');
+                        const raw = a.files[0] ? a.files[0].content : '';
+                        let html = '';
+                        try { html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(raw, { gfm: true, breaks: true }) : '<pre>' + escHtml(raw) + '</pre>'; } catch (e) { html = '<pre>' + escHtml(raw) + '</pre>'; }
+                        if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) { try { html = DOMPurify.sanitize(html); } catch (e) {} }
+                        el('studio-md-view').innerHTML = html;
+                    } else {
+                        const doc = buildPreview(a);
+                        if (!doc) { el('studio-empty-pane').classList.remove('hidden'); el('studio-empty-text').textContent = 'No live preview for ' + a.type + ' artifacts \u2014 open the Code tab.'; return; }
+                        el('studio-preview-pane').classList.remove('hidden');
+                        el('studio-iframe').srcdoc = doc;
+                    }
+                } else {
+                    el('studio-code-pane').classList.remove('hidden');
+                    el('studio-edit-toggle').classList.remove('hidden');
+                    renderFileTabs();
+                    renderCode();
+                }
+            }
+
+            function renderFileTabs() {
+                const a = state.artifacts[state.index];
+                const host = el('studio-file-tabs');
+                if (a.files.length > 1) {
+                    host.classList.remove('hidden');
+                    host.innerHTML = a.files.map(function (f, i) {
+                        return '<button type="button" class="studio-file-tab' + (i === state.fileIndex ? ' active' : '') + '">' + escHtml(f.name) + '</button>';
+                    }).join('');
+                    Array.prototype.forEach.call(host.children, function (btn, i) { btn.onclick = function () { selectFile(i); }; });
+                } else {
+                    host.classList.add('hidden');
+                    host.innerHTML = '';
+                }
+            }
+
+            function selectFile(i) { state.fileIndex = i; state.editing = false; renderFileTabs(); renderCode(); }
+
+            function renderCode() {
+                const a = state.artifacts[state.index];
+                const f = a.files[state.fileIndex] || a.files[0];
+                if (!f) return;
+                const pre = el('studio-code-pre');
+                const edit = el('studio-code-edit');
+                const toggle = el('studio-edit-toggle');
+                el('studio-code-view').textContent = f.content;
+                if (state.editing) {
+                    pre.classList.add('hidden');
+                    edit.classList.remove('hidden');
+                    edit.value = f.content;
+                    toggle.classList.add('active');
+                    toggle.querySelector('span').textContent = 'Apply';
+                } else {
+                    pre.classList.remove('hidden');
+                    edit.classList.add('hidden');
+                    toggle.classList.remove('active');
+                    toggle.querySelector('span').textContent = 'Edit';
+                }
+            }
+
+            function toggleEdit() {
+                const a = state.artifacts[state.index];
+                const f = a.files[state.fileIndex] || a.files[0];
+                if (!f) return;
+                if (!state.editing) { state.editing = true; renderCode(); return; }
+                f.content = el('studio-code-edit').value;
+                state.editing = false;
+                renderCode();
+                if (typeof showToast === 'function') showToast('Artifact updated.', 'success');
+            }
+
+            function switchArtifact(v) {
+                state.index = parseInt(v, 10) || 0;
+                state.fileIndex = 0;
+                state.editing = false;
+                state.tab = tabsFor(state.artifacts[state.index])[0];
+                renderSelect();
+                renderMeta();
+                renderTabs();
+                renderPane();
+            }
+
+            function refresh() {
+                const a = state.artifacts[state.index];
+                if (a.type === 'markdown' || state.tab !== 'preview') { renderPane(); return; }
+                const doc = buildPreview(a);
+                if (doc) el('studio-iframe').srcdoc = doc;
+            }
+
+            function copy() {
+                const a = state.artifacts[state.index];
+                const multi = a.files.length > 1;
+                const text = a.files.map(function (f) { return (multi ? '/* ' + f.name + ' */\n' : '') + f.content; }).join('\n\n');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function () { if (typeof showToast === 'function') showToast('Artifact copied to clipboard!', 'success'); }).catch(function () { if (typeof showToast === 'function') showToast('Copy blocked \u2014 select the code manually.', 'error'); });
+                } else if (typeof showToast === 'function') {
+                    showToast('Copy not supported in this browser.', 'error');
+                }
+            }
+
+            function download() {
+                const a = state.artifacts[state.index];
+                let filename, content, mime;
+                if (a.type === 'html') {
+                    filename = (a.title || 'artifact').replace(/[^a-z0-9\-_]+/gi, '-').toLowerCase().replace(/^-+|-+$/g, '') + '.html';
+                    content = buildPreview(a);
+                    mime = 'text/html';
+                } else {
+                    const f = a.files[0];
+                    filename = f.name;
+                    content = f.content;
+                    mime = (/\.md$/.test(f.name)) ? 'text/markdown' : 'text/plain';
+                }
+                try {
+                    const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url; link.download = filename;
+                    document.body.appendChild(link); link.click(); link.remove();
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+                } catch (e) { if (typeof showToast === 'function') showToast('Download failed.', 'error'); }
+            }
+
+            function fullscreen() {
+                const panel = el('artifact-studio-modal').querySelector('.studio-panel');
+                if (!document.fullscreenElement) {
+                    const fn = panel.requestFullscreen || panel.webkitRequestFullscreen || panel.msRequestFullscreen;
+                    if (fn) fn.call(panel);
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+
+            function editWithAI() {
+                const a = state.artifacts[state.index];
+                if (!a) return;
+                const change = window.prompt('Describe the change you want Alumni AI to make:', '');
+                if (change === null) return;
+                const multi = a.files.length > 1;
+                const cur = a.files.map(function (f) { return (multi ? '/* ' + f.name + ' */\n' : '') + f.content; }).join('\n\n');
+                const lang = a.primaryLang || 'code';
+                const promptText = 'Modify this existing ' + a.type + ' artifact. Return the COMPLETE updated code in a single ```' + lang + ' fenced block, with no explanations.\n\nCurrent code:\n```' + lang + '\n' + cur + '\n```\n\nRequested change: ' + (change || 'Improve it while keeping everything working.');
+                close();
+                if (typeof sendQuickPrompt === 'function') { sendQuickPrompt(promptText); }
+                else if (typeof showToast === 'function') { showToast('Could not open editor.', 'error'); }
+            }
+
+            function hideError() { const b = el('studio-errorbar'); if (b) { b.style.display = 'none'; b.textContent = ''; } }
+
+            function attach(messageDiv, text) {
+                if (!messageDiv || !text) return;
+                let arts;
+                try { arts = detect(text); } catch (e) { return; }
+                if (!arts || !arts.length) return;
+                messageDiv._studioArtifacts = arts;
+                const speakBtn = messageDiv.querySelector('button[onclick^="speakMessageBubble"]');
+                const host = speakBtn ? speakBtn.parentElement : null;
+                if (!host) return;
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'artifact-chip';
+                chip.title = 'Open generated artifact(s) in Artifact Studio';
+                chip.innerHTML = '<i class="fa-solid fa-cube"></i> Studio (' + arts.length + ')';
+                chip.onclick = function (e) { if (e) e.stopPropagation(); open(messageDiv._studioArtifacts, 0); };
+                host.insertBefore(chip, host.firstChild);
+            }
+
+            window.addEventListener('message', function (e) {
+                if (e && e.data && typeof e.data.__studioError === 'string') {
+                    const modal = el('artifact-studio-modal');
+                    const bar = el('studio-errorbar');
+                    if (bar && modal && !modal.classList.contains('hidden')) {
+                        bar.textContent = '\u26a0 ' + e.data.__studioError;
+                        bar.style.display = 'block';
+                    }
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    const modal = el('artifact-studio-modal');
+                    if (modal && !modal.classList.contains('hidden')) close();
+                }
+            });
+
+            return {
+                detect: detect,
+                open: open,
+                openFromCode: openFromCode,
+                close: close,
+                canPreview: canPreview,
+                attach: attach,
+                setTab: setTab,
+                selectFile: selectFile,
+                toggleEdit: toggleEdit,
+                refresh: refresh,
+                copy: copy,
+                download: download,
+                fullscreen: fullscreen,
+                editWithAI: editWithAI,
+                switchArtifact: switchArtifact
+            };
+        })();
+        window.ARTIFACT_STUDIO = ARTIFACT_STUDIO;
+
+        function closeArtifactStudio() { ARTIFACT_STUDIO.close(); }
+        function refreshStudioPreview() { ARTIFACT_STUDIO.refresh(); }
+        function copyStudioArtifact() { ARTIFACT_STUDIO.copy(); }
+        function downloadStudioArtifact() { ARTIFACT_STUDIO.download(); }
+        function toggleStudioFullscreen() { ARTIFACT_STUDIO.fullscreen(); }
+        function editStudioArtifactWithAI() { ARTIFACT_STUDIO.editWithAI(); }
+        function toggleStudioEditMode() { ARTIFACT_STUDIO.toggleEdit(); }
+        function switchStudioArtifact(v) { ARTIFACT_STUDIO.switchArtifact(v); }
     </script>
 </body>
 </html>
