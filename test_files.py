@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import uuid
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import get_messages_by_session, init_db
@@ -25,8 +26,8 @@ def test_file_extract_and_chat_attachment():
 
     # 2. Login to get token
     login_res = client.post("/api/auth/login", json={
-        "username": "Code Tester",
-        "email": "codetester@example.com",
+        "username": "Rohan Mehta",
+        "email": f"rohan-{uuid.uuid4().hex[:8]}@example.com",
         "password": "pass1234Secure",
         "login_method": "email",
         "is_team_alum": False

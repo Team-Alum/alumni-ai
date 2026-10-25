@@ -1249,6 +1249,23 @@
     <!-- Toast Notifications -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- Account removal warning (founder action on suspicious usernames) -->
+    <div id="account-removed-notice" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div role="alertdialog" aria-modal="true" aria-labelledby="account-removed-title" class="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 shadow-2xl p-6 sm:p-7 text-center space-y-4">
+            <div class="mx-auto w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 flex items-center justify-center">
+                <i class="fa-solid fa-user-slash text-xl"></i>
+            </div>
+            <div class="space-y-2">
+                <h2 id="account-removed-title" class="text-lg font-black text-slate-900 dark:text-white">Account access removed</h2>
+                <p id="account-removed-message" class="text-sm leading-relaxed text-slate-600 dark:text-slate-300"></p>
+            </div>
+            <p class="text-[11px] leading-relaxed text-slate-400">Team Alum review action. If you believe this was a mistake, sign in with a proper human name or contact the Team Alum crew.</p>
+            <button type="button" onclick="acknowledgeAccountRemoval()" class="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 text-white text-xs font-extrabold shadow-sm transition active:scale-95">
+                Return to sign in
+            </button>
+        </div>
+    </div>
+
     <!-- Login View (Tactile Claymorphism) -->
     <div id="login-view" class="fixed inset-0 z-40 w-full h-[100dvh] flex items-center justify-center relative overflow-y-auto overflow-x-hidden p-2 sm:p-4 mobile-safe-top mobile-safe-bottom hidden touch-scroll" style="background-color: var(--bg-color);">
         
@@ -2051,10 +2068,11 @@
                                     <th class="py-2.5 px-3">Username</th>
                                     <th class="py-2.5 px-3">Method</th>
                                     <th class="py-2.5 px-3">Joined</th>
+                                    <th class="py-2.5 px-3 text-right">Review</th>
                                 </tr>
                             </thead>
                             <tbody id="au-users-table-body">
-                                <tr><td colspan="4" class="text-center py-6 text-slate-400">Loading registered users...</td></tr>
+                                <tr><td colspan="5" class="text-center py-6 text-slate-400">Loading registered users...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2799,6 +2817,19 @@
                             loginMethod: userData.login_method,
                             token: savedToken
                         };
+                        if (userData.account_removed) {
+                            setTimeout(() => {
+                                const welcomeScreen = document.getElementById('welcome-intro-screen');
+                                if (welcomeScreen) welcomeScreen.style.opacity = '0';
+                                setTimeout(() => {
+                                    if (welcomeScreen) welcomeScreen.classList.add('hidden');
+                                    const loginView = document.getElementById('login-view');
+                                    if (loginView) loginView.classList.remove('hidden');
+                                    showAccountRemovalNotice(userData.removal_warning);
+                                }, 500);
+                            }, 600);
+                            return;
+                        }
                         setTimeout(() => {
                             const welcomeScreen = document.getElementById('welcome-intro-screen');
                             welcomeScreen.style.opacity = '0';
@@ -3388,7 +3419,12 @@
                     }
                     transitionToWorkspace();
                 } else {
-                    showToast(data.detail || 'Google sign-in failed. Please try again.', 'error');
+                    const detail = String(data.detail || 'Google sign-in failed. Please try again.');
+                    if (resp.status === 403 && detail.toLowerCase().includes('unusual username')) {
+                        showAccountRemovalNotice(detail);
+                    } else {
+                        showToast(detail, 'error');
+                    }
                 }
             } catch (err) {
                 console.error('Google sign-in error:', err);
@@ -3476,6 +3512,10 @@
                 } else {
                     const errData = await resp.json().catch(() => ({}));
                     const errMsg = errData.detail || 'Backend authentication failed. Please try again.';
+                    if (resp.status === 403 && String(errMsg).toLowerCase().includes('unusual username')) {
+                        showAccountRemovalNotice(errMsg);
+                        return;
+                    }
                     showToast(errMsg, 'error');
                     setLoginIdentityHint(errMsg, 'error');
                 }
@@ -3582,6 +3622,7 @@
             showToast(loginResult.greeting);
             loadRecentSessions();
             initDragAndDrop();
+            startAccountStatusWatch();
         }
 
 
@@ -4454,6 +4495,14 @@
                     loadRecentSessions();
                 } else if (resp.status === 429) {
                     appendMessage("⚠️ Rate limit reached (too many requests in a short time). Please wait a few seconds and try again.", 'ai', currentMode);
+                } else if (resp.status === 403) {
+                    const errData = await resp.json().catch(() => ({}));
+                    const detail = typeof errData.detail === 'string' ? errData.detail : '';
+                    if (detail && detail.toLowerCase().includes('unusual username')) {
+                        showAccountRemovalNotice(detail);
+                    } else {
+                        appendMessage(detail || "Access denied. Please sign in again.", 'ai', currentMode);
+                    }
                 } else if (resp.status === 401) {
                     showToast("Session expired. Please sign in again.", "error");
                     logoutApp();
@@ -6027,7 +6076,7 @@
                     renderAnalyticsUsers(currentAnalyticsUsers);
                 } else {
                     const tb = document.getElementById('au-users-table-body');
-                    if (tb) tb.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-rose-500 text-xs">Could not load registered users.</td></tr>';
+                    if (tb) tb.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-rose-500 text-xs">Could not load registered users.</td></tr>';
                 }
 
                 if (visitorsRes.ok) {
@@ -6400,24 +6449,88 @@
             if (pill) pill.textContent = rows.length + ' / ' + all.length;
 
             if (rows.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">${all.length === 0 ? 'No registered users yet.' : 'No match for your search.'}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 text-xs">${all.length === 0 ? 'No registered users yet.' : 'No match for your search.'}</td></tr>`;
                 return;
             }
             tableBody.innerHTML = rows.map(u => {
                 const email = u.email || '—';
                 const isGuest = email.endsWith('@guest.alumni.ai');
                 const joined = u.created_at ? String(u.created_at).slice(0, 10) : '—';
+                const isRemoved = Boolean(u.account_removed || u.removed_at);
+                const isSuspicious = Boolean(u.suspicious);
                 const methodTag = isGuest
                     ? '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500">guest</span>'
                     : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${u.login_method === 'google' ? 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'}">${escapeHTML(u.login_method || 'password')}</span>`;
+                const nameBadge = isRemoved
+                    ? '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">removed</span>'
+                    : (isSuspicious
+                        ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300" title="${escapeHTML(u.suspicious_reason || 'Suspicious username')}">suspicious</span>`
+                        : '');
+                let actionCell = '<span class="text-[10px] text-slate-300 dark:text-slate-700">-</span>';
+                if (isRemoved) {
+                    const removedAt = u.removed_at ? String(u.removed_at).slice(0, 10) : '';
+                    actionCell = `<span class="text-[10px] font-bold text-rose-600 dark:text-rose-400" title="Access removed ${escapeHTML(removedAt)}">Removed</span>`;
+                } else if (isSuspicious) {
+                    actionCell = `<button type="button"
+                        data-remove-user-id="${escapeHTML(u.id)}"
+                        data-remove-username="${escapeHTML(u.username || '')}"
+                        onclick="removeSuspiciousUser(this)"
+                        class="px-2.5 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold hover:bg-rose-200 dark:hover:bg-rose-900/60 transition active:scale-95">
+                        Remove
+                    </button>`;
+                }
                 return `
                 <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 text-xs transition">
                     <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200 truncate max-w-[210px]" title="${escapeHTML(email)}">${escapeHTML(email)}</td>
-                    <td class="py-2 px-3 font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[110px]">${escapeHTML(u.username || '—')}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-600 dark:text-slate-300 truncate max-w-[150px]">${escapeHTML(u.username || '—')}${nameBadge}</td>
                     <td class="py-2 px-3">${methodTag}</td>
                     <td class="py-2 px-3 font-mono text-slate-400 text-[11px]">${escapeHTML(joined)}</td>
+                    <td class="py-2 px-3 text-right">${actionCell}</td>
                 </tr>`;
             }).join('');
+        }
+
+        async function removeSuspiciousUser(button) {
+            if (!currentUser || !currentUser.isTeamAlum) {
+                showToast('Access restricted: Team Alum Founders only.', 'error');
+                return;
+            }
+            const userId = button && button.dataset ? button.dataset.removeUserId : '';
+            const username = button && button.dataset ? button.dataset.removeUsername : '';
+            if (!userId || !username) return;
+
+            const warning = 'We have detected an unusual username, so we have removed your account. Please try using other proper human names. Truly, Team Alum';
+            const confirmed = window.confirm(
+                `Remove access for "${username}"?\n\n` +
+                `They will see this warning on their chatbot screen:\n"${warning}"\n\n` +
+                'Historical chats and records are preserved.'
+            );
+            if (!confirmed) return;
+
+            button.disabled = true;
+            button.classList.add('opacity-50', 'pointer-events-none');
+            try {
+                const resp = await fetch(`/api/analytics/users/${encodeURIComponent(userId)}/remove`, {
+                    method: 'POST',
+                    headers: Object.assign({ 'Content-Type': 'application/json' }, getAuthHeaders()),
+                    body: JSON.stringify({ confirm_username: username })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok) {
+                    const msg = data.detail || 'Could not remove this account.';
+                    showToast(msg, 'error');
+                    button.disabled = false;
+                    button.classList.remove('opacity-50', 'pointer-events-none');
+                    return;
+                }
+                showToast(`Access removed for ${username}. Their history is preserved.`, 'success');
+                await refreshAnalyticsData();
+            } catch (err) {
+                console.error('Remove suspicious user failed:', err);
+                showToast('Could not reach the server to remove this account.', 'error');
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'pointer-events-none');
+            }
         }
 
         const CAMPAIGN_TEMPLATES = {
@@ -6692,7 +6805,71 @@
         }
 
 
+        // ---- Account removal notice (founder review action) ----
+        const ACCOUNT_REMOVAL_FALLBACK = "We have detected an unusual username, so we have removed your account. Please try using other proper human names. Truly, Team Alum";
+        let _accountStatusTimer = null;
+
+        function showAccountRemovalNotice(message) {
+            stopAccountStatusWatch();
+            const modal = document.getElementById('account-removed-notice');
+            const messageEl = document.getElementById('account-removed-message');
+            if (messageEl) messageEl.textContent = message || ACCOUNT_REMOVAL_FALLBACK;
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            if (currentUser) {
+                currentUser.token = '';
+                currentUser.isTeamAlum = false;
+            }
+            localStorage.removeItem('alumni_token');
+            localStorage.removeItem('alumni_current_user');
+        }
+
+        function acknowledgeAccountRemoval() {
+            const modal = document.getElementById('account-removed-notice');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            logoutApp();
+        }
+
+        function stopAccountStatusWatch() {
+            if (_accountStatusTimer) {
+                clearInterval(_accountStatusTimer);
+                _accountStatusTimer = null;
+            }
+        }
+
+        async function checkAccountStatus() {
+            if (!currentUser || !currentUser.token) return;
+            try {
+                const resp = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (data.account_removed) {
+                    showAccountRemovalNotice(data.removal_warning);
+                }
+            } catch (err) {
+                // A transient network error must not interrupt the workspace.
+            }
+        }
+
+        function startAccountStatusWatch() {
+            stopAccountStatusWatch();
+            if (!currentUser || !currentUser.token) return;
+            _accountStatusTimer = setInterval(checkAccountStatus, 15000);
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible' && currentUser && currentUser.token) {
+                checkAccountStatus();
+            }
+        });
+
         async function logoutApp() {
+            stopAccountStatusWatch();
             closeSettingsModal();
             try {
                 await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });

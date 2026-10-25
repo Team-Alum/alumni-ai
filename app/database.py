@@ -61,6 +61,7 @@ def _pg_schema_ready(cursor) -> bool:
             AND to_regclass('public.analytics_events') IS NOT NULL
             AND to_regclass('public.user_memories') IS NOT NULL
             AND to_regclass('public.visitor_events') IS NOT NULL
+            AND to_regclass('public.account_removals') IS NOT NULL
             AND EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_analytics_created')
             AND EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_analytics_user')
             AND EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'idx_analytics_provider')
@@ -161,6 +162,21 @@ def init_db():
                 visitor_key TEXT NOT NULL,
                 path TEXT DEFAULT '/',
                 created_at TEXT NOT NULL
+            );
+        """)
+        # Removing access is a soft removal: the user row, sessions, messages
+        # and analytics history stay intact, while this table records the
+        # warning and blocks every authenticated endpoint except /auth/me.
+        _exec(cursor, """
+            CREATE TABLE IF NOT EXISTS account_removals (
+                user_id TEXT PRIMARY KEY,
+                reason TEXT DEFAULT 'suspicious_username',
+                warning TEXT NOT NULL,
+                removed_by TEXT,
+                removed_at TEXT NOT NULL,
+                username_snapshot TEXT,
+                email_snapshot TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             );
         """)
 
@@ -273,6 +289,72 @@ def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
+
+def get_account_removal(user_id: str) -> Optional[Dict[str, Any]]:
+    """Return the soft-removal record for an account, if it has one."""
+    if not user_id:
+        return None
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "SELECT * FROM account_removals WHERE user_id = %s", (user_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+
+def remove_user_access(
+    user_id: str,
+    removed_by: str,
+    warning: str,
+    reason: str = "suspicious_username",
+) -> Dict[str, Any]:
+    """Record a soft removal without deleting any historical data.
+
+    The auth token intentionally remains readable by ``/api/auth/me`` so the
+    removed person can see the warning on their next visit. Every other
+    authenticated endpoint is blocked by ``app.security.get_current_user``.
+    """
+    now = datetime.utcnow().isoformat()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor, "SELECT * FROM users WHERE id = %s", (user_id,))
+        target = cursor.fetchone()
+        if not target:
+            return {}
+        target = dict(target)
+
+        _exec(cursor, "SELECT user_id FROM account_removals WHERE user_id = %s", (user_id,))
+        existing = cursor.fetchone()
+        if existing:
+            _exec(cursor, """
+                UPDATE account_removals
+                SET reason = %s, warning = %s, removed_by = %s, removed_at = %s,
+                    username_snapshot = %s, email_snapshot = %s
+                WHERE user_id = %s
+            """, (
+                reason, warning, removed_by, now,
+                target.get("username"), target.get("email"), user_id,
+            ))
+        else:
+            _exec(cursor, """
+                INSERT INTO account_removals (
+                    user_id, reason, warning, removed_by, removed_at,
+                    username_snapshot, email_snapshot
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                user_id, reason, warning, removed_by, now,
+                target.get("username"), target.get("email"),
+            ))
+        conn.commit()
+        return {
+            "user_id": user_id,
+            "reason": reason,
+            "warning": warning,
+            "removed_by": removed_by,
+            "removed_at": now,
+            "username": target.get("username"),
+            "email": target.get("email"),
+        }
+
 def get_users_by_email(email: str) -> List[Dict[str, Any]]:
     if not email:
         return []
@@ -331,8 +413,13 @@ def get_user_by_token(token: str) -> Optional[Dict[str, Any]]:
     with get_connection() as conn:
         cursor = conn.cursor()
         _exec(cursor, """
-            SELECT u.* FROM users u
+            SELECT u.*,
+                   ar.removed_at AS account_removed_at,
+                   ar.reason AS account_removal_reason,
+                   ar.warning AS account_removal_warning
+            FROM users u
             JOIN auth_tokens t ON u.id = t.user_id
+            LEFT JOIN account_removals ar ON ar.user_id = u.id
             WHERE t.token = %s AND t.created_at >= %s
         """, (token, cutoff))
         row = cursor.fetchone()
@@ -615,9 +702,14 @@ def get_users_admin() -> Dict[str, Any]:
         cursor = conn.cursor()
 
         _exec(cursor, """
-            SELECT id, username, email, login_method, is_team_alum, created_at
-            FROM users
-            ORDER BY created_at DESC
+            SELECT u.id, u.username, u.email, u.login_method, u.is_team_alum,
+                   u.created_at,
+                   ar.removed_at AS removed_at,
+                   ar.reason AS removal_reason,
+                   ar.warning AS removal_warning
+            FROM users u
+            LEFT JOIN account_removals ar ON ar.user_id = u.id
+            ORDER BY u.created_at DESC
         """)
         users = [dict(r) for r in cursor.fetchall()]
 
@@ -643,6 +735,7 @@ def get_users_admin() -> Dict[str, Any]:
         guests = sum(1 for u in users if (u.get("email") or "").endswith("@guest.alumni.ai"))
         email_accounts = total - guests
         new_this_month = sum(1 for u in users if (u.get("created_at") or "").startswith(this_month))
+        removed = sum(1 for u in users if u.get("removed_at"))
 
     return {
         "users": users,
@@ -653,6 +746,7 @@ def get_users_admin() -> Dict[str, Any]:
             "email_accounts": email_accounts,
             "guests": guests,
             "new_this_month": new_this_month,
+            "removed": removed,
             "current_month": this_month
         }
     }

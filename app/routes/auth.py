@@ -1,12 +1,13 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
 from app.models import LoginRequest, UserResponse
 from app.database import (
     save_user,
+    get_account_removal,
     get_users_by_email,
     get_users_by_username,
     username_exists,
@@ -16,6 +17,7 @@ from app.database import (
     password_needs_rehash,
 )
 from app.identity import (
+    ACCOUNT_REMOVAL_WARNING,
     GUEST_NAME_MAX,
     NAME_MAX,
     derive_display_name,
@@ -23,7 +25,7 @@ from app.identity import (
     synthetic_email_for_name,
     validate_display_name,
 )
-from app.security import get_current_user
+from app.security import get_token_user
 from app.config import GOOGLE_CLIENT_ID, is_admin_email
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -81,6 +83,15 @@ def _create_guest_account(raw_name: Optional[str]) -> dict:
 def _is_founder_email(email: str) -> bool:
     # Delegates to the central allowlist (ADMIN_EMAILS + @team.alum domain).
     return is_admin_email(email)
+
+
+def _raise_if_removed(user_id: str) -> None:
+    removal = get_account_removal(user_id)
+    if removal:
+        raise HTTPException(
+            status_code=403,
+            detail=removal.get("warning") or ACCOUNT_REMOVAL_WARNING,
+        )
 
 
 @router.get("/config")
@@ -161,6 +172,7 @@ def google_oauth_login(payload: GoogleCredentialRequest):
     adjusted = False
 
     if existing:
+        _raise_if_removed(existing["id"])
         user_id = existing["id"]
         # Google proves mailbox ownership. Clear any legacy password so a
         # password login can never be used against a Google account.
@@ -298,6 +310,7 @@ def login_user(payload: LoginRequest):
                 detail="Incorrect password for this account. Please try again.",
             )
 
+        _raise_if_removed(existing_user["id"])
         user_id = existing_user["id"]
         username_final = existing_user["username"]
         email_final = existing_user["email"]
@@ -396,13 +409,23 @@ def login_user(payload: LoginRequest):
 
 
 @router.get("/me")
-def get_me(user: dict = Depends(get_current_user)):
+def get_me(authorization: Optional[str] = Header(None)):
+    user = get_token_user(authorization)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired session. Please sign in again.",
+        )
+    removed = bool(user.get("account_removed_at"))
     return {
         "id": user["id"],
         "username": user["username"],
         "email": user["email"],
         "login_method": user["login_method"],
-        "is_team_alum": bool(user["is_team_alum"]),
+        "is_team_alum": bool(is_admin_email(user.get("email"))),
+        "account_removed": removed,
+        "removal_warning": (user.get("account_removal_warning") or ACCOUNT_REMOVAL_WARNING) if removed else "",
+        "removed_at": user.get("account_removed_at") or "",
     }
 
 

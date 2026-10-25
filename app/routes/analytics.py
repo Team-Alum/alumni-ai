@@ -1,17 +1,21 @@
 import time as _time
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from fastapi import Body
 from app.models import AnalyticsSummaryResponse, AnalyticsEventItem
 from app.database import (
     get_analytics_summary,
+    get_account_removal,
     get_recent_analytics_events,
+    get_user_by_id,
     get_users_admin,
     get_visitor_stats,
-    record_visitor
+    record_visitor,
+    remove_user_access,
 )
 from app.security import get_current_user
 from app.config import is_admin_email
+from app.identity import ACCOUNT_REMOVAL_WARNING, detect_suspicious_name
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics & Usage Analysis"])
 
@@ -57,7 +61,82 @@ async def get_registered_users(user: dict = Depends(get_current_user)):
     breakdown for welcome/offer email campaigns. Founders only.
     """
     verify_team_alum_founder(user)
-    return get_users_admin()
+    data = get_users_admin()
+    suspicious_count = 0
+    for item in data.get("users", []):
+        reason = detect_suspicious_name(item.get("username"))
+        item["suspicious"] = bool(reason)
+        item["suspicious_reason"] = reason or ""
+        item["account_removed"] = bool(item.get("removed_at"))
+        if reason and not item["account_removed"]:
+            suspicious_count += 1
+    data.setdefault("totals", {})["suspicious"] = suspicious_count
+    return data
+
+
+@router.post("/users/{user_id}/remove")
+async def remove_suspicious_user(
+    user_id: str,
+    payload: Optional[dict] = Body(default=None),
+    user: dict = Depends(get_current_user),
+):
+    """Soft-remove a suspicious account and record the chatbot warning.
+
+    Founder-only. Historical rows are preserved; the removed account loses
+    access to every API except /api/auth/me, which returns the warning.
+    """
+    verify_team_alum_founder(user)
+
+    target = get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="Account not found.")
+
+    if target["id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="You cannot remove your own admin account.")
+
+    if is_admin_email(target.get("email")):
+        raise HTTPException(status_code=403, detail="Admin and founder accounts cannot be removed here.")
+
+    suspicious_reason = detect_suspicious_name(target.get("username"))
+    if not suspicious_reason:
+        raise HTTPException(
+            status_code=400,
+            detail="This account is not flagged as a suspicious username. No account was removed.",
+        )
+
+    expected_name = (target.get("username") or "").strip()
+    confirm_name = str((payload or {}).get("confirm_username") or "").strip()
+    if confirm_name.casefold() != expected_name.casefold():
+        raise HTTPException(
+            status_code=400,
+            detail="Type the exact username to confirm this removal.",
+        )
+
+    existing = get_account_removal(user_id)
+    if existing:
+        return {
+            "status": "already_removed",
+            "user_id": user_id,
+            "username": expected_name,
+            "warning": existing.get("warning") or ACCOUNT_REMOVAL_WARNING,
+            "removed_at": existing.get("removed_at"),
+            "data_preserved": True,
+        }
+
+    record = remove_user_access(
+        user_id=user_id,
+        removed_by=user["id"],
+        warning=ACCOUNT_REMOVAL_WARNING,
+        reason=suspicious_reason,
+    )
+    return {
+        "status": "removed",
+        "user_id": user_id,
+        "username": record.get("username") or expected_name,
+        "warning": ACCOUNT_REMOVAL_WARNING,
+        "removed_at": record.get("removed_at"),
+        "data_preserved": True,
+    }
 
 @router.get("/visitors")
 async def get_visitors(user: dict = Depends(get_current_user)):

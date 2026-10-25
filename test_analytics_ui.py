@@ -93,6 +93,10 @@ def test_analytics_and_ui():
     assert 'id="analytics-daily-chart"' in html, "Missing #analytics-daily-chart"
     assert 'id="analytics-success-rate"' in html, "Missing #analytics-success-rate"
     assert 'id="analytics-last-updated"' in html, "Missing #analytics-last-updated"
+    assert 'id="account-removed-notice"' in html, "Missing removal warning overlay"
+    assert 'removeSuspiciousUser' in html, "Missing admin removal action"
+    assert 'data-remove-user-id' in html, "Missing per-user review button data"
+    assert html.count('colspan="5"') >= 2, "Users table must expose the review column"
     assert "Engine Uptime &amp; Integrity" not in html and "Engine Uptime & Integrity" not in html, \
         "Fake engine-uptime panel is still present in the overview"
     # Regression guard: analytics renderers must call the real escapeHTML() helper

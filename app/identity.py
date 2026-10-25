@@ -48,6 +48,70 @@ _KEYBOARD_FRAGMENTS = (
     "qwerty", "asdf", "zxcv", "hjkl", "uiop", "poiu", "lkjh", "mnbv",
     "qazwsx", "wsxedc", "edcrfv", "rfvtgb", "tgbyhn", "yhnujm", "abcdef",
 )
+
+# Names that describe a device, a test run, or an anonymous session rather
+# than a person. These are also used to flag legacy rows in the admin panel,
+# so the list deliberately covers the common "checking system", "tester",
+# "mobile device" style names seen in production.
+_SUSPICIOUS_TOKENS = {
+    "admin", "administrator", "android", "anonymous", "api", "automated",
+    "automation", "bot", "browser", "checker", "checking", "computer",
+    "crawler", "debug", "desktop", "device", "dummy", "emulator", "fake",
+    "guest", "ipad", "iphone", "laptop", "linux", "login", "mobile",
+    "noname", "phone", "placeholder", "qa", "robot", "root", "script",
+    "server", "signup", "simulator", "smartphone", "system", "tablet",
+    "temp", "temporary", "test", "tester", "testing", "unknown", "user",
+    "username", "visitor", "windows",
+}
+_SUSPICIOUS_COMPACT = {
+    "androiddevice", "anonymoususer", "checkingaccount", "checkingsystem",
+    "deviceuser", "emulatoruser", "guestuser", "iphonedevice",
+    "mobiledevice", "mobilephone", "newuser", "qabot", "systemuser",
+    "testaccount", "testeraccount", "testuser", "virtualdevice",
+    "windowsdevice",
+}
+_SUSPICIOUS_GENERIC_TOKENS = {
+    "another", "anonymous", "device", "dummy", "fake", "guest", "human",
+    "mobile", "name", "new", "person", "proper", "random", "real", "scholar",
+    "some", "student", "system", "test", "testing", "unknown", "unusual",
+    "user", "account",
+}
+
+ACCOUNT_REMOVAL_WARNING = (
+    "We have detected an unusual username, so we have removed your account. "
+    "Please try using other proper human names. Truly, Team Alum"
+)
+
+
+def detect_suspicious_name(raw: Optional[str]) -> Optional[str]:
+    """Return a short reason when a name looks automated/anonymous.
+
+    ``None`` means no suspicious signal was found. The check is intentionally
+    independent of :func:`validate_display_name` so the admin panel can flag
+    legacy rows that were created before these rules existed.
+    """
+    value = unicodedata.normalize("NFKC", (raw or "")).strip()
+    if not value:
+        return None
+
+    compact = _compact(value)
+    if compact and compact in _SUSPICIOUS_COMPACT:
+        return "system or device style name"
+
+    # Split camelCase / PascalCase before tokenizing so "MobileDevice" and
+    # "checkingSystem" are caught as well as "mobile device".
+    spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
+    tokens = [
+        token.casefold()
+        for token in re.split(r"[\W_]+", spaced, flags=re.UNICODE)
+        if token
+    ]
+    for token in tokens:
+        if token in _SUSPICIOUS_TOKENS:
+            return f"contains the non-name word '{token}'"
+    if tokens and all(token in _SUSPICIOUS_GENERIC_TOKENS for token in tokens):
+        return "only generic placeholder words"
+    return None
 _PARTICLES = {
     "van", "von", "der", "den", "de", "da", "del", "della", "bin", "ibn",
     "al", "el", "la", "le", "di", "du", "st",
@@ -179,6 +243,9 @@ def validate_display_name(
         return None, "reserved", "That name belongs to the Team Alum crew — could you pick a different one for yourself?"
     if compact in _PLACEHOLDER_COMPACT:
         return None, "placeholder", "Please use the name you'd like us to greet you by — not a placeholder."
+    suspicious_reason = detect_suspicious_name(value)
+    if suspicious_reason:
+        return None, "suspicious", "Please use a proper human name - this looks like a system, device, test, or anonymous name."
     if any(fragment in compact for fragment in _KEYBOARD_FRAGMENTS):
         return None, "not_name", "That doesn't look like a human name — could you use your real name?"
     if len(set(compact)) < 2:
