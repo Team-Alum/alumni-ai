@@ -16,13 +16,16 @@ app = FastAPI(
     redoc_url="/redoc" if DEBUG else None
 )
 
-# CORS setup
+# CORS setup. Authentication uses a bearer token (not cookies), so credentials
+# are intentionally disabled: a wildcard origin plus credentials is unsafe and
+# unnecessary for this same-origin app.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=600,
 )
 
 # Keep HTML fresh, but let browsers reuse static artwork/fonts between visits.

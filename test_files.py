@@ -2,9 +2,10 @@ import asyncio
 import base64
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import get_messages_by_session
+from app.database import get_messages_by_session, init_db
 import fitz
 
+init_db()
 client = TestClient(app)
 
 def test_file_extract_and_chat_attachment():
@@ -24,11 +25,11 @@ def test_file_extract_and_chat_attachment():
 
     # 2. Login to get token
     login_res = client.post("/api/auth/login", json={
-        "username": "CodeTester",
-        "email": "codetester@team.alum",
+        "username": "Code Tester",
+        "email": "codetester@example.com",
         "password": "pass1234Secure",
-        "login_method": "alum",
-        "is_team_alum": True
+        "login_method": "email",
+        "is_team_alum": False
     })
     assert login_res.status_code == 200, f"Login failed: {login_res.text}"
     token = login_res.json()["token"]

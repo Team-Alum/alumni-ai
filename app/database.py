@@ -1,4 +1,7 @@
+import hashlib
+import hmac
 import os
+import re
 import sqlite3
 import secrets
 from contextlib import contextmanager
@@ -7,6 +10,13 @@ from datetime import datetime, timedelta
 from app.config import DB_PATH, DATABASE_URL
 
 _IS_PG = DATABASE_URL.startswith(("postgres://", "postgresql://"))
+
+# Password hashing is intentionally versioned so old hashes can be verified and
+# transparently upgraded on the next successful login.
+_PBKDF2_ALGORITHM = "pbkdf2_sha256"
+_PBKDF2_ITERATIONS = 260_000
+_LEGACY_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+AUTH_TOKEN_TTL_DAYS = 90
 
 
 @contextmanager
@@ -165,15 +175,50 @@ def init_db():
 
 
 def hash_password(password: str) -> str:
-    import hashlib
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    """PBKDF2-HMAC-SHA256 with a per-user random salt."""
+    if not password:
+        raise ValueError("password must not be empty")
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS
+    )
+    return (
+        f"{_PBKDF2_ALGORITHM}${_PBKDF2_ITERATIONS}"
+        f"${salt.hex()}${digest.hex()}"
+    )
+
 
 def verify_password(stored_hash: Optional[str], provided_password: Optional[str]) -> bool:
-    if not stored_hash:
-        return True
-    if not provided_password:
+    """Verify current hashes and the legacy unsalted SHA-256 format.
+
+    A missing stored hash is *not* a valid password. Callers must explicitly
+    handle passwordless (Google/guest) accounts.
+    """
+    if not stored_hash or not provided_password:
         return False
-    return hash_password(provided_password) == stored_hash
+
+    stored = str(stored_hash).strip()
+    try:
+        if stored.startswith(f"{_PBKDF2_ALGORITHM}$"):
+            _, iterations, salt_hex, digest_hex = stored.split("$", 3)
+            digest = hashlib.pbkdf2_hmac(
+                "sha256",
+                provided_password.encode("utf-8"),
+                bytes.fromhex(salt_hex),
+                int(iterations),
+            )
+            return hmac.compare_digest(digest.hex(), digest_hex)
+        if _LEGACY_SHA256_RE.match(stored):
+            legacy = hashlib.sha256(provided_password.encode("utf-8")).hexdigest()
+            return hmac.compare_digest(legacy, stored)
+    except (TypeError, ValueError):
+        return False
+    return False
+
+
+def password_needs_rehash(stored_hash: Optional[str]) -> bool:
+    return bool(stored_hash) and not str(stored_hash).startswith(f"{_PBKDF2_ALGORITHM}$")
+
 
 def save_user(
     user_id: str,
@@ -181,7 +226,8 @@ def save_user(
     email: str,
     login_method: str,
     is_team_alum: bool,
-    password: Optional[str] = None
+    password: Optional[str] = None,
+    clear_password: bool = False,
 ) -> Dict[str, Any]:
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -195,6 +241,11 @@ def save_user(
                 _exec(cursor,
                     "UPDATE users SET username = %s, email = %s, login_method = %s, is_team_alum = %s, password_hash = %s WHERE id = %s",
                     (username, email, login_method, 1 if is_team_alum else 0, pwd_hash, user_id)
+                )
+            elif clear_password:
+                _exec(cursor,
+                    "UPDATE users SET username = %s, email = %s, login_method = %s, is_team_alum = %s, password_hash = NULL WHERE id = %s",
+                    (username, email, login_method, 1 if is_team_alum else 0, user_id)
                 )
             else:
                 _exec(cursor,
@@ -222,14 +273,31 @@ def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+def get_users_by_email(email: str) -> List[Dict[str, Any]]:
     if not email:
-        return None
+        return []
     with get_connection() as conn:
         cursor = conn.cursor()
         _exec(cursor, "SELECT * FROM users WHERE LOWER(email) = LOWER(%s)", (email.strip(),))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        return [dict(r) for r in cursor.fetchall()]
+
+def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    users = get_users_by_email(email)
+    return users[0] if users else None
+
+def get_users_by_username(username: str) -> List[Dict[str, Any]]:
+    if not username:
+        return []
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        _exec(cursor,
+            "SELECT * FROM users WHERE LOWER(username) = LOWER(%s)",
+            (username.strip(),)
+        )
+        return [dict(r) for r in cursor.fetchall()]
+
+def username_exists(username: str) -> bool:
+    return bool(get_users_by_username(username))
 
 def get_user_by_email_or_username(identifier: str) -> Optional[Dict[str, Any]]:
     if not identifier:
@@ -259,13 +327,14 @@ def create_auth_token(user_id: str) -> str:
 def get_user_by_token(token: str) -> Optional[Dict[str, Any]]:
     if not token:
         return None
+    cutoff = (datetime.utcnow() - timedelta(days=AUTH_TOKEN_TTL_DAYS)).isoformat()
     with get_connection() as conn:
         cursor = conn.cursor()
         _exec(cursor, """
             SELECT u.* FROM users u
             JOIN auth_tokens t ON u.id = t.user_id
-            WHERE t.token = %s
-        """, (token,))
+            WHERE t.token = %s AND t.created_at >= %s
+        """, (token, cutoff))
         row = cursor.fetchone()
         return dict(row) if row else None
 

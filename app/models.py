@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     login_method: str
     is_team_alum: bool
     token: str
+    name_adjusted: bool = False
 
 class FileAttachment(BaseModel):
     name: str

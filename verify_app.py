@@ -109,10 +109,10 @@ def verify_all():
     r_guest_noname = client.post("/api/auth/guest", json={})
     assert r_guest_noname.status_code == 400, \
         f"Guest login without a name must be refused, got {r_guest_noname.status_code}"
-    r_guest_direct = client.post("/api/auth/guest", json={"username": "Guest Scholar"})
+    r_guest_direct = client.post("/api/auth/guest", json={"username": "Aarav Sharma"})
     assert r_guest_direct.status_code == 200, f"Guest direct login failed: {r_guest_direct.text}"
     u_guest = r_guest_direct.json()
-    assert u_guest["username"] == "Guest Scholar", u_guest["username"]
+    assert u_guest["username"] == "Aarav Sharma", u_guest["username"]
     assert u_guest["login_method"] == "guest"
     assert u_guest["email"].endswith("@guest.alumni.ai")
     assert u_guest["is_team_alum"] is False
@@ -133,7 +133,7 @@ def verify_all():
     # 4e. Guest Login via /api/auth/login payload (client email is ignored)
     r_guest_route = client.post("/api/auth/login", json={
         "login_method": "guest",
-        "username": "Guest Route",
+        "username": "Mira Patel",
         "email": "teamalumorg@gmail.com"
     })
     assert r_guest_route.status_code == 200
@@ -144,7 +144,7 @@ def verify_all():
     print(f"Guest Route Login [OK]: Authenticated as '{u_guest2['username']}' ({u_guest2['email']})")
 
     r_auth2 = client.post("/api/auth/login", json={
-        "username": "alex_coder",
+        "username": "Alex Coder",
         "email": "alex@alumni.ai",
         "password": "AlexUserPassword99!",
         "login_method": "username",

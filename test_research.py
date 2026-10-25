@@ -1,8 +1,10 @@
 import asyncio
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database import init_db
 
 def test_research_pipeline():
+    init_db()
     client = TestClient(app)
 
     # 1. Reject unauthenticated access

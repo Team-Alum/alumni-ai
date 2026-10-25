@@ -1,29 +1,39 @@
 import asyncio
+import uuid
 from fastapi.testclient import TestClient
 from app.main import app
 from app.services.voice_service import process_voice_query
+from app.database import init_db, save_user
 
+init_db()
 client = TestClient(app)
 
 
 def _get_admin_token() -> str:
-    """Password login when available; otherwise mint a session token for the
-    allowlisted founder account (Google-only accounts cannot password-login)."""
+    """Seed the allowlisted founder locally, then exercise password login.
+
+    Production founder accounts are Google-only. The test suite uses a local
+    throwaway database, so seeding one allowlisted row here is safe and keeps
+    the analytics access-control path realistic.
+    """
+    founder_email = "sudarshan.deve@gmail.com"
+    save_user(
+        user_id=str(uuid.uuid5(uuid.NAMESPACE_DNS, founder_email)),
+        username="Sudarshan Hadmode",
+        email=founder_email,
+        login_method="alum",
+        is_team_alum=True,
+        password="superSafePassword123",
+    )
     login_res = client.post("/api/auth/login", json={
-        "username": "FounderSudarshan",
-        "email": "sudarshan.deve@gmail.com",
+        "username": "Sudarshan Hadmode",
+        "email": founder_email,
         "password": "superSafePassword123",
         "login_method": "alum",
         "is_team_alum": True
     })
-    if login_res.status_code == 200:
-        return login_res.json()["token"]
-
-    from app.database import get_user_by_email, create_auth_token
-    user = (get_user_by_email("sudarshan.deve@gmail.com")
-            or get_user_by_email("teamalumorg@gmail.com"))
-    assert user, "No allowlisted founder account found in the database"
-    return create_auth_token(user["id"])
+    assert login_res.status_code == 200, login_res.text
+    return login_res.json()["token"]
 
 
 def test_analytics_and_ui():

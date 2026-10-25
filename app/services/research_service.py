@@ -1,3 +1,4 @@
+import html
 import re
 import urllib.parse
 import httpx
@@ -139,6 +140,60 @@ async def gather_web_research(query: str, depth: str = "deep", max_results: int 
         "total_sources": len(sources)
     }
 
+def _clean_source_text(value: str) -> str:
+    text = html.unescape(value or "")
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def _is_usable_research_answer(text: str) -> bool:
+    stripped = re.sub(r"\s+", " ", (text or "")).strip()
+    if len(stripped) < 80:
+        return False
+    # Reject number-only or punctuation-only outputs such as "405.2.".
+    words = re.findall(r"[^\W\d_]{2,}", stripped, flags=re.UNICODE)
+    return len(words) >= 10
+
+
+def _source_grounded_research_brief(query: str, research_data: Dict[str, Any]) -> str:
+    """Deterministic, citation-backed brief used when live synthesis is absent.
+
+    This is intentionally transparent: it quotes the gathered evidence and
+    labels itself as an extractive brief instead of pretending an unavailable
+    model produced it.
+    """
+    sources = research_data.get("sources") or []
+    bullets: List[str] = []
+    for index, source in enumerate(sources[:4], 1):
+        snippet = _clean_source_text(source.get("snippet", ""))
+        if not snippet:
+            continue
+        if len(snippet) > 240:
+            snippet = snippet[:237].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
+        domain = source.get("domain") or "web"
+        bullets.append(f"- **[{index}] {domain}** — {snippet}")
+
+    if not bullets:
+        return (
+            f"I gathered sources for **{query}**, but none contained enough readable "
+            "text to quote safely. Please retry with a narrower question, or open the "
+            "source list to inspect the pages directly."
+        )
+
+    return (
+        f"Here is a source-grounded overview of **{query}**.\n\n"
+        + "\n".join(bullets)
+        + "\n\n**What to take away:** The sources point to a landscape that is moving "
+        "quickly, so the right choice depends on your use case, ecosystem maturity, "
+        "deployment constraints, and how much control you need. Compare the cited "
+        "pages directly before committing to a specific tool or version.\n\n"
+        "**Note:** Live model synthesis was unavailable for this request, so this is "
+        "an extractive brief built only from the sources above. Verify version-specific "
+        "or benchmark claims against the linked pages."
+    )
+
+
 async def synthesize_research_with_first_api(
     query: str,
     research_data: Dict[str, Any],
@@ -171,6 +226,9 @@ async def synthesize_research_with_first_api(
 
     clean_content = clean_ai_response(str(ai_resp))
     provider = getattr(ai_resp, "provider", "opencode_zen")
+    if provider == "offline_brain" or not _is_usable_research_answer(clean_content):
+        clean_content = _source_grounded_research_brief(query, research_data)
+        provider = f"{provider}_research_brief"
     return clean_content, provider
 
 def generate_suggested_questions(query: str, answer: str, mode: str = "professional") -> List[str]:

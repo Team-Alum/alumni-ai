@@ -294,6 +294,53 @@
             color: #38bdf8;
         }
 
+        /* Identity / login polish */
+        .identity-status {
+            min-height: 1.05rem;
+            margin-top: 0.35rem;
+            padding-left: 0.25rem;
+            font-size: 10.5px;
+            line-height: 1.45;
+            font-weight: 600;
+            color: #64748b;
+            transition: color 0.15s ease;
+        }
+        .identity-status.ok { color: #0e7490; }
+        .identity-status.error { color: #b45309; }
+        .identity-status.checking { color: #64748b; }
+        html.dark .identity-status.ok { color: #67e8f9; }
+        html.dark .identity-status.error { color: #fbbf24; }
+        .password-toggle {
+            position: absolute;
+            right: 0.55rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 2.35rem;
+            height: 2.35rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.8rem;
+            border: 0;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        .password-toggle:hover { color: #0e7490; background: rgba(14, 116, 144, 0.08); }
+        .password-toggle:active { transform: translateY(-50%) scale(0.94); }
+        html.dark .password-toggle { color: #94a3b8; }
+        html.dark .password-toggle:hover { color: #67e8f9; background: rgba(103, 232, 249, 0.08); }
+        .clay-btn:focus-visible,
+        .clay-input:focus-visible,
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 2px solid #06b6d4;
+            outline-offset: 2px;
+        }
+
         /* Reduced Motion Accessibility */
         @media (prefers-reduced-motion: reduce) {
             *, ::before, ::after {
@@ -1363,49 +1410,77 @@
                     
                     <div class="mb-7 text-center md:text-left">
                         <h1 class="text-3xl lg:text-4xl font-black text-slate-700 mb-2 font-reveal" data-text="Alumni AI"></h1>
-                        <p class="text-slate-500 font-semibold text-lg font-reveal" data-text="Welcome back!"></p>
-                        <p class="text-xs text-slate-400 mt-1 font-reveal" data-text="Enter your credentials below"></p>
+                        <p class="text-slate-500 font-semibold text-lg font-reveal" data-text="Welcome to Alumni AI"></p>
+                        <p class="text-xs text-slate-400 mt-1 font-reveal" data-text="Sign in, or create your workspace on first visit"></p>
                     </div>
 
                     <form id="login-form" class="space-y-5" onsubmit="event.preventDefault(); handleClayFormLogin();">
                         
-                        <!-- Email / Workspace Account Input -->
+                        <!-- Email / Full Name Input -->
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1.5 pl-1 flex items-center justify-between">
-                                <span>Email Address <span class="text-cyan-600 font-semibold">(Workspace Account)</span></span>
-                                <span class="text-[10px] text-slate-400 font-normal">Saves all sessions & chats</span>
+                                <span>Email or full name</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Saves all sessions &amp; chats</span>
                             </label>
                             <input 
                                 type="text" 
                                 id="email" 
                                 class="clay-input w-full px-5 py-3.5 text-slate-700 font-medium placeholder-slate-400 text-xs" 
-                                placeholder="you@gmail.com or student@alumni.ai" 
-                                autocomplete="email"
+                                placeholder="you@gmail.com or Aarav Sharma"
+                                autocomplete="username"
+                                autocapitalize="words"
+                                spellcheck="false"
+                                aria-describedby="login-identity-hint"
                             >
-                            <p class="text-[10px] text-slate-400 mt-1 pl-1 flex items-center gap-1">
-                                <i class="fa-solid fa-cloud-arrow-up text-cyan-500 text-[10px]"></i> All sessions, chats & work are permanently linked to your email ID.
+                            <p id="login-identity-hint" class="identity-status" aria-live="polite"></p>
+                            <p class="text-[10px] text-slate-400 mt-0.5 pl-1 flex items-center gap-1">
+                                <i class="fa-solid fa-shield-halved text-cyan-500 text-[10px]"></i> New here? Your workspace is created securely on first sign-in.
                             </p>
+                        </div>
+
+                        <!-- Optional display name for email sign-ups -->
+                        <div id="display-name-wrap" class="hidden">
+                            <label for="display-name" class="block text-xs font-bold text-slate-500 mb-1.5 pl-1 flex items-center justify-between">
+                                <span>What should we call you?</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Optional</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="display-name"
+                                class="clay-input w-full px-5 py-3.5 text-slate-700 font-medium placeholder-slate-400 text-xs"
+                                placeholder="e.g. Aarav Sharma"
+                                autocomplete="name"
+                                maxlength="40"
+                                aria-describedby="display-name-hint"
+                            >
+                            <p id="display-name-hint" class="text-[10px] text-slate-400 mt-1 pl-1">Only needed if your email doesn't show your name. Letters, spaces, apostrophes, and hyphens work best.</p>
                         </div>
                         
                         <!-- Password Input -->
                         <div>
                             <div class="flex justify-between items-end mb-2 pl-1 pr-1">
-                                <label class="block text-xs font-bold text-slate-500">Password / Key <span class="text-rose-500">*</span></label>
-                                <span class="text-[11px] font-bold text-rose-500">Required</span>
+                                <label for="password" class="block text-xs font-bold text-slate-500">Password / Key <span class="text-rose-500">*</span></label>
+                                <span class="text-[10px] text-slate-400 font-normal">8+ characters for new accounts</span>
                             </div>
-                            <input 
-                                type="password" 
-                                id="password" 
-                                class="clay-input w-full px-5 py-3.5 text-slate-700 font-medium placeholder-slate-400 text-xs" 
-                                placeholder="•••••••• (min 4 characters)"
-                                required
-                                minlength="4"
-                            >
+                            <div class="relative">
+                                <input
+                                    type="password"
+                                    id="password"
+                                    class="clay-input w-full px-5 py-3.5 pr-12 text-slate-700 font-medium placeholder-slate-400 text-xs"
+                                    placeholder="••••••••"
+                                    autocomplete="current-password"
+                                    required
+                                    minlength="4"
+                                >
+                                <button type="button" id="toggle-password" class="password-toggle" onclick="togglePasswordVisibility()" aria-label="Show password" title="Show password">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="pt-1">
-                            <button type="submit" id="login-submit-btn" class="clay-btn clay-btn-primary w-full py-3.5 text-xs tracking-wide">
-                                Log In
+                            <button type="submit" id="login-submit-btn" class="clay-btn clay-btn-primary w-full py-3.5 min-h-[48px] text-xs tracking-wide">
+                                Continue to Workspace
                             </button>
                         </div>
                     </form>
@@ -1420,11 +1495,11 @@
                     </div>
 
                     <div class="mt-6 grid grid-cols-2 gap-4">
-                        <button type="button" onclick="triggerGoogleAuth(); createRipple(event);" class="clay-btn py-3 flex items-center justify-center gap-2 text-xs hover:text-slate-900 transition-colors">
+                        <button type="button" onclick="triggerGoogleAuth(); createRipple(event);" class="clay-btn py-3 min-h-[44px] flex items-center justify-center gap-2 text-xs hover:text-slate-900 transition-colors">
                             <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
                             Google
                         </button>
-                        <button type="button" onclick="openTeamAlumLoginModal(); createRipple(event);" class="clay-btn py-3 flex items-center justify-center gap-2 text-xs hover:text-slate-900 transition-colors">
+                        <button type="button" onclick="openTeamAlumLoginModal(); createRipple(event);" class="clay-btn py-3 min-h-[44px] flex items-center justify-center gap-2 text-xs hover:text-slate-900 transition-colors">
                             <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                             Team Alum
                         </button>
@@ -1445,7 +1520,7 @@
     <!-- Team Alum Quick Login Modal -->
     <div id="team-alum-login-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden transition-all">
         <div class="clay-card p-7 max-w-md w-full relative animate-fade-scale border border-slate-200">
-            <button onclick="closeTeamAlumLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-sm">
+            <button type="button" onclick="closeTeamAlumLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-sm" title="Close">
                 <i class="fa-solid fa-xmark text-base"></i>
             </button>
             
@@ -1455,50 +1530,23 @@
                 </div>
                 <div>
                     <h3 class="text-base font-extrabold text-slate-800">Team Alum Portal</h3>
-                    <p class="text-[11px] text-slate-500 font-medium">Institutional member account access</p>
+                    <p class="text-[11px] text-slate-500 font-medium">Protected institutional access</p>
                 </div>
             </div>
 
-            <div class="flex rounded-xl p-1 mb-5 clay-pill bg-slate-200/50 text-xs font-bold">
-                <button type="button" id="modal-subtab-new" onclick="switchModalAlumTab('new')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-slate-800 transition">✨ New Member</button>
-                <button type="button" id="modal-subtab-return" onclick="switchModalAlumTab('return')" class="flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 transition">🔑 Returning Member</button>
+            <div class="p-4 rounded-2xl bg-white/70 border border-slate-200/80 text-[11px] text-slate-600 font-medium leading-relaxed mb-5">
+                <p class="mb-2"><i class="fa-solid fa-shield-halved mr-1 text-cyan-600"></i> Team Alum access is protected by Google Sign-In and the approved email allowlist.</p>
+                <p>Only verified founder and <span class="font-mono text-cyan-700 font-bold">@team.alum</span> accounts can open analytics. No one can self-generate an admin ID.</p>
             </div>
 
-            <!-- New Member Panel -->
-            <div id="modal-panel-alum-new" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Full Name</label>
-                    <input type="text" id="modal-alum-name" placeholder="Alex Morgan" class="clay-input w-full px-4 py-3 text-xs text-slate-800 placeholder-slate-400">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Set Password <span class="text-rose-500">*</span></label>
-                    <input type="password" id="modal-alum-password" placeholder="•••••••• (min 4 characters)" class="clay-input w-full px-4 py-3 text-xs text-slate-800 placeholder-slate-400" required minlength="4">
-                </div>
-                <div class="p-3 rounded-2xl bg-white/70 border border-slate-200/80 text-[11px] text-slate-600 font-medium leading-relaxed">
-                    <i class="fa-solid fa-circle-info mr-1 text-cyan-600"></i> Auto-generates your unique institutional ID (e.g. <span class="font-mono text-cyan-700 font-bold">user1234@team.alum</span>) saved to the database.
-                </div>
-                <button onclick="handleModalTeamAlumLogin(); createRipple(event);" class="clay-btn clay-btn-primary w-full py-3 text-xs">
-                    Generate ID & Enter Workspace
-                </button>
-            </div>
+            <button type="button" onclick="closeTeamAlumLoginModal(); triggerGoogleAuth();" class="clay-btn clay-btn-primary w-full py-3 min-h-[44px] text-xs flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+                Continue with Google
+            </button>
 
-            <!-- Returning Member Panel -->
-            <div id="modal-panel-alum-return" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Saved Team Alum Email</label>
-                    <input type="email" id="modal-alum-existing-email" placeholder="user1234@team.alum" class="clay-input w-full px-4 py-3 text-xs text-slate-800 placeholder-slate-400 font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Account Password <span class="text-rose-500">*</span></label>
-                    <input type="password" id="modal-alum-return-password" placeholder="••••••••" class="clay-input w-full px-4 py-3 text-xs text-slate-800 placeholder-slate-400 font-mono" required minlength="4">
-                </div>
-                <div class="p-3 rounded-2xl bg-white/70 border border-slate-200/80 text-[11px] text-slate-600 font-medium leading-relaxed">
-                    <i class="fa-solid fa-clock-rotate-left mr-1 text-cyan-600"></i> Instantly retrieves your saved profile and past conversations.
-                </div>
-                <button onclick="handleModalReturningTeamAlumLogin(); createRipple(event);" class="clay-btn clay-btn-primary w-full py-3 text-xs">
-                    Access Saved Workspace
-                </button>
-            </div>
+            <p class="text-[10px] text-slate-400 text-center mt-3 leading-relaxed">
+                Need access? Ask a Team Alum founder to add your approved email to the allowlist first.
+            </p>
         </div>
     </div>
 
@@ -1525,15 +1573,17 @@
                     type="text"
                     id="guest-name-input"
                     class="clay-input w-full px-4 py-3 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400"
-                    placeholder="e.g. Aarav"
+                    placeholder="e.g. Aarav Sharma"
                     maxlength="32"
                     autocomplete="nickname"
                     enterkeyhint="go"
-                    oninput="clearGuestNameHint();"
+                    aria-describedby="guest-name-hint"
+                    oninput="validateGuestNameDraft();"
                 >
-                <p id="guest-name-hint" class="text-[11px] text-cyan-700 dark:text-cyan-400 font-medium mt-1.5 pl-1 min-h-[16px]"></p>
+                <p id="guest-name-hint" class="identity-status mt-1.5 pl-1" aria-live="polite"></p>
+                <p class="text-[10px] text-slate-400 mt-0.5 pl-1">Letters, spaces, apostrophes, and hyphens — no numbers or symbols.</p>
 
-                <button type="submit" id="guest-name-continue-btn" onclick="createRipple(event);" class="clay-btn clay-btn-primary w-full py-3 text-xs mt-2">
+                <button type="submit" id="guest-name-continue-btn" onclick="createRipple(event);" class="clay-btn clay-btn-primary w-full py-3 min-h-[44px] text-xs mt-2">
                     Continue to Workspace
                 </button>
             </form>
@@ -2732,6 +2782,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             trackVisitorBeacon();
             initPreferences();
+            initLoginIdentityValidation();
             const savedToken = localStorage.getItem('alumni_token');
             if (savedToken) {
                 try {
@@ -2779,6 +2830,7 @@
                     const emailEl = document.getElementById('email');
                     if (emailEl && savedEmail) {
                         emailEl.value = savedEmail;
+                        setDisplayNameVisibility(savedEmail.includes('@'));
                     }
                 }, 600);
             }, 1200);
@@ -2906,15 +2958,128 @@
             }
         }
 
+        // ---------------------------------------------------------------
+        // Identity validation: friendly, live, and never blocks a returning
+        // member with an older handle from signing in.
+        // ---------------------------------------------------------------
+        let _identityCheckTimer = null;
+        let _identityCheckSeq = 0;
+
+        function setLoginIdentityHint(message, state) {
+            const hint = document.getElementById('login-identity-hint');
+            if (!hint) return;
+            hint.textContent = message || '';
+            hint.classList.remove('ok', 'error', 'checking');
+            if (state) hint.classList.add(state);
+        }
+
+        function setDisplayNameVisibility(show) {
+            const wrap = document.getElementById('display-name-wrap');
+            if (!wrap) return;
+            wrap.classList.toggle('hidden', !show);
+        }
+
+        function initLoginIdentityValidation() {
+            const input = document.getElementById('email');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                const value = input.value.trim();
+                const looksLikeEmail = value.includes('@');
+                setDisplayNameVisibility(looksLikeEmail);
+                clearTimeout(_identityCheckTimer);
+
+                if (!value) {
+                    setLoginIdentityHint('');
+                    return;
+                }
+                if (looksLikeEmail) {
+                    const valid = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value);
+                    setLoginIdentityHint(
+                        valid
+                            ? 'We will sign you in, or create your workspace if this is your first visit.'
+                            : 'Please finish the email address, for example you@gmail.com.',
+                        valid ? 'ok' : 'error'
+                    );
+                    return;
+                }
+                if (value.length < 2) {
+                    setLoginIdentityHint('Use the name you would like us to greet you by.', 'error');
+                    return;
+                }
+
+                setLoginIdentityHint('Checking that name…', 'checking');
+                const seq = ++_identityCheckSeq;
+                _identityCheckTimer = setTimeout(async function () {
+                    try {
+                        const resp = await fetch('/api/auth/username-availability?username=' + encodeURIComponent(value));
+                        const data = await resp.json().catch(() => ({}));
+                        if (seq !== _identityCheckSeq) return;
+                        if (!data.valid) {
+                            setLoginIdentityHint(
+                                (data.message || 'Please use letters for your name.') +
+                                ' Existing accounts can still continue with their password.',
+                                'error'
+                            );
+                        } else if (!data.available) {
+                            setLoginIdentityHint(
+                                'That username is already taken — enter its password to sign in, or choose another name.',
+                                'error'
+                            );
+                        } else {
+                            setLoginIdentityHint('That name is available — first sign-in creates your workspace.', 'ok');
+                        }
+                    } catch (e) {
+                        if (seq === _identityCheckSeq) {
+                            setLoginIdentityHint('We will confirm this when you continue.', 'checking');
+                        }
+                    }
+                }, 450);
+            });
+
+            const display = document.getElementById('display-name');
+            if (display) {
+                display.addEventListener('input', function () {
+                    const value = display.value.trim();
+                    if (!value) {
+                        const hint = document.getElementById('display-name-hint');
+                        if (hint) hint.textContent = "Only needed if your email doesn't show your name. Letters, spaces, apostrophes, and hyphens work best.";
+                        return;
+                    }
+                    const hint = document.getElementById('display-name-hint');
+                    if (hint) {
+                        hint.textContent = /[\d]/.test(value)
+                            ? 'Names don’t usually include numbers — letters only, please.'
+                            : 'This is how we will greet you.';
+                    }
+                });
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password');
+            const btn = document.getElementById('toggle-password');
+            if (!input || !btn) return;
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            btn.setAttribute('title', show ? 'Hide password' : 'Show password');
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = show ? 'fa-solid fa-eye-slash text-sm' : 'fa-solid fa-eye text-sm';
+            input.focus();
+        }
+
         // Form Login from Clay Login Card
         async function handleClayFormLogin() {
             const emailEl = document.getElementById('email');
             const pwEl = document.getElementById('password');
+            const displayEl = document.getElementById('display-name');
             const inputVal = emailEl ? emailEl.value.trim() : '';
-            const pwVal = pwEl ? pwEl.value.trim() : '';
+            const displayVal = displayEl ? displayEl.value.trim() : '';
+            const pwVal = pwEl ? pwEl.value : '';
 
             if (!inputVal) {
-                showToast('Please enter your email or username.', 'error');
+                showToast('Please enter your email or full name.', 'error');
+                setLoginIdentityHint('Please enter your email or full name.', 'error');
                 if (emailEl) emailEl.focus();
                 return;
             }
@@ -2933,30 +3098,18 @@
 
             currentUser.password = pwVal;
 
-            const cleanInput = inputVal.trim().toLowerCase();
-            const isFounder = cleanInput.endsWith('@team.alum') || cleanInput === 'sudarshan.dev@gmail.com' || cleanInput === 'sudarshan.deve@gmail.com';
-
-            if (isFounder) {
+            if (inputVal.includes('@')) {
                 currentUser.email = inputVal;
-                currentUser.username = 'Sudarshan Hadmode';
-                currentUser.isTeamAlum = true;
-                currentUser.loginMethod = 'alum';
-                localStorage.setItem('alumni_last_team_email', inputVal);
-                localStorage.setItem('alumni_last_email', inputVal);
-            } else if (inputVal.includes('@')) {
-                const rawPrefix = inputVal.split('@')[0].replace(/[._-]/g, ' ');
-                currentUser.username = rawPrefix ? (rawPrefix.charAt(0).toUpperCase() + rawPrefix.slice(1)) : 'Scholar';
-                currentUser.email = inputVal;
+                currentUser.username = displayVal;
                 currentUser.isTeamAlum = false;
                 currentUser.loginMethod = 'email';
-                localStorage.setItem('alumni_last_email', inputVal);
             } else {
                 currentUser.username = inputVal;
-                currentUser.email = `${inputVal.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.ai`;
+                currentUser.email = '';
                 currentUser.isTeamAlum = false;
                 currentUser.loginMethod = 'username';
-                localStorage.setItem('alumni_last_email', currentUser.email);
             }
+            localStorage.setItem('alumni_last_email', inputVal);
             await postLoginUser();
         }
 
@@ -2971,7 +3124,10 @@
             modal.classList.remove('hidden');
             const input = document.getElementById('guest-name-input');
             const hint = document.getElementById('guest-name-hint');
-            if (hint) hint.textContent = '';
+            if (hint) {
+                hint.textContent = '';
+                hint.classList.remove('ok', 'error', 'checking');
+            }
             const remembered = localStorage.getItem('alumni_last_guest_name') || '';
             if (input) {
                 input.value = remembered;
@@ -2988,21 +3144,46 @@
             if (hint) hint.textContent = '';
         }
 
-        function clearGuestNameHint() {
+        function setGuestNameHint(message, state) {
             const hint = document.getElementById('guest-name-hint');
-            if (hint) hint.textContent = '';
+            if (!hint) return;
+            hint.textContent = message || '';
+            hint.classList.remove('ok', 'error', 'checking');
+            if (state) hint.classList.add(state);
         }
 
-        function setGuestNameHint(message) {
-            const hint = document.getElementById('guest-name-hint');
-            if (hint) hint.textContent = message;
+        function validateGuestNameDraft() {
+            const input = document.getElementById('guest-name-input');
+            const raw = ((input && input.value) || '').replace(/\s+/g, ' ').trim();
+            if (!raw) {
+                setGuestNameHint('');
+                return true;
+            }
+            if (/\d/.test(raw)) {
+                setGuestNameHint('Names don’t usually include numbers — letters only, please.', 'error');
+                return false;
+            }
+            if (/[^\p{L}\p{M}\s.'’-]/u.test(raw)) {
+                setGuestNameHint('Letters, spaces, apostrophes, and hyphens only, please.', 'error');
+                return false;
+            }
+            if (raw.replace(/[^\p{L}\p{M}]/gu, '').length < 2) {
+                setGuestNameHint('A little more of your name, please.', 'error');
+                return false;
+            }
+            setGuestNameHint('That looks good — no account needed.', 'ok');
+            return true;
         }
 
         async function submitGuestName() {
             const input = document.getElementById('guest-name-input');
             const name = ((input && input.value) || '').replace(/\s+/g, ' ').trim();
             if (!name) {
-                setGuestNameHint('Just your name, and you\'re in 🙂');
+                setGuestNameHint('Just your name, and you\'re in 🙂', 'error');
+                if (input) input.focus();
+                return;
+            }
+            if (!validateGuestNameDraft()) {
                 if (input) input.focus();
                 return;
             }
@@ -3042,7 +3223,11 @@
                     localStorage.setItem('alumni_current_user', JSON.stringify(currentUser));
                     closeGuestNameModal();
                     transitionToWorkspace();
-                    showToast(`Welcome aboard, ${data.username}! Guest exploration is active.`);
+                    if (data.name_adjusted) {
+                        showToast(`That name was already in use, so we added a small tag to keep you distinct. You are ${data.username}.`);
+                    } else {
+                        showToast(`Welcome aboard, ${data.username}! Guest exploration is active.`);
+                    }
                 } else {
                     const errData = await resp.json().catch(() => ({}));
                     const msg = errData.detail || 'We could not start the guest session just now — please try once more.';
@@ -3073,105 +3258,16 @@
             if (modal && e.target === modal) closeGuestNameModal();
         });
 
-        // Team Alum Login Modal Handlers
+        // Team Alum Login Modal Handlers. Access itself goes through the
+        // verified Google flow; there is no client-side account generation.
         function openTeamAlumLoginModal() {
             const modal = document.getElementById('team-alum-login-modal');
             if (modal) modal.classList.remove('hidden');
-            const lastEmail = localStorage.getItem('alumni_last_team_email');
-            if (lastEmail) {
-                const el = document.getElementById('modal-alum-existing-email');
-                if (el) el.value = lastEmail;
-            }
         }
 
         function closeTeamAlumLoginModal() {
             const modal = document.getElementById('team-alum-login-modal');
             if (modal) modal.classList.add('hidden');
-        }
-
-        function switchModalAlumTab(sub) {
-            const btnNew = document.getElementById('modal-subtab-new');
-            const btnReturn = document.getElementById('modal-subtab-return');
-            const panelNew = document.getElementById('modal-panel-alum-new');
-            const panelReturn = document.getElementById('modal-panel-alum-return');
-
-            if (sub === 'new') {
-                btnNew.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-slate-800 transition';
-                btnReturn.className = 'flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 transition';
-                panelNew.classList.remove('hidden');
-                panelReturn.classList.add('hidden');
-            } else {
-                btnReturn.className = 'flex-1 py-2 rounded-lg bg-white shadow-sm text-slate-800 transition';
-                btnNew.className = 'flex-1 py-2 rounded-lg text-slate-500 hover:text-slate-800 transition';
-                panelReturn.classList.remove('hidden');
-                panelNew.classList.add('hidden');
-            }
-        }
-
-        async function handleModalTeamAlumLogin() {
-            const nameEl = document.getElementById('modal-alum-name');
-            const pwEl = document.getElementById('modal-alum-password');
-            const nameInput = nameEl ? nameEl.value.trim() : '';
-            const pwVal = pwEl ? pwEl.value.trim() : '';
-
-            if (!nameInput) {
-                showToast('Please enter your full name.', 'error');
-                if (nameEl) nameEl.focus();
-                return;
-            }
-
-            if (!pwVal) {
-                showToast('Password is required to set up your account.', 'error');
-                if (pwEl) pwEl.focus();
-                return;
-            }
-
-            if (pwVal.length < 4) {
-                showToast('Password must be at least 4 characters long.', 'error');
-                if (pwEl) pwEl.focus();
-                return;
-            }
-
-            closeTeamAlumLoginModal();
-            const randomNo = Math.floor(1000 + Math.random() * 9000);
-            const cleanName = nameInput.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const generatedEmail = `${cleanName}${randomNo}@team.alum`;
-            currentUser.username = nameInput;
-            currentUser.email = generatedEmail;
-            currentUser.password = pwVal;
-            currentUser.isTeamAlum = true;
-            currentUser.loginMethod = 'alum';
-            localStorage.setItem('alumni_last_team_email', generatedEmail);
-            await postLoginUser();
-            showToast(`Assigned ID: ${generatedEmail}`);
-        }
-
-        async function handleModalReturningTeamAlumLogin() {
-            const emailEl = document.getElementById('modal-alum-existing-email');
-            const pwEl = document.getElementById('modal-alum-return-password');
-            const emailInput = emailEl ? emailEl.value.trim() : '';
-            const pwVal = pwEl ? pwEl.value.trim() : '';
-
-            if (!emailInput || !emailInput.includes('@')) {
-                showToast('Please enter your valid Team Alum email address.', 'error');
-                if (emailEl) emailEl.focus();
-                return;
-            }
-
-            if (!pwVal) {
-                showToast('Password is required. Please enter your password.', 'error');
-                if (pwEl) pwEl.focus();
-                return;
-            }
-
-            closeTeamAlumLoginModal();
-            currentUser.email = emailInput;
-            currentUser.username = emailInput.split('@')[0];
-            currentUser.password = pwVal;
-            currentUser.isTeamAlum = true;
-            currentUser.loginMethod = 'alum';
-            localStorage.setItem('alumni_last_team_email', emailInput);
-            await postLoginUser();
         }
 
         // Transition from Login to Workspace (Landing Transitions)
@@ -3285,7 +3381,11 @@
                     localStorage.setItem('alumni_token', data.token);
                     localStorage.setItem('alumni_current_user', JSON.stringify(currentUser));
                     closeGoogleAuthModal();
-                    showToast(`Welcome, ${data.username}! Signed in with Google.`);
+                    if (data.name_adjusted) {
+                        showToast(`Welcome, ${data.username}! We added a small tag to keep your display name distinct.`);
+                    } else {
+                        showToast(`Welcome, ${data.username}! Signed in with Google.`);
+                    }
                     transitionToWorkspace();
                 } else {
                     showToast(data.detail || 'Google sign-in failed. Please try again.', 'error');
@@ -3340,74 +3440,6 @@
             penguIdle();
         }
 
-        async function handleDirectUsernameLogin() {
-            const usernameInput = document.getElementById('direct-username').value.trim();
-            if (!usernameInput) {
-                showToast('Please enter your username.', 'error');
-                return;
-            }
-            currentUser.username = usernameInput;
-            currentUser.email = `${usernameInput.toLowerCase().replace(/[^a-z0-9]/g, '')}@alumni.ai`;
-            currentUser.loginMethod = 'username';
-            currentUser.isTeamAlum = false;
-            await postLoginUser();
-        }
-
-        function switchAlumSubTab(sub) {
-            const btnNew = document.getElementById('subtab-alum-new');
-            const btnReturn = document.getElementById('subtab-alum-return');
-            const panelNew = document.getElementById('alum-panel-new');
-            const panelReturn = document.getElementById('alum-panel-return');
-
-            if (sub === 'new') {
-                btnNew.className = 'flex-1 py-1.5 rounded-lg bg-white shadow-sm text-pink-600 transition';
-                btnReturn.className = 'flex-1 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition';
-                panelNew.classList.remove('hidden');
-                panelReturn.classList.add('hidden');
-            } else {
-                btnReturn.className = 'flex-1 py-1.5 rounded-lg bg-white shadow-sm text-cyan-600 transition';
-                btnNew.className = 'flex-1 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition';
-                panelReturn.classList.remove('hidden');
-                panelNew.classList.add('hidden');
-                const lastEmail = localStorage.getItem('alumni_last_team_email');
-                if (lastEmail) {
-                    document.getElementById('alum-existing-email').value = lastEmail;
-                }
-            }
-        }
-
-        async function handleTeamAlumLogin() {
-            const nameInput = document.getElementById('alum-name').value.trim();
-            if (!nameInput) {
-                showToast('Please enter your full name.', 'error');
-                return;
-            }
-            const randomNo = Math.floor(1000 + Math.random() * 9000);
-            const cleanName = nameInput.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const generatedEmail = `${cleanName}${randomNo}@team.alum`;
-            currentUser.username = nameInput;
-            currentUser.email = generatedEmail;
-            currentUser.isTeamAlum = true;
-            currentUser.loginMethod = 'alum';
-            localStorage.setItem('alumni_last_team_email', generatedEmail);
-            await postLoginUser();
-            showToast(`Assigned Team Alum Email: ${generatedEmail} (Save for next time!)`);
-        }
-
-        async function handleReturningTeamAlumLogin() {
-            const emailInput = document.getElementById('alum-existing-email').value.trim();
-            if (!emailInput || !emailInput.includes('@')) {
-                showToast('Please enter your valid Team Alum email address.', 'error');
-                return;
-            }
-            currentUser.email = emailInput;
-            currentUser.username = emailInput.split('@')[0];
-            currentUser.isTeamAlum = true;
-            currentUser.loginMethod = 'alum';
-            localStorage.setItem('alumni_last_team_email', emailInput);
-            await postLoginUser();
-        }
-
         async function postLoginUser() {
             try {
                 const payload = {
@@ -3431,13 +3463,21 @@
                     currentUser.email = data.email;
                     currentUser.token = data.token;
                     currentUser.isTeamAlum = Boolean(data.is_team_alum);
+                    currentUser.loginMethod = data.login_method || currentUser.loginMethod;
+                    // Never persist the password in localStorage.
+                    currentUser.password = '';
                     localStorage.setItem('alumni_token', data.token);
                     localStorage.setItem('alumni_current_user', JSON.stringify(currentUser));
+                    setLoginIdentityHint('');
                     transitionToWorkspace();
+                    if (data.name_adjusted) {
+                        showToast(`That name was already in use, so we added a small tag to keep your workspace distinct. You are ${data.username}.`);
+                    }
                 } else {
                     const errData = await resp.json().catch(() => ({}));
                     const errMsg = errData.detail || 'Backend authentication failed. Please try again.';
                     showToast(errMsg, 'error');
+                    setLoginIdentityHint(errMsg, 'error');
                 }
             } catch (err) {
                 console.error("Backend login error:", err);

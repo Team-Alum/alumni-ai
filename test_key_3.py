@@ -1,9 +1,15 @@
 import asyncio
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database import init_db
 from app.services.ai_service import observe_and_analyze_attachments, generate_ai_response
 from app.config import OPENCODE_ATTACHMENT_KEY, OPENCODE_FALLBACK_KEY
 
+if not (OPENCODE_ATTACHMENT_KEY.startswith("oc_sk_") and OPENCODE_FALLBACK_KEY.startswith("oc_sk_")):
+    print("SKIP: attachment API keys are not configured in this environment.")
+    raise SystemExit(0)
+
+init_db()
 client = TestClient(app)
 
 async def test_attachment_observer_and_fallback():
@@ -43,11 +49,11 @@ def calculate_compound_interest(principal: float, rate: float, times_per_year: i
 
     # 3. Test Full Chat Endpoint with Attachment Observation + 1st API Synthesis
     login_res = client.post("/api/auth/login", json={
-        "username": "ObserverDev",
-        "email": "observer@team.alum",
+        "username": "Observer Dev",
+        "email": "observer@example.com",
         "password": "pass1234Secure",
-        "login_method": "alum",
-        "is_team_alum": True
+        "login_method": "email",
+        "is_team_alum": False
     })
     token = login_res.json()["token"]
     headers = {"Authorization": f"Bearer {token}"}

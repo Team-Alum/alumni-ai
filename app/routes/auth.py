@@ -1,17 +1,27 @@
-import re
-import unicodedata
 import uuid
-from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
+
 from app.models import LoginRequest, UserResponse
 from app.database import (
     save_user,
-    get_user_by_email,
-    get_user_by_email_or_username,
+    get_users_by_email,
+    get_users_by_username,
+    username_exists,
     create_auth_token,
     delete_auth_token,
-    verify_password
+    verify_password,
+    password_needs_rehash,
+)
+from app.identity import (
+    GUEST_NAME_MAX,
+    NAME_MAX,
+    derive_display_name,
+    is_valid_email,
+    synthetic_email_for_name,
+    validate_display_name,
 )
 from app.security import get_current_user
 from app.config import GOOGLE_CLIENT_ID, is_admin_email
@@ -27,86 +37,45 @@ class GuestLoginRequest(BaseModel):
     username: Optional[str] = None
 
 
-GUEST_NAME_MAX = 32
-GUEST_NAME_MIN = 2
-
-# Guests may pick any friendly display name, but must never pass themselves off
-# as the team, the product, or an administrator.
-_RESERVED_GUEST_NAMES = {
-    "sudarshan", "sudarshanhadmode", "soham", "teamalum", "teamalumorg",
-    "alumni", "alumniai", "admin", "administrator", "root", "founder",
-    "cofounder", "moderator", "support", "system", "may", "pengu"
-}
-_RESERVED_GUEST_PREFIXES = ("teamalum", "alumni", "admin")
-_GUEST_NAME_EXTRA_CHARS = set(" .-'’")
-
-
-def _normalize_guest_name(raw: Optional[str]) -> str:
-    """Whitespace/character cleanup only — never raises."""
-    name = re.sub(r"\s+", " ", (raw or "")).strip()
-    # Keep letters, combining marks and digits from any script (so Hindi names
-    # such as "अंश" survive intact) plus a few safe name characters. Everything
-    # else — markup, control chars, emoji, zero-width joiners — is dropped.
-    name = "".join(
-        ch for ch in name
-        if ch in _GUEST_NAME_EXTRA_CHARS or unicodedata.category(ch)[0] in ("L", "M", "N")
-    )
-    name = re.sub(r"\s+", " ", name).strip(" .-_'’")
-    return name[:GUEST_NAME_MAX].strip()
-
-
-def _validate_guest_name(raw: Optional[str]) -> str:
-    """Polite, non-shaming validation for the guest display name."""
-    name = _normalize_guest_name(raw)
-    if not name:
-        raise HTTPException(
-            status_code=400,
-            detail="Hello there! Could you please tell us your name before we begin?"
-        )
-    if len(name) < GUEST_NAME_MIN:
-        raise HTTPException(
-            status_code=400,
-            detail="That looks a little short — could you share the name you'd like us to use?"
-        )
-    if not any(ch.isalpha() for ch in name):
-        raise HTTPException(
-            status_code=400,
-            detail="Could you share the name you'd like us to use? Letters work best."
-        )
-    compact = "".join(ch for ch in name.lower() if ch.isalnum())
-    if compact in _RESERVED_GUEST_NAMES or compact.startswith(_RESERVED_GUEST_PREFIXES):
-        raise HTTPException(
-            status_code=400,
-            detail="That name belongs to the Team Alum crew — could you pick a different one for yourself?"
-        )
-    return name
-
-
-def _unique_guest_name(name: str) -> str:
-    """Keep guest display names distinct so greetings stay unambiguous."""
-    if not get_user_by_email_or_username(name):
-        return name
+def _unique_account_name(name: str, max_length: int = NAME_MAX) -> tuple[str, bool]:
+    """Keep account display names distinct without ever rewriting a login row."""
+    if not username_exists(name):
+        return name, False
     suffix = f" ({uuid.uuid4().hex[:4].upper()})"
-    return f"{name[:GUEST_NAME_MAX - len(suffix)].strip()}{suffix}"
+    candidate = f"{name[:max_length - len(suffix)].strip()}{suffix}"
+    if not username_exists(candidate):
+        return candidate, True
+    # Extremely unlikely, but never loop forever on a collision.
+    return f"{name[:max_length - 10].strip()} ({uuid.uuid4().hex[:6].upper()})", True
 
 
 def _create_guest_account(raw_name: Optional[str]) -> dict:
     """Single hardened path used by both /guest and the /login guest fast-path.
 
     The email is always server-generated so a guest can never claim (or shadow)
-    a real account's address.
+    a real account's address. Duplicate friendly names get a transparent tag.
     """
-    display_name = _validate_guest_name(raw_name)
+    display_name, error_code, message = validate_display_name(
+        raw_name, max_length=GUEST_NAME_MAX
+    )
+    if error_code:
+        raise HTTPException(status_code=400, detail=message)
+
+    final_name, adjusted = _unique_account_name(display_name, GUEST_NAME_MAX)
     guest_id = uuid.uuid4().hex
     user = save_user(
         user_id=str(uuid.uuid4()),
-        username=_unique_guest_name(display_name),
+        username=final_name,
         email=f"guest_{guest_id[:10]}@guest.alumni.ai",
         login_method="guest",
         is_team_alum=False,
-        password=None
+        password=None,
     )
-    return {**user, "token": create_auth_token(user["id"])}
+    return {
+        **user,
+        "token": create_auth_token(user["id"]),
+        "name_adjusted": adjusted,
+    }
 
 
 def _is_founder_email(email: str) -> bool:
@@ -116,8 +85,38 @@ def _is_founder_email(email: str) -> bool:
 
 @router.get("/config")
 def get_auth_config():
+    return {"google_client_id": GOOGLE_CLIENT_ID}
+
+
+@router.get("/username-availability")
+def username_availability(username: str = ""):
+    """Public, validation-first availability check used by the login card.
+
+    It deliberately returns friendly guidance instead of a bare boolean so the
+    UI can explain *why* a name cannot be used.
+    """
+    normalized, error_code, message = validate_display_name(
+        username, max_length=NAME_MAX
+    )
+    if error_code:
+        return {
+            "available": False,
+            "valid": False,
+            "username": "",
+            "message": message,
+        }
+    if username_exists(normalized):
+        return {
+            "available": False,
+            "valid": True,
+            "username": normalized,
+            "message": "That username is already taken. Please choose another one.",
+        }
     return {
-        "google_client_id": GOOGLE_CLIENT_ID
+        "available": True,
+        "valid": True,
+        "username": normalized,
+        "message": "That name is available.",
     }
 
 
@@ -126,188 +125,273 @@ def google_oauth_login(payload: GoogleCredentialRequest):
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=503,
-            detail="Google Sign-In is not configured on this server."
+            detail="Google Sign-In is not configured on this server.",
         )
     try:
         from google.oauth2 import id_token as google_id_token
         from google.auth.transport import requests as google_requests
+
         info = google_id_token.verify_oauth2_token(
             payload.credential, google_requests.Request(), GOOGLE_CLIENT_ID
         )
     except Exception:
         raise HTTPException(
             status_code=401,
-            detail="Google sign-in verification failed. Please try again."
+            detail="Google sign-in verification failed. Please try again.",
         )
 
     if not info.get("email") or not info.get("email_verified", False):
         raise HTTPException(
             status_code=401,
-            detail="Your Google account email is not verified."
+            detail="Your Google account email is not verified.",
         )
 
     email = info["email"].strip().lower()
-    display_name = (info.get("name") or "").strip() or email.split("@")[0]
+    matches = get_users_by_email(email)
+    if len(matches) > 1:
+        raise HTTPException(
+            status_code=409,
+            detail="This email is linked to more than one account. Please contact Team Alum support.",
+        )
+    existing = matches[0] if matches else None
 
-    existing = get_user_by_email(email)
+    raw_name = (info.get("name") or "").strip() or email.split("@")[0]
+    normalized, error_code, _ = validate_display_name(raw_name)
+    display_name = normalized if not error_code else derive_display_name(email)
+    adjusted = False
+
     if existing:
         user_id = existing["id"]
+        # Google proves mailbox ownership. Clear any legacy password so a
+        # password login can never be used against a Google account.
         user = save_user(
             user_id=user_id,
             username=existing.get("username") or display_name,
             email=email,
             login_method="google",
             is_team_alum=_is_founder_email(email),
-            password=None
+            password=None,
+            clear_password=True,
         )
     else:
-        user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email))
+        display_name, adjusted = _unique_account_name(display_name, NAME_MAX)
+        user_id = str(uuid.uuid4())
         user = save_user(
             user_id=user_id,
             username=display_name,
             email=email,
             login_method="google",
             is_team_alum=_is_founder_email(email),
-            password=None
+            password=None,
         )
 
     token = create_auth_token(user_id)
-    return {**user, "token": token}
+    return {**user, "token": token, "name_adjusted": adjusted}
 
 
 @router.post("/guest", response_model=UserResponse)
 def guest_login(payload: Optional[GuestLoginRequest] = None):
-    """Guest access requires a display name so the workspace can greet the user."""
+    """Guest access asks for a display name so the workspace can greet the user."""
     return _create_guest_account(payload.username if payload else None)
 
 
 @router.post("/login", response_model=UserResponse)
 def login_user(payload: LoginRequest):
-    email_clean = (payload.email or "").strip().lower()
-    username_clean = (payload.username or "").strip()
+    email_raw = (payload.email or "").strip()
+    username_raw = (payload.username or "").strip()
     password_clean = (payload.password or "").strip()
 
-    # Fast-path for guest login via /api/auth/login. A display name is required
-    # and the email is always generated server-side (never client-supplied).
+    # Fast-path for guest login via /api/auth/login.
     if payload.login_method == "guest":
         return _create_guest_account(payload.username)
 
     # Google logins must go through the verified /api/auth/google endpoint.
-    # Plain /login accepts no Google credentials, so no identity can be spoofed here.
     if payload.login_method == "google":
         raise HTTPException(
             status_code=400,
-            detail="Please use the Google Sign-In button to log in with Google."
+            detail="Please use the Google Sign-In button to log in with Google.",
         )
 
-    # 1. Mandatory password validation for direct / non-OAuth logins
-    if payload.login_method not in ("guest",):
-        if not password_clean:
+    if not password_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Password is required. Please provide a valid password.",
+        )
+    if len(password_clean) < 4:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 4 characters long.",
+        )
+
+    email_clean = email_raw.lower()
+    username_clean = username_raw
+
+    # Be forgiving if an API client puts the email in the username field.
+    if email_clean and "@" not in email_clean:
+        if not username_clean:
+            username_clean = email_clean
+        email_clean = ""
+    if username_clean and "@" in username_clean:
+        if not email_clean:
+            email_clean = username_clean.lower()
+        username_clean = ""
+
+    # ---------------------------------------------------------
+    # Resolve the account. Email wins when supplied; duplicate
+    # usernames/emails fail safely instead of returning a random row.
+    # ---------------------------------------------------------
+    email_matches = get_users_by_email(email_clean) if email_clean else []
+    if len(email_matches) > 1:
+        raise HTTPException(
+            status_code=409,
+            detail="This email is linked to more than one account. Please contact Team Alum support.",
+        )
+    email_user = email_matches[0] if email_matches else None
+
+    username_matches = []
+    if not email_user and username_clean:
+        username_matches = get_users_by_username(username_clean)
+        if len(username_matches) > 1:
             raise HTTPException(
-                status_code=400,
-                detail="Password is required. Please provide a valid password."
+                status_code=409,
+                detail="This username is linked to more than one account. Please sign in with your email address.",
             )
-        if len(password_clean) < 4:
+        if username_matches and email_clean:
+            # A supplied email that does not own this username must never be
+            # allowed to take it over or silently rewrite the row.
             raise HTTPException(
-                status_code=400,
-                detail="Password must be at least 4 characters long."
+                status_code=409,
+                detail="That username is already taken. Please sign in with its email address or choose another name.",
             )
-    
-    # 2. Check if user already exists by email or username
-    existing_user = None
-    if email_clean:
-        existing_user = get_user_by_email_or_username(email_clean)
-    if not existing_user and username_clean:
-        existing_user = get_user_by_email_or_username(username_clean)
-    
+
+    existing_user = email_user or (username_matches[0] if username_matches else None)
+
     if existing_user:
-        stored_hash = existing_user.get("password_hash")
-        existing_method = existing_user.get("login_method", payload.login_method)
-
-        if payload.login_method != "google":
-            # Guest rows are not password accounts — refuse password login on them.
-            if existing_method == "guest":
-                raise HTTPException(
-                    status_code=400,
-                    detail="This is a temporary guest session. Please continue as a guest."
-                )
-            # Passwordless (Google-created) accounts must use the Google flow.
-            # Without this check, knowing only a username would grant full
-            # account access because there is no hash to verify against.
-            if not stored_hash:
-                raise HTTPException(
-                    status_code=400,
-                    detail="This account was created with Google Sign-In. Please sign in with Google instead."
-                )
-            if not verify_password(stored_hash, password_clean):
-                raise HTTPException(
-                    status_code=401,
-                    detail="Incorrect password for this account. Please try again."
-                )
-
-        # Never swap emails: a username match with a *different* supplied
-        # email is treated as non-matching credentials (prevents rewriting a
-        # victim row's email to an admin address).
-        if (
-            email_clean
-            and existing_user.get("email")
-            and email_clean != (existing_user.get("email") or "").strip().lower()
-        ):
+        existing_email = (existing_user.get("email") or "").strip().lower()
+        if email_clean and email_clean != existing_email:
             raise HTTPException(
                 status_code=401,
-                detail="Incorrect email/username or password for this account."
+                detail="Incorrect email/username or password for this account.",
+            )
+
+        stored_hash = existing_user.get("password_hash")
+        existing_method = existing_user.get("login_method") or payload.login_method
+
+        if existing_method == "guest":
+            raise HTTPException(
+                status_code=400,
+                detail="This is a temporary guest session. Please continue as a guest.",
+            )
+        if existing_method == "google":
+            raise HTTPException(
+                status_code=400,
+                detail="This account was created with Google Sign-In. Please sign in with Google instead.",
+            )
+        if not stored_hash:
+            raise HTTPException(
+                status_code=400,
+                detail="This account has no password set. Please sign in with Google or contact Team Alum support.",
+            )
+        if not verify_password(stored_hash, password_clean):
+            raise HTTPException(
+                status_code=401,
+                detail="Incorrect password for this account. Please try again.",
             )
 
         user_id = existing_user["id"]
-        username_final = username_clean if username_clean else existing_user["username"]
-        email_final = email_clean if email_clean else existing_user["email"]
-        # Admin flag is derived ONLY from the verified email allowlist —
-        # legacy/attacker-set DB flags are discarded on every login.
-        is_team_alum_final = is_admin_email(email_final)
+        username_final = existing_user["username"]
+        email_final = existing_user["email"]
+        login_method_final = "alum" if _is_founder_email(email_final) else existing_method
+        # Transparently upgrade legacy SHA-256 hashes on the next login.
         user = save_user(
             user_id=user_id,
             username=username_final,
             email=email_final,
-            login_method=existing_method,
-            is_team_alum=is_team_alum_final,
-            password=password_clean if password_clean else None
+            login_method=login_method_final,
+            is_team_alum=_is_founder_email(email_final),
+            password=password_clean if password_needs_rehash(stored_hash) else None,
         )
-    else:
-        # Determine email and friendly username for new accounts
-        if not email_clean:
-            email_clean = f"{username_clean.lower().replace(' ', '')}@alumni.ai"
-        if not username_clean:
-            raw_prefix = email_clean.split("@")[0]
-            username_clean = raw_prefix.replace(".", " ").replace("_", " ").title() if raw_prefix else "Scholar"
+        return {
+            **user,
+            "token": create_auth_token(user_id),
+            "name_adjusted": False,
+        }
 
-        # SECURITY: an allowlisted admin address can never be claimed through
-        # unverified password registration (email ownership is only proven by
-        # Google Sign-In). This prevents anyone from pre-registering
-        # teamalumorg@gmail.com with a password of their choice.
-        if is_admin_email(email_clean):
+    # ---------------------------------------------------------
+    # New account. Usernames must look like a human name, be unique,
+    # and new password accounts need at least 8 characters.
+    # ---------------------------------------------------------
+    if not email_clean and not username_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter your email address or the name you'd like us to use.",
+        )
+
+    if email_clean:
+        if not is_valid_email(email_clean):
+            raise HTTPException(
+                status_code=400,
+                detail="Please enter a valid email address.",
+            )
+        if _is_founder_email(email_clean):
             raise HTTPException(
                 status_code=403,
-                detail="This email address must be registered via Google Sign-In."
+                detail="This email address must be registered via Google Sign-In.",
+            )
+        email_final = email_clean
+        if username_clean:
+            display_name, error_code, message = validate_display_name(
+                username_clean, max_length=NAME_MAX
+            )
+            if error_code:
+                raise HTTPException(status_code=400, detail=message)
+            name_was_derived = False
+        else:
+            display_name = derive_display_name(email_final)
+            name_was_derived = True
+    else:
+        display_name, error_code, message = validate_display_name(
+            username_clean, max_length=NAME_MAX
+        )
+        if error_code:
+            raise HTTPException(status_code=400, detail=message)
+        email_final = synthetic_email_for_name(display_name)
+        name_was_derived = False
+
+    if len(password_clean) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="For a new account, please use at least 8 characters for your password.",
+        )
+
+    if get_users_by_email(email_final):
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this email already exists. Please sign in instead.",
+        )
+
+    adjusted = False
+    if username_exists(display_name):
+        if name_was_derived:
+            display_name, adjusted = _unique_account_name(display_name, NAME_MAX)
+        else:
+            raise HTTPException(
+                status_code=409,
+                detail="That username is already taken. Please choose another one.",
             )
 
-        user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, email_clean.lower()))
-        # SECURITY: client-supplied payload.is_team_alum is IGNORED.
-        # New password accounts are never admin; admin status is granted only
-        # when an allowlisted email is proven through Google OAuth.
-        user = save_user(
-            user_id=user_id,
-            username=username_clean,
-            email=email_clean,
-            login_method=payload.login_method,
-            is_team_alum=False,
-            password=password_clean if password_clean else None
-        )
-    
-    # Generate secure session token
-    token = create_auth_token(user_id)
+    user = save_user(
+        user_id=str(uuid.uuid4()),
+        username=display_name,
+        email=email_final,
+        login_method="email" if email_clean else "username",
+        is_team_alum=False,
+        password=password_clean,
+    )
     return {
         **user,
-        "token": token
+        "token": create_auth_token(user["id"]),
+        "name_adjusted": adjusted,
     }
 
 
@@ -318,8 +402,9 @@ def get_me(user: dict = Depends(get_current_user)):
         "username": user["username"],
         "email": user["email"],
         "login_method": user["login_method"],
-        "is_team_alum": bool(user["is_team_alum"])
+        "is_team_alum": bool(user["is_team_alum"]),
     }
+
 
 @router.post("/logout")
 def logout_user(authorization: Optional[str] = Header(None)):
