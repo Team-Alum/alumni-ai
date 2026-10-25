@@ -1794,7 +1794,7 @@
 
             <!-- Tab Switcher -->
             <div class="flex items-center gap-2 mb-5 p-1 bg-slate-100/80 dark:bg-slate-800/60 rounded-2xl w-fit">
-                <button id="analytics-btn-overview" onclick="switchAnalyticsTab('overview')" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-cyan-500 text-white shadow-sm transition">
+                <button id="analytics-btn-overview" onclick="switchAnalyticsTab('overview')" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-500 text-white shadow-sm transition">
                     <i class="fa-solid fa-gauge-high mr-1"></i> Overview
                 </button>
                 <button id="analytics-btn-stream" onclick="switchAnalyticsTab('stream')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">
@@ -1812,26 +1812,26 @@
             <div id="analytics-tab-overview" class="space-y-6">
                 <!-- 4 Top KPI Cards -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-50/80 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-100 dark:border-cyan-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">Total Users</div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Total Users</div>
                         <div id="analytics-total-users" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div id="analytics-users-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/80 to-purple-50/40 dark:from-indigo-950/30 dark:to-purple-950/20 border border-indigo-100 dark:border-indigo-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Total Sessions</div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-100 dark:border-purple-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Total Sessions</div>
                         <div id="analytics-total-sessions" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div id="analytics-sessions-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-green-50/40 dark:from-emerald-950/30 dark:to-green-950/20 border border-emerald-100 dark:border-emerald-900/40">
                         <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Total Queries</div>
                         <div id="analytics-total-queries" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div id="analytics-queries-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
 
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50/80 to-orange-50/40 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-100 dark:border-amber-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">Avg Response Latency</div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-violet-50/80 to-purple-50/40 dark:from-violet-950/30 dark:to-purple-950/20 border border-violet-100 dark:border-violet-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-violet-600 dark:text-violet-400 mb-1">Avg Response Latency</div>
                         <div id="analytics-avg-latency" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div id="analytics-latency-sub" class="text-[10px] text-slate-400 mt-1">Loading...</div>
                     </div>
@@ -1843,7 +1843,7 @@
                     <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                                <i class="fa-solid fa-microchip text-indigo-500"></i> AI Provider Distribution
+                                <i class="fa-solid fa-microchip text-emerald-500"></i> AI Provider Distribution
                             </h4>
                             <span id="analytics-providers-count" class="text-[10px] text-slate-400 font-mono">-- providers</span>
                         </div>
@@ -1856,7 +1856,7 @@
                     <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
                         <div class="flex items-center justify-between">
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                                <i class="fa-solid fa-brain text-cyan-500"></i> Workspace Mode Usage
+                                <i class="fa-solid fa-brain text-purple-500"></i> Workspace Mode Usage
                             </h4>
                             <span id="analytics-modes-count" class="text-[10px] text-slate-400 font-mono">-- modes</span>
                         </div>
@@ -1898,7 +1898,7 @@
                         </h4>
                         <span id="analytics-volume-total" class="text-[10px] text-slate-400 font-mono">--</span>
                     </div>
-                    <div id="analytics-daily-chart" class="flex items-end justify-between gap-2 h-32 pt-2">
+                    <div id="analytics-daily-chart" class="h-36 w-full">
                         <div class="text-slate-400 text-xs">Loading volume...</div>
                     </div>
                 </div>
@@ -1960,7 +1960,7 @@
                         <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                             <i class="fa-solid fa-chart-column text-violet-500"></i> Signup Growth (Last 8 Months)
                         </h4>
-                        <div id="au-signups-chart" class="flex items-end justify-between gap-2 h-32 pt-2">
+                        <div id="au-signups-chart" class="h-36 w-full">
                             <div class="text-slate-400 text-xs">Loading...</div>
                         </div>
                         <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800 space-y-2">
@@ -2020,40 +2020,83 @@
 
             <!-- TAB 4: VISITORS -->
             <div id="analytics-tab-visitors" class="hidden space-y-5">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-fuchsia-50/80 to-pink-50/40 dark:from-fuchsia-950/30 dark:to-pink-950/20 border border-fuchsia-100 dark:border-fuchsia-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400 mb-1">Visits This Month</div>
+                <!-- Today + all-time traffic KPIs -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Today Visitors</div>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        </div>
+                        <div id="av-today-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div id="av-today-sub" class="text-[10px] text-slate-400 mt-1">Unique browsers today</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-100 dark:border-purple-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Today Visits</div>
+                        <div id="av-today-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Page views since midnight (UTC)</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Visitors This Month</div>
+                        <div id="av-month-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Unique browsers</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-100 dark:border-purple-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Visits This Month</div>
                         <div id="av-month-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div class="text-[10px] text-slate-400 mt-1" id="av-current-month">Current cycle</div>
                     </div>
                     <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/80 to-indigo-50/40 dark:from-purple-950/30 dark:to-indigo-950/20 border border-purple-100 dark:border-purple-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Visitors This Month</div>
-                        <div id="av-month-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Unique browsers</div>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-cyan-50/80 to-blue-50/40 dark:from-cyan-950/30 dark:to-blue-950/20 border border-cyan-100 dark:border-cyan-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">All-Time Visits</div>
-                        <div id="av-total-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
-                        <div class="text-[10px] text-slate-400 mt-1">Page loads recorded</div>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
-                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">All-Time Visitors</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">All-Time Visitors</div>
                         <div id="av-total-uniques" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
                         <div class="text-[10px] text-slate-400 mt-1">Distinct browsers ever</div>
                     </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 border border-emerald-100 dark:border-emerald-900/40">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">All-Time Visits</div>
+                        <div id="av-total-hits" class="text-2xl font-black text-slate-900 dark:text-white">--</div>
+                        <div class="text-[10px] text-slate-400 mt-1">Page loads recorded</div>
+                    </div>
                 </div>
 
+                <!-- Rolling 7-day summary strip -->
+                <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+                    <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
+                        <i class="fa-solid fa-calendar-week text-emerald-500 mr-1"></i> Last 7 Days
+                    </span>
+                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        <span id="av-week-hits" class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">0</span> visits
+                        <span class="mx-1 text-slate-300 dark:text-slate-600">·</span>
+                        <span id="av-week-uniques" class="font-mono font-extrabold text-purple-600 dark:text-purple-400">0</span> unique visitors
+                    </span>
+                </div>
+
+                <!-- Daily traffic (last 14 days) -->
                 <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
                         <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <i class="fa-solid fa-chart-column text-fuchsia-500"></i> Monthly Traffic Record
+                            <i class="fa-solid fa-chart-column text-emerald-500"></i> Daily Traffic (Last 14 Days)
                         </h4>
                         <span class="flex items-center gap-3 text-[10px] text-slate-400">
-                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-cyan-500"></span> Visits</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Visits</span>
                             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-purple-500"></span> Unique Visitors</span>
                         </span>
                     </div>
-                    <div id="av-monthly-chart" class="flex items-end justify-between gap-1.5 h-40 pt-2 overflow-x-auto">
+                    <div id="av-daily-chart" class="h-44 w-full">
+                        <div class="text-slate-400 text-xs">Loading daily traffic...</div>
+                    </div>
+                </div>
+
+                <!-- Monthly traffic record -->
+                <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column text-purple-500"></i> Monthly Traffic Record
+                        </h4>
+                        <span class="flex items-center gap-3 text-[10px] text-slate-400">
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Visits</span>
+                            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-purple-500"></span> Unique Visitors</span>
+                        </span>
+                    </div>
+                    <div id="av-monthly-chart" class="h-44 w-full">
                         <div class="text-slate-400 text-xs">Loading...</div>
                     </div>
                 </div>
@@ -6047,7 +6090,14 @@
             if (providerContainer) {
                 providerContainer.innerHTML = '';
                 const total = providerEntries.reduce((sum, [, count]) => sum + (Number(count) || 0), 0) || 1;
-                const colors = ['bg-cyan-500', 'bg-purple-500', 'bg-emerald-500', 'bg-amber-500', 'bg-pink-500', 'bg-blue-500'];
+                const colors = [
+                    'from-emerald-500 to-emerald-400',
+                    'from-purple-500 to-purple-400',
+                    'from-emerald-600 to-teal-400',
+                    'from-violet-600 to-purple-400',
+                    'from-green-600 to-emerald-400',
+                    'from-fuchsia-600 to-purple-400'
+                ];
                 let i = 0;
 
                 const friendlyNames = {
@@ -6085,8 +6135,8 @@
                                 <span class="truncate pr-2">${escapeHTML(label)}</span>
                                 <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px] shrink-0">${numericCount} (${pct}%)</span>
                             </div>
-                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                                <div class="${color} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                                <div class="bg-gradient-to-r ${color} h-2.5 rounded-full transition-all duration-500" style="width: ${numericCount > 0 ? Math.max(pct, 2) : 0}%"></div>
                             </div>
                         `;
                         providerContainer.appendChild(el);
@@ -6104,9 +6154,9 @@
                 modeContainer.innerHTML = '';
                 const totalModes = modeEntries.reduce((sum, [, count]) => sum + (Number(count) || 0), 0) || 1;
                 const modeColors = {
-                    'professional': 'bg-cyan-500',
-                    'basic': 'bg-emerald-500',
-                    'sarcastic': 'bg-pink-500'
+                    'professional': 'bg-emerald-500',
+                    'basic': 'bg-purple-500',
+                    'sarcastic': 'bg-emerald-400'
                 };
                 if (modeEntries.length === 0) {
                     modeContainer.innerHTML = '<div class="text-slate-400 text-xs">Zero modes active yet.</div>';
@@ -6114,7 +6164,7 @@
                     for (const [mode, count] of modeEntries) {
                         const numericCount = Number(count) || 0;
                         const pct = Math.round((numericCount / totalModes) * 100);
-                        const color = modeColors[String(mode).toLowerCase()] || 'bg-blue-500';
+                        const color = modeColors[String(mode).toLowerCase()] || 'bg-purple-500';
                         const el = document.createElement('div');
                         el.className = 'flex items-center justify-between text-xs py-1.5 border-b border-slate-100 dark:border-slate-800/60 last:border-0';
                         el.innerHTML = `
@@ -6133,23 +6183,14 @@
             const dailyChart = document.getElementById('analytics-daily-chart');
             const days = (data.daily_volume || []).slice().reverse();
             setStatText('analytics-volume-total', totalQueries + ' total queries');
-            if (dailyChart) {
-                if (days.length === 0) {
-                    dailyChart.innerHTML = '<div class="text-slate-400 text-xs">No query volume recorded yet.</div>';
-                } else {
-                    const max = Math.max(...days.map(d => Number(d.count) || 0), 1);
-                    dailyChart.innerHTML = days.map(d => {
-                        const count = Number(d.count) || 0;
-                        const height = Math.max(6, Math.round((count / max) * 100));
-                        return `
-                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHTML(d.day)}: ${count} queries">
-                            <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${count}</span>
-                            <div class="w-full max-w-[38px] rounded-t-md bg-gradient-to-t from-cyan-500 to-emerald-400 transition-all duration-500" style="height: ${height}%"></div>
-                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHTML(String(d.day || '').slice(5))}</span>
-                        </div>`;
-                    }).join('');
-                }
-            }
+            renderAnalyticsBarChart(dailyChart, days.map(d => {
+                const count = Number(d.count) || 0;
+                return {
+                    label: String(d.day || '').slice(5).replace('-', '/'),
+                    title: `${d.day}: ${count} queries`,
+                    values: [count]
+                };
+            }), [ANALYTICS_CHART_SERIES.mixed], { empty: 'No query volume recorded yet.' });
         }
 
         function renderAnalyticsEvents(events) {
@@ -6193,6 +6234,72 @@
             if (el) el.textContent = String(value ?? 0);
         }
 
+        // ---- Shared green/purple chart palette & renderer ----
+        const ANALYTICS_CHART_SERIES = {
+            green: { name: 'Visits', from: '#065f46', to: '#34d399' },
+            purple: { name: 'Unique Visitors', from: '#6d28d9', to: '#c084fc' },
+            mixed: { name: 'Queries', from: '#059669', to: '#8b5cf6' }
+        };
+        const ANALYTICS_MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        function analyticsMonthLabel(monthKey) {
+            const parts = String(monthKey || '').split('-');
+            const year = parts[0] || '';
+            const month = Number(parts[1]) || 1;
+            return (ANALYTICS_MONTH_ABBR[month - 1] || String(month)) + ' ' + year.slice(2);
+        }
+
+        // Lightweight grouped bar chart: crisp gridlines, gradient bars and
+        // hover tooltips with zero external dependencies.
+        // points: [{ label, title, values: [n, ...], highlight }]
+        // series: [{ name, from, to }]
+        function renderAnalyticsBarChart(container, points, series, options) {
+            if (!container) return;
+            const opts = options || {};
+            const list = points || [];
+            if (list.length === 0) {
+                container.innerHTML = `<div class="h-full flex items-center justify-center text-center text-slate-400 text-xs px-3">${escapeHTML(opts.empty || 'No data recorded yet.')}</div>`;
+                return;
+            }
+
+            const seriesList = series && series.length ? series : [ANALYTICS_CHART_SERIES.green];
+            const max = Math.max(1, ...list.map(p => Math.max(...(p.values || [0]).map(v => Number(v) || 0))));
+            const barMaxWidth = seriesList.length > 1 ? 15 : 30;
+            const labelEvery = opts.labelEvery || (list.length > 10 ? 2 : 1);
+
+            const grid = Array.from({ length: 5 }, (_, i) => {
+                const last = i === 4;
+                return `<div class="border-t ${last ? 'border-solid border-slate-300/80 dark:border-slate-700' : 'border-dashed border-slate-200/70 dark:border-slate-800'}"></div>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="relative h-full">
+                    <div class="absolute inset-x-0 top-0 bottom-[18px] flex flex-col justify-between pointer-events-none">${grid}</div>
+                    <div class="relative h-full flex items-end gap-1 sm:gap-1.5">
+                        ${list.map((point, index) => {
+                            const values = (point.values || []).map(v => Number(v) || 0);
+                            const title = point.title
+                                || `${point.label || ''}: ${values.join(' / ')}`;
+                            const bars = seriesList.map((s, si) => {
+                                const value = values[si] || 0;
+                                const height = value > 0 ? Math.max(3, Math.round((value / max) * 100)) : 1.5;
+                                return `<div class="rounded-t-[3px] transition-all duration-500 hover:brightness-110" style="height:${height}%; flex:1 1 0; max-width:${barMaxWidth}px; background:linear-gradient(to top, ${s.from}, ${s.to}); opacity:${value > 0 ? 1 : 0.16}"></div>`;
+                            }).join('');
+                            const showLabel = (list.length - 1 - index) % labelEvery === 0;
+                            const label = showLabel ? (point.label || '') : '';
+                            const labelClass = point.highlight
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-slate-400';
+                            return `
+                            <div class="flex-1 min-w-0 h-full flex flex-col justify-end items-center" title="${escapeHTML(title)}">
+                                <div class="flex items-end justify-center gap-[2px] w-full" style="height:calc(100% - 18px)">${bars}</div>
+                                <span class="h-[18px] leading-[18px] w-full text-center text-[9px] font-bold ${labelClass} truncate">${escapeHTML(String(label))}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+
         // ---- Tab 3: Registered users & email campaigns ----
         function renderAnalyticsUsers(data) {
             const t = data.totals || {};
@@ -6206,21 +6313,14 @@
             const chart = document.getElementById('au-signups-chart');
             if (chart) {
                 const months = (data.signups_by_month || []).slice(0, 8).reverse();
-                if (months.length === 0) {
-                    chart.innerHTML = '<div class="text-slate-400 text-xs">No signups yet.</div>';
-                } else {
-                    const max = Math.max(...months.map(m => Number(m.count) || 0), 1);
-                    chart.innerHTML = months.map(m => {
-                        const c = Number(m.count) || 0;
-                        const h = Math.max(6, Math.round((c / max) * 100));
-                        return `
-                        <div class="flex-1 flex flex-col items-center justify-end gap-1 min-w-0" title="${escapeHTML(m.month)}: ${c} signups">
-                            <span class="text-[10px] font-extrabold text-slate-700 dark:text-slate-300">${c}</span>
-                            <div class="w-full max-w-[26px] rounded-t-md bg-gradient-to-t from-violet-500 to-purple-400" style="height: ${h}%"></div>
-                            <span class="text-[9px] font-bold text-slate-400 truncate w-full text-center">${escapeHTML(String(m.month).slice(2))}</span>
-                        </div>`;
-                    }).join('');
-                }
+                renderAnalyticsBarChart(chart, months.map(m => {
+                    const c = Number(m.count) || 0;
+                    return {
+                        label: analyticsMonthLabel(m.month),
+                        title: `${m.month}: ${c} signup${c === 1 ? '' : 's'}`,
+                        values: [c]
+                    };
+                }), [ANALYTICS_CHART_SERIES.purple], { empty: 'No signups yet.' });
             }
 
             const lm = document.getElementById('au-login-methods');
@@ -6230,7 +6330,7 @@
                     lm.innerHTML = '<div class="text-slate-400 text-xs">No data.</div>';
                 } else {
                     const total = rows.reduce((a, r) => a + (Number(r.count) || 0), 0) || 1;
-                    const colors = ['bg-violet-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-amber-500'];
+                    const colors = ['bg-purple-500', 'bg-emerald-500', 'bg-violet-500', 'bg-emerald-400'];
                     lm.innerHTML = rows.map((r, i) => {
                         const c = Number(r.count) || 0;
                         const pct = Math.round((c / total) * 100);
@@ -6240,8 +6340,8 @@
                                 <span class="capitalize">${escapeHTML(r.login_method || 'unknown')}</span>
                                 <span class="font-mono">${c} (${pct}%)</span>
                             </div>
-                            <div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2 mt-1 overflow-hidden">
-                                <div class="${colors[i % colors.length]} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            <div class="w-full bg-slate-200/70 dark:bg-slate-800 rounded-full h-2.5 mt-1 overflow-hidden">
+                                <div class="${colors[i % colors.length]} h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
                             </div>
                         </div>`;
                     }).join('');
@@ -6410,51 +6510,97 @@
 
         // ---- Tab 4: Visitor traffic record ----
         function renderAnalyticsVisitors(data) {
+            data = data || {};
             const t = data.totals || {};
-            setStatText('av-month-hits', t.month_hits ?? 0);
-            setStatText('av-month-uniques', t.month_uniques ?? 0);
-            setStatText('av-total-hits', t.all_time_hits ?? 0);
-            setStatText('av-total-uniques', t.all_time_uniques ?? 0);
-            const cm = document.getElementById('av-current-month');
-            if (cm && t.current_month) cm.textContent = 'Month of ' + t.current_month;
+            const todayHits = Number(t.today_hits) || 0;
+            const todayUniques = Number(t.today_uniques) || 0;
+            const monthHits = Number(t.month_hits) || 0;
+            const monthUniques = Number(t.month_uniques) || 0;
+            const allHits = Number(t.all_time_hits) || 0;
+            const allUniques = Number(t.all_time_uniques) || 0;
+            const weekHits = Number(t.week_hits) || 0;
+            const weekUniques = Number(t.week_uniques) || 0;
 
-            const chart = document.getElementById('av-monthly-chart');
-            if (chart) {
-                const months = (data.monthly || []).slice(0, 12).reverse();
-                if (months.length === 0) {
-                    chart.innerHTML = '<div class="text-slate-400 text-xs">No visits recorded yet \u2014 traffic starts counting from today.</div>';
+            setStatText('av-today-uniques', todayUniques);
+            setStatText('av-today-hits', todayHits);
+            setStatText('av-month-hits', monthHits);
+            setStatText('av-month-uniques', monthUniques);
+            setStatText('av-total-hits', allHits);
+            setStatText('av-total-uniques', allUniques);
+            setStatText('av-week-hits', weekHits);
+            setStatText('av-week-uniques', weekUniques);
+            setStatText('av-today-sub', todayHits > 0
+                ? `${todayHits} page view${todayHits === 1 ? '' : 's'} today`
+                : 'No visits yet today (UTC)');
+
+            const cm = document.getElementById('av-current-month');
+            if (cm) {
+                if (t.current_month) {
+                    const parts = String(t.current_month).split('-');
+                    const monthDate = new Date(Date.UTC(Number(parts[0]) || 1970, (Number(parts[1]) || 1) - 1, 1));
+                    cm.textContent = 'Month of ' + monthDate.toLocaleDateString([], {
+                        month: 'long', year: 'numeric', timeZone: 'UTC'
+                    });
                 } else {
-                    const max = Math.max(...months.map(m => Math.max(Number(m.hits) || 0, Number(m.uniques) || 0)), 1);
-                    chart.innerHTML = months.map(m => {
-                        const hits = Number(m.hits) || 0;
-                        const uns = Number(m.uniques) || 0;
-                        const hh = Math.max(4, Math.round((hits / max) * 100));
-                        const uh = Math.max(4, Math.round((uns / max) * 100));
-                        return `
-                        <div class="flex-1 min-w-[34px] flex flex-col items-center gap-1" title="${escapeHTML(m.month)}: ${hits} visits / ${uns} unique visitors">
-                            <span class="text-[9px] font-extrabold text-slate-600 dark:text-slate-300">${hits}</span>
-                            <div class="w-full flex items-end justify-center gap-0.5" style="height: 70%">
-                                <div class="w-[42%] max-w-[13px] rounded-t bg-cyan-500" style="height: ${hh}%"></div>
-                                <div class="w-[42%] max-w-[13px] rounded-t bg-purple-500" style="height: ${uh}%"></div>
-                            </div>
-                            <span class="text-[9px] font-bold text-slate-400">${escapeHTML(String(m.month).slice(2))}</span>
-                        </div>`;
-                    }).join('');
+                    cm.textContent = 'Current cycle';
                 }
             }
+
+            // Daily traffic (last 14 days): green = visits, purple = unique visitors
+            const daily = (data.daily || []).slice().reverse();
+            renderAnalyticsBarChart(
+                document.getElementById('av-daily-chart'),
+                allHits > 0 ? daily.map(d => {
+                    const hits = Number(d.hits) || 0;
+                    const uniques = Number(d.uniques) || 0;
+                    return {
+                        label: String(d.day || '').slice(5).replace('-', '/'),
+                        title: `${d.day}: ${hits} visits / ${uniques} unique visitors`,
+                        values: [hits, uniques],
+                        highlight: !!d.is_today
+                    };
+                }) : [],
+                [ANALYTICS_CHART_SERIES.green, ANALYTICS_CHART_SERIES.purple],
+                { empty: 'No visits recorded yet \u2014 traffic starts counting from today.' }
+            );
+
+            // Monthly traffic (last 12 months)
+            const months = (data.monthly || []).slice().reverse();
+            renderAnalyticsBarChart(
+                document.getElementById('av-monthly-chart'),
+                allHits > 0 ? months.map(m => {
+                    const hits = Number(m.hits) || 0;
+                    const uniques = Number(m.uniques) || 0;
+                    return {
+                        label: analyticsMonthLabel(m.month),
+                        title: `${m.month}: ${hits} visits / ${uniques} unique visitors`,
+                        values: [hits, uniques],
+                        highlight: !!m.is_current
+                    };
+                }) : [],
+                [ANALYTICS_CHART_SERIES.green, ANALYTICS_CHART_SERIES.purple],
+                { empty: 'No monthly traffic recorded yet.' }
+            );
 
             const dailyBody = document.getElementById('av-daily-table-body');
             if (dailyBody) {
                 const rows = data.daily || [];
+                const todayKey = t.today || new Date().toISOString().slice(0, 10);
                 if (rows.length === 0) {
                     dailyBody.innerHTML = '<tr><td colspan="3" class="text-center py-6 text-slate-400 text-xs">No daily traffic recorded yet.</td></tr>';
                 } else {
-                    dailyBody.innerHTML = rows.map(d => `
-                        <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition">
-                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200">${escapeHTML(d.day || '—')}</td>
-                            <td class="py-2 px-3 font-extrabold text-cyan-600 dark:text-cyan-400">${Number(d.hits) || 0}</td>
+                    dailyBody.innerHTML = rows.map(d => {
+                        const isToday = !!d.is_today || String(d.day) === todayKey;
+                        return `
+                        <tr class="border-b border-slate-100 dark:border-slate-800/60 text-xs transition ${isToday ? 'bg-emerald-50/60 dark:bg-emerald-950/20' : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/30'}">
+                            <td class="py-2 px-3 font-mono text-slate-700 dark:text-slate-200">
+                                ${escapeHTML(d.day || '—')}
+                                ${isToday ? '<span class="ml-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase bg-emerald-500 text-white">Today</span>' : ''}
+                            </td>
+                            <td class="py-2 px-3 font-extrabold text-emerald-600 dark:text-emerald-400">${Number(d.hits) || 0}</td>
                             <td class="py-2 px-3 font-extrabold text-purple-600 dark:text-purple-400">${Number(d.uniques) || 0}</td>
-                        </tr>`).join('');
+                        </tr>`;
+                    }).join('');
                 }
             }
 
@@ -6476,7 +6622,7 @@
                                 ${escapeHTML(t)}
                             </td>
                             <td class="py-2 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400" title="${escapeHTML(vk)}">${escapeHTML(shortVk)}</td>
-                            <td class="py-2 px-3 font-mono text-cyan-600 dark:text-cyan-400">${escapeHTML(r.path || '/')}</td>
+                            <td class="py-2 px-3 font-mono text-emerald-600 dark:text-emerald-400">${escapeHTML(r.path || '/')}</td>
                         </tr>`;
                     }).join('');
                 }
@@ -6492,7 +6638,7 @@
                 const btn = document.getElementById('analytics-btn-' + t);
                 if (pane) pane.classList.toggle('hidden', t !== tabName);
                 if (btn) btn.className = t === tabName
-                    ? 'px-3 py-1.5 rounded-xl font-bold text-xs bg-cyan-500 text-white shadow-sm transition'
+                    ? 'px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-500 text-white shadow-sm transition'
                     : 'px-3 py-1.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
             });
         }

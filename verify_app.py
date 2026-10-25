@@ -1,8 +1,20 @@
+import os
 import uuid
 
 from fastapi.testclient import TestClient
 from app.main import app
 from app.database import init_db, save_user
+
+# Safety rail: this suite creates users, sessions and telemetry. Running it with
+# a live Postgres/Supabase URL would write that test data into production, so
+# refuse unless the caller explicitly opts in.
+if (os.getenv("DATABASE_URL", "").startswith(("postgres://", "postgresql://"))
+        and os.getenv("ALLOW_REMOTE_TESTS", "") != "1"):
+    raise SystemExit(
+        "Refusing to run verification against a remote Postgres/Supabase database.\n"
+        "Point DATABASE_URL at a local value (e.g. DATABASE_URL=local-sqlite) and set "
+        "DATABASE_PATH to a throwaway file, or set ALLOW_REMOTE_TESTS=1 to override."
+    )
 
 def verify_all():
     init_db()
@@ -205,6 +217,24 @@ def verify_all():
     print(f"Provider Distribution: {analytics_data['provider_distribution']}")
     print(f"Mode Distribution: {analytics_data['mode_distribution']}")
 
+    # 13b. Visitor traffic counters (today, rolling week, month, all-time)
+    r_track = client.post("/api/analytics/track", json={"visitor_key": "verify-visitor-001", "path": "/"})
+    assert r_track.status_code == 200, f"Visitor tracking failed: {r_track.status_code}"
+    r_visitors = client.get("/api/analytics/visitors", headers=headers1)
+    assert r_visitors.status_code == 200, f"Expected 200, got {r_visitors.status_code}"
+    visitor_data = r_visitors.json()
+    vtotals = visitor_data["totals"]
+    assert vtotals["today_hits"] >= 1
+    assert vtotals["today_uniques"] >= 1
+    assert vtotals["week_hits"] >= vtotals["today_hits"]
+    assert vtotals["all_time_hits"] >= vtotals["week_hits"]
+    assert len(visitor_data["daily"]) == 14, f"Expected 14 daily buckets, got {len(visitor_data['daily'])}"
+    assert len(visitor_data["monthly"]) == 12, f"Expected 12 monthly buckets, got {len(visitor_data['monthly'])}"
+    assert visitor_data["daily"][0]["is_today"] is True
+    print(f"Visitor Traffic [OK]: today {vtotals['today_uniques']} visitors / {vtotals['today_hits']} visits, "
+          f"7d {vtotals['week_uniques']} / {vtotals['week_hits']}, "
+          f"all-time {vtotals['all_time_uniques']} / {vtotals['all_time_hits']}")
+
     # 14. Data Analytics Recent Events Log
     r_events = client.get("/api/analytics/events?limit=10", headers=headers1)
     assert r_events.status_code == 200
@@ -214,7 +244,7 @@ def verify_all():
     print(f"Analytics Events Log [OK]: Latest query used '{latest['provider_used']}' with mode '{latest['mode']}' in {latest['latency_ms']}ms")
 
     print("\n=======================================================")
-    print("ALL 14 MULTI-USER, AUTO-FALLBACK & ANALYTICS TESTS PASSED 100%!")
+    print("ALL 15 MULTI-USER, AUTO-FALLBACK, ANALYTICS & VISITOR TESTS PASSED 100%!")
     print("=======================================================")
 
 if __name__ == "__main__":

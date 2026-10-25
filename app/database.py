@@ -405,7 +405,10 @@ def record_visitor(visitor_key: str, path: str = "/") -> None:
         conn.commit()
 
 def get_visitor_stats() -> Dict[str, Any]:
-    this_month = datetime.utcnow().strftime("%Y-%m")
+    now = datetime.utcnow()
+    this_month = now.strftime("%Y-%m")
+    today = now.strftime("%Y-%m-%d")
+    week_start = (now - timedelta(days=6)).strftime("%Y-%m-%d")
     with get_connection() as conn:
         cursor = conn.cursor()
 
@@ -418,7 +421,22 @@ def get_visitor_stats() -> Dict[str, Any]:
             ORDER BY month DESC
             LIMIT 12
         """)
-        monthly = [dict(r) for r in cursor.fetchall()]
+        monthly_rows = {r["month"]: dict(r) for r in cursor.fetchall()}
+
+        # Fill the last 12 calendar months (current first) so the chart keeps a
+        # stable, correctly spaced series even for months with zero traffic.
+        monthly = []
+        for i in range(12):
+            month_index = (now.year * 12 + (now.month - 1)) - i
+            year, month = divmod(month_index, 12)
+            key = f"{year:04d}-{month + 1:02d}"
+            row = monthly_rows.get(key) or {}
+            monthly.append({
+                "month": key,
+                "hits": int(row.get("hits") or 0),
+                "uniques": int(row.get("uniques") or 0),
+                "is_current": key == this_month,
+            })
 
         _exec(cursor, """
             SELECT substr(created_at, 1, 10) AS day,
@@ -429,7 +447,18 @@ def get_visitor_stats() -> Dict[str, Any]:
             ORDER BY day DESC
             LIMIT 14
         """)
-        daily = [dict(r) for r in cursor.fetchall()]
+        daily_rows = {r["day"]: dict(r) for r in cursor.fetchall()}
+
+        daily = []
+        for i in range(14):
+            key = (now - timedelta(days=i)).strftime("%Y-%m-%d")
+            row = daily_rows.get(key) or {}
+            daily.append({
+                "day": key,
+                "hits": int(row.get("hits") or 0),
+                "uniques": int(row.get("uniques") or 0),
+                "is_today": key == today,
+            })
 
         _exec(cursor, "SELECT COUNT(*) AS hits, COUNT(DISTINCT visitor_key) AS uniques FROM visitor_events")
         totals_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
@@ -440,6 +469,20 @@ def get_visitor_stats() -> Dict[str, Any]:
             WHERE substr(created_at, 1, 7) = %s
         """, (this_month,))
         month_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
+
+        _exec(cursor, """
+            SELECT COUNT(*) AS hits, COUNT(DISTINCT visitor_key) AS uniques
+            FROM visitor_events
+            WHERE substr(created_at, 1, 10) = %s
+        """, (today,))
+        today_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
+
+        _exec(cursor, """
+            SELECT COUNT(*) AS hits, COUNT(DISTINCT visitor_key) AS uniques
+            FROM visitor_events
+            WHERE substr(created_at, 1, 10) >= %s
+        """, (week_start,))
+        week_row = dict(cursor.fetchone() or {"hits": 0, "uniques": 0})
 
         _exec(cursor, """
             SELECT visitor_key, path, created_at
@@ -456,9 +499,14 @@ def get_visitor_stats() -> Dict[str, Any]:
         "totals": {
             "all_time_hits": int(totals_row.get("hits") or 0),
             "all_time_uniques": int(totals_row.get("uniques") or 0),
+            "today_hits": int(today_row.get("hits") or 0),
+            "today_uniques": int(today_row.get("uniques") or 0),
+            "week_hits": int(week_row.get("hits") or 0),
+            "week_uniques": int(week_row.get("uniques") or 0),
             "month_hits": int(month_row.get("hits") or 0),
             "month_uniques": int(month_row.get("uniques") or 0),
-            "current_month": this_month
+            "current_month": this_month,
+            "today": today,
         }
     }
 
@@ -481,7 +529,13 @@ def get_users_admin() -> Dict[str, Any]:
             ORDER BY month DESC
             LIMIT 12
         """)
-        signups_by_month = [dict(r) for r in cursor.fetchall()]
+        signup_rows = {r["month"]: int(r["count"] or 0) for r in cursor.fetchall()}
+        signups_by_month = []
+        for i in range(12):
+            month_index = (datetime.utcnow().year * 12 + (datetime.utcnow().month - 1)) - i
+            year, month = divmod(month_index, 12)
+            key = f"{year:04d}-{month + 1:02d}"
+            signups_by_month.append({"month": key, "count": signup_rows.get(key, 0)})
 
         _exec(cursor, "SELECT login_method, COUNT(*) AS count FROM users GROUP BY login_method ORDER BY count DESC")
         by_login_method = [dict(r) for r in cursor.fetchall()]
@@ -577,14 +631,20 @@ def get_analytics_summary() -> Dict[str, Any]:
         """)
         statuses = {r["status"]: r["count"] for r in cursor.fetchall()}
 
+        # Always return seven calendar-day buckets (including empty days) so the
+        # volume chart keeps a stable x-axis even when a day has no queries.
+        week_day_cutoff = (datetime.utcnow() - timedelta(days=6)).strftime("%Y-%m-%d")
         _exec(cursor, """
             SELECT substr(created_at, 1, 10) as day, COUNT(*) as count
             FROM analytics_events
+            WHERE substr(created_at, 1, 10) >= %s
             GROUP BY day
-            ORDER BY day DESC
-            LIMIT 7
-        """)
-        daily = [{"day": r["day"], "count": r["count"]} for r in cursor.fetchall()]
+        """, (week_day_cutoff,))
+        daily_rows = {r["day"]: int(r["count"] or 0) for r in cursor.fetchall()}
+        daily = []
+        for i in range(7):
+            key = (datetime.utcnow() - timedelta(days=i)).strftime("%Y-%m-%d")
+            daily.append({"day": key, "count": daily_rows.get(key, 0)})
 
         return {
             "total_queries": total_queries,
