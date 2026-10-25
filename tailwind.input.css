@@ -1,0 +1,6 @@
+/* Rebuild after editing static/index.html:
+   npx --yes tailwindcss@3.4.17 -c tailwind.config.cjs -i tailwind.input.css -o static/tailwind.css --minify
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

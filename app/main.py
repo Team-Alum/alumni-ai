@@ -25,6 +25,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Keep HTML fresh, but let browsers reuse static artwork/fonts between visits.
+_STATIC_CACHE_PREFIXES = (
+    "/logo", "/icon-", "/apple-touch-icon", "/manifest", "/tailwind",
+    "/robots.txt", "/sitemap.xml", "/llms",
+)
+
+
+@app.middleware("http")
+async def add_cache_headers(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")
+    elif path in ("/", "/index.html"):
+        response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
+    elif path.startswith(_STATIC_CACHE_PREFIXES):
+        response.headers["Cache-Control"] = "public, max-age=604800, stale-while-revalidate=86400"
+    return response
+
 # Initialize database tables on startup
 @app.on_event("startup")
 def on_startup():
