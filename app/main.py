@@ -27,7 +27,7 @@ app.add_middleware(
 
 # Keep HTML fresh, but let browsers reuse static artwork/fonts between visits.
 _STATIC_CACHE_PREFIXES = (
-    "/logo", "/icon-", "/apple-touch-icon", "/manifest", "/tailwind",
+    "/logo", "/icon-", "/apple-touch-icon", "/manifest", "/tailwind", "/vendor",
     "/robots.txt", "/sitemap.xml", "/llms",
 )
 
