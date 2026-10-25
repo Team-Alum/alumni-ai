@@ -14,7 +14,7 @@
 | **10-tier auto-fallback AI engine** | Tries providers in order on every request — OpenCode Zen → OpenRouter → Qwen → Ollama → Google Gemini → Groq → Cerebras → Mistral → GitHub Models → built-in offline brain. Rate-limited or down? It moves on automatically. |
 | **Voice assistant "May"** | Hindi, Hinglish & Indian English detection with Sarvam AI neural TTS — concise answers by default, silent on small talk, voice-controlled UI actions |
 | **Sessions & chat history** | Email-bound accounts with strict per-user isolation — nobody can read another user's sessions. Powered by Supabase Postgres. |
-| **Sign-in options** | Google Sign-In (server-verified OAuth credentials), username/password, and 1-click guest access |
+| **Sign-in options** | Google Sign-In (server-verified OAuth credentials), username/password, and guest access that politely asks for a display name first |
 | **3D companion "Pengu"** | Interactive SVG mascot with eye/flipper physics, shy & happy states |
 | **System Pulse analytics** | Founder-only (`is_team_alum`) latency/provider/mode dashboards — 403-locked for everyone else |
 | **Extras** | YouTube educational embeds with channel deduplication, file attachments, text research pipeline, dark claymorphic UI, mobile-first layout |

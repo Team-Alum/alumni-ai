@@ -1,6 +1,8 @@
+import uuid
+
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import init_db
+from app.database import init_db, save_user
 
 def verify_all():
     init_db()
@@ -32,10 +34,24 @@ def verify_all():
     print("Security Check: Missing password rejected with 400 [OK]")
 
     # 4a. User 1 Login (ScholarDev - Team Alum)
+    # Founder accounts are intentionally NOT creatable through the password
+    # endpoint (admin access requires verified Google OAuth). Seed the founder
+    # row directly through the DB layer so this suite can still exercise the
+    # password login + analytics paths.
+    founder_email = "scholar.dev@team.alum"
+    founder_password = "AlumSecurePassword123!"
+    save_user(
+        user_id=str(uuid.uuid5(uuid.NAMESPACE_DNS, founder_email)),
+        username="ScholarDev",
+        email=founder_email,
+        login_method="alum",
+        is_team_alum=True,
+        password=founder_password
+    )
     r_auth1 = client.post("/api/auth/login", json={
         "username": "ScholarDev",
-        "email": "scholar.dev@team.alum",
-        "password": "AlumSecurePassword123!",
+        "email": founder_email,
+        "password": founder_password,
         "login_method": "alum",
         "is_team_alum": True
     })
@@ -77,27 +93,43 @@ def verify_all():
         f"Fake credential must be rejected, got {r_google_fake.status_code}"
     print("Google Credential Verify [OK]: Fake credential rejected with", r_google_fake.status_code)
 
-    # 4d. Guest Login Test (Fast 1-Click instant guest access, no passwords)
-    r_guest_direct = client.post("/api/auth/guest")
+    # 4d. Guest Login Test (name-first guest access — no passwords)
+    r_guest_noname = client.post("/api/auth/guest", json={})
+    assert r_guest_noname.status_code == 400, \
+        f"Guest login without a name must be refused, got {r_guest_noname.status_code}"
+    r_guest_direct = client.post("/api/auth/guest", json={"username": "Guest Scholar"})
     assert r_guest_direct.status_code == 200, f"Guest direct login failed: {r_guest_direct.text}"
     u_guest = r_guest_direct.json()
-    assert u_guest["username"].startswith("Guest")
+    assert u_guest["username"] == "Guest Scholar", u_guest["username"]
     assert u_guest["login_method"] == "guest"
+    assert u_guest["email"].endswith("@guest.alumni.ai")
+    assert u_guest["is_team_alum"] is False
     assert "token" in u_guest and len(u_guest["token"]) > 10
-    
+
     guest_headers = {"Authorization": f"Bearer {u_guest['token']}"}
     r_guest_me = client.get("/api/auth/me", headers=guest_headers)
     assert r_guest_me.status_code == 200 and r_guest_me.json()["id"] == u_guest["id"]
-    print(f"Guest 1-Click Login [OK]: Authenticated as '{u_guest['username']}' ({u_guest['email']})")
+    print(f"Guest Name-First Login [OK]: Authenticated as '{u_guest['username']}' ({u_guest['email']})")
 
-    # 4e. Guest Login via /api/auth/login payload
+    # 4d-ii. Guests can never impersonate the team or an administrator
+    r_guest_reserved = client.post("/api/auth/guest", json={"username": "Sudarshan Hadmode"})
+    assert r_guest_reserved.status_code == 400, "Founder name must not be claimable by a guest"
+    r_guest_admin = client.post("/api/auth/guest", json={"username": "Admin"})
+    assert r_guest_admin.status_code == 400, "Admin name must not be claimable by a guest"
+    print("Guest Display-Name Guard [OK]: Reserved / impersonation names rejected with 400")
+
+    # 4e. Guest Login via /api/auth/login payload (client email is ignored)
     r_guest_route = client.post("/api/auth/login", json={
-        "login_method": "guest"
+        "login_method": "guest",
+        "username": "Guest Route",
+        "email": "teamalumorg@gmail.com"
     })
     assert r_guest_route.status_code == 200
     u_guest2 = r_guest_route.json()
     assert u_guest2["login_method"] == "guest"
-    print(f"Guest Route Login [OK]: Authenticated as '{u_guest2['username']}'")
+    assert u_guest2["email"] != "teamalumorg@gmail.com", "Guest email must be server-generated"
+    assert u_guest2["is_team_alum"] is False, "Guest must never gain founder access"
+    print(f"Guest Route Login [OK]: Authenticated as '{u_guest2['username']}' ({u_guest2['email']})")
 
     r_auth2 = client.post("/api/auth/login", json={
         "username": "alex_coder",

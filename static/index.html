@@ -1438,10 +1438,10 @@
                     </div>
 
                     <div class="mt-3">
-                        <button type="button" id="guest-login-btn" onclick="handleGuestLogin(); createRipple(event);" class="clay-btn w-full py-2.5 flex items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 font-semibold transition-all">
+                        <button type="button" id="guest-login-btn" onclick="openGuestNameModal(); createRipple(event);" class="clay-btn w-full py-2.5 flex items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-300 hover:text-cyan-700 dark:hover:text-cyan-400 font-semibold transition-all">
                             <i class="fa-solid fa-user-ninja text-slate-500"></i>
                             <span>Continue as Guest</span>
-                            <span class="text-[10px] text-slate-400 font-normal">(Instant Access)</span>
+                            <span class="text-[10px] text-slate-400 font-normal">(No password needed)</span>
                         </button>
                     </div>
                 </div>
@@ -1506,6 +1506,48 @@
                     Access Saved Workspace
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Guest Display Name Modal (polite, name-first guest entry) -->
+    <div id="guest-name-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden transition-all">
+        <div class="clay-card p-7 max-w-sm w-full relative animate-fade-scale border border-slate-200 dark:border-slate-800">
+            <button type="button" onclick="closeGuestNameModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-sm" title="Close">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-2xl clay-pill flex items-center justify-center text-cyan-700 dark:text-cyan-400 bg-white dark:bg-slate-900">
+                    <i class="fa-solid fa-hand-sparkles text-lg"></i>
+                </div>
+                <h3 class="text-lg font-extrabold text-slate-800 dark:text-white">Hello there! 👋</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5 leading-relaxed">
+                    Lovely to have you here. Can you please tell us your name? That way the workspace and May can greet you properly.
+                </p>
+            </div>
+
+            <form id="guest-name-form" onsubmit="event.preventDefault(); submitGuestName();">
+                <label for="guest-name-input" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5 pl-1">What should we call you?</label>
+                <input
+                    type="text"
+                    id="guest-name-input"
+                    class="clay-input w-full px-4 py-3 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400"
+                    placeholder="e.g. Aarav"
+                    maxlength="32"
+                    autocomplete="nickname"
+                    enterkeyhint="go"
+                    oninput="clearGuestNameHint();"
+                >
+                <p id="guest-name-hint" class="text-[11px] text-cyan-700 dark:text-cyan-400 font-medium mt-1.5 pl-1 min-h-[16px]"></p>
+
+                <button type="submit" id="guest-name-continue-btn" onclick="createRipple(event);" class="clay-btn clay-btn-primary w-full py-3 text-xs mt-2">
+                    Continue to Workspace
+                </button>
+            </form>
+
+            <p class="text-[10px] text-slate-400 text-center mt-3 leading-relaxed">
+                Guest mode needs no email or password — just the name you'd like us to use.
+            </p>
         </div>
     </div>
 
@@ -2882,14 +2924,75 @@
             await postLoginUser();
         }
 
-        // Fast 1-Click Guest Login Handler
-        async function handleGuestLogin() {
+        // ---------------------------------------------------------------
+        // Guest entry: we politely ask for a name before creating the guest
+        // session. The name is a friendly requirement, not a wall — the copy
+        // stays warm and never says "required" / "compulsory".
+        // ---------------------------------------------------------------
+        function openGuestNameModal() {
+            const modal = document.getElementById('guest-name-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            const input = document.getElementById('guest-name-input');
+            const hint = document.getElementById('guest-name-hint');
+            if (hint) hint.textContent = '';
+            const remembered = localStorage.getItem('alumni_last_guest_name') || '';
+            if (input) {
+                input.value = remembered;
+                setTimeout(function () { try { input.focus(); input.select(); } catch (e) {} }, 80);
+            }
+        }
+
+        function closeGuestNameModal() {
+            const modal = document.getElementById('guest-name-modal');
+            if (modal) modal.classList.add('hidden');
+            const input = document.getElementById('guest-name-input');
+            const hint = document.getElementById('guest-name-hint');
+            if (input) input.value = '';
+            if (hint) hint.textContent = '';
+        }
+
+        function clearGuestNameHint() {
+            const hint = document.getElementById('guest-name-hint');
+            if (hint) hint.textContent = '';
+        }
+
+        function setGuestNameHint(message) {
+            const hint = document.getElementById('guest-name-hint');
+            if (hint) hint.textContent = message;
+        }
+
+        async function submitGuestName() {
+            const input = document.getElementById('guest-name-input');
+            const name = ((input && input.value) || '').replace(/\s+/g, ' ').trim();
+            if (!name) {
+                setGuestNameHint('Just your name, and you\'re in 🙂');
+                if (input) input.focus();
+                return;
+            }
+            localStorage.setItem('alumni_last_guest_name', name);
+            await handleGuestLogin(name);
+        }
+
+        async function handleGuestLogin(name) {
+            const btn = document.getElementById('guest-name-continue-btn');
+            const guestName = ((name || '').replace(/\s+/g, ' ').trim());
+            if (!guestName) {
+                openGuestNameModal();
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'pointer-events-none');
+            }
             try {
-                showToast('Entering Alumni AI as Guest...', 'success');
                 const resp = await fetch('/api/auth/guest', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: guestName })
                 });
+
                 if (resp.ok) {
                     const data = await resp.json();
                     currentUser.id = data.id;
@@ -2901,22 +3004,38 @@
                     currentUser.token = data.token;
                     localStorage.setItem('alumni_token', data.token);
                     localStorage.setItem('alumni_current_user', JSON.stringify(currentUser));
+                    closeGuestNameModal();
                     transitionToWorkspace();
-                    showToast(`Welcome, ${data.username}! Guest exploration active.`);
+                    showToast(`Welcome aboard, ${data.username}! Guest exploration is active.`);
                 } else {
-                    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
-                    currentUser.username = 'Guest ' + randomHex;
-                    currentUser.email = 'guest_' + randomHex.toLowerCase() + '@guest.alumni.ai';
-                    currentUser.isTeamAlum = false;
-                    currentUser.loginMethod = 'guest';
-                    currentUser.password = '';
-                    await postLoginUser();
+                    const errData = await resp.json().catch(() => ({}));
+                    const msg = errData.detail || 'We could not start the guest session just now — please try once more.';
+                    setGuestNameHint(msg);
+                    showToast(msg, 'error');
                 }
             } catch (err) {
                 console.error("Guest login error:", err);
-                showToast('Could not initiate guest login. Please try again.', 'error');
+                const msg = 'Could not reach the Alumni AI server. Please check your connection and try again.';
+                setGuestNameHint(msg);
+                showToast(msg, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-60', 'pointer-events-none');
+                }
             }
         }
+
+        // Close the guest-name sheet with Escape or a backdrop tap.
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            const modal = document.getElementById('guest-name-modal');
+            if (modal && !modal.classList.contains('hidden')) closeGuestNameModal();
+        });
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('guest-name-modal');
+            if (modal && e.target === modal) closeGuestNameModal();
+        });
 
         // Team Alum Login Modal Handlers
         function openTeamAlumLoginModal() {

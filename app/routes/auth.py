@@ -1,3 +1,5 @@
+import re
+import unicodedata
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional
@@ -19,6 +21,92 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 class GoogleCredentialRequest(BaseModel):
     credential: str
+
+
+class GuestLoginRequest(BaseModel):
+    username: Optional[str] = None
+
+
+GUEST_NAME_MAX = 32
+GUEST_NAME_MIN = 2
+
+# Guests may pick any friendly display name, but must never pass themselves off
+# as the team, the product, or an administrator.
+_RESERVED_GUEST_NAMES = {
+    "sudarshan", "sudarshanhadmode", "soham", "teamalum", "teamalumorg",
+    "alumni", "alumniai", "admin", "administrator", "root", "founder",
+    "cofounder", "moderator", "support", "system", "may", "pengu"
+}
+_RESERVED_GUEST_PREFIXES = ("teamalum", "alumni", "admin")
+_GUEST_NAME_EXTRA_CHARS = set(" .-'’")
+
+
+def _normalize_guest_name(raw: Optional[str]) -> str:
+    """Whitespace/character cleanup only — never raises."""
+    name = re.sub(r"\s+", " ", (raw or "")).strip()
+    # Keep letters, combining marks and digits from any script (so Hindi names
+    # such as "अंश" survive intact) plus a few safe name characters. Everything
+    # else — markup, control chars, emoji, zero-width joiners — is dropped.
+    name = "".join(
+        ch for ch in name
+        if ch in _GUEST_NAME_EXTRA_CHARS or unicodedata.category(ch)[0] in ("L", "M", "N")
+    )
+    name = re.sub(r"\s+", " ", name).strip(" .-_'’")
+    return name[:GUEST_NAME_MAX].strip()
+
+
+def _validate_guest_name(raw: Optional[str]) -> str:
+    """Polite, non-shaming validation for the guest display name."""
+    name = _normalize_guest_name(raw)
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="Hello there! Could you please tell us your name before we begin?"
+        )
+    if len(name) < GUEST_NAME_MIN:
+        raise HTTPException(
+            status_code=400,
+            detail="That looks a little short — could you share the name you'd like us to use?"
+        )
+    if not any(ch.isalpha() for ch in name):
+        raise HTTPException(
+            status_code=400,
+            detail="Could you share the name you'd like us to use? Letters work best."
+        )
+    compact = "".join(ch for ch in name.lower() if ch.isalnum())
+    if compact in _RESERVED_GUEST_NAMES or compact.startswith(_RESERVED_GUEST_PREFIXES):
+        raise HTTPException(
+            status_code=400,
+            detail="That name belongs to the Team Alum crew — could you pick a different one for yourself?"
+        )
+    return name
+
+
+def _unique_guest_name(name: str) -> str:
+    """Keep guest display names distinct so greetings stay unambiguous."""
+    if not get_user_by_email_or_username(name):
+        return name
+    suffix = f" ({uuid.uuid4().hex[:4].upper()})"
+    return f"{name[:GUEST_NAME_MAX - len(suffix)].strip()}{suffix}"
+
+
+def _create_guest_account(raw_name: Optional[str]) -> dict:
+    """Single hardened path used by both /guest and the /login guest fast-path.
+
+    The email is always server-generated so a guest can never claim (or shadow)
+    a real account's address.
+    """
+    display_name = _validate_guest_name(raw_name)
+    guest_id = uuid.uuid4().hex
+    user = save_user(
+        user_id=str(uuid.uuid4()),
+        username=_unique_guest_name(display_name),
+        email=f"guest_{guest_id[:10]}@guest.alumni.ai",
+        login_method="guest",
+        is_team_alum=False,
+        password=None
+    )
+    return {**user, "token": create_auth_token(user["id"])}
 
 
 def _is_founder_email(email: str) -> bool:
@@ -88,24 +176,9 @@ def google_oauth_login(payload: GoogleCredentialRequest):
 
 
 @router.post("/guest", response_model=UserResponse)
-def guest_login():
-    guest_suffix = uuid.uuid4().hex[:5].upper()
-    username = f"Guest {guest_suffix}"
-    email = f"guest_{guest_suffix.lower()}@guest.alumni.ai"
-    user_id = str(uuid.uuid4())
-    user = save_user(
-        user_id=user_id,
-        username=username,
-        email=email,
-        login_method="guest",
-        is_team_alum=False,
-        password=None
-    )
-    token = create_auth_token(user_id)
-    return {
-        **user,
-        "token": token
-    }
+def guest_login(payload: Optional[GuestLoginRequest] = None):
+    """Guest access requires a display name so the workspace can greet the user."""
+    return _create_guest_account(payload.username if payload else None)
 
 
 @router.post("/login", response_model=UserResponse)
@@ -114,25 +187,10 @@ def login_user(payload: LoginRequest):
     username_clean = (payload.username or "").strip()
     password_clean = (payload.password or "").strip()
 
-    # Fast-path for guest login via /api/auth/login
+    # Fast-path for guest login via /api/auth/login. A display name is required
+    # and the email is always generated server-side (never client-supplied).
     if payload.login_method == "guest":
-        guest_suffix = uuid.uuid4().hex[:5].upper()
-        username_clean = username_clean or f"Guest {guest_suffix}"
-        email_clean = email_clean or f"guest_{guest_suffix.lower()}@guest.alumni.ai"
-        user_id = str(uuid.uuid4())
-        user = save_user(
-            user_id=user_id,
-            username=username_clean,
-            email=email_clean,
-            login_method="guest",
-            is_team_alum=False,
-            password=None
-        )
-        token = create_auth_token(user_id)
-        return {
-            **user,
-            "token": token
-        }
+        return _create_guest_account(payload.username)
 
     # Google logins must go through the verified /api/auth/google endpoint.
     # Plain /login accepts no Google credentials, so no identity can be spoofed here.
