@@ -201,7 +201,7 @@ async def synthesize_research_with_first_api(
     custom_api_key: Optional[str] = None
 ) -> Tuple[str, str]:
     """
-    Feeds the compiled web research dossier into the First API (Alumni AI Reasoning Engine / OpenCode Zen).
+    Feeds the compiled web research dossier into the Alumni AI reasoning engine.
     The First API performs analytical synthesis, fact-checking, and generates a structured, citation-backed response.
     """
     synthesis_prompt = (

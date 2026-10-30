@@ -38,7 +38,7 @@ async def extract_file_content(payload: FileExtractRequest, user: dict = Depends
 
     if is_image:
         # Image files: metadata descriptor here; real pixel analysis happens at chat
-        # time — the attachment observer runs Gemini vision over the image bytes.
+        # time — the attachment observer runs a vision model over the image bytes.
         ext = lower_name.rsplit(".", 1)[-1] if "." in lower_name else "image"
         extracted_text = (
             f"[Attached image: {name} — format: {ext.upper()}, size: {file_size} bytes. "

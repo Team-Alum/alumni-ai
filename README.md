@@ -1,6 +1,6 @@
 # Alumni AI
 
-**Alumni AI** is a full-stack AI workspace built by **Team Alum** — multi-mode intelligence, an interactive voice companion **May**, a 3D mascot **Pengu**, persistent chat sessions, and a 10-tier automatic AI fallback engine that keeps working even when individual providers fail.
+**Alumni AI** is a full-stack AI workspace built by **Team Alum** — multi-mode intelligence, an interactive voice companion **May**, a 3D mascot **Pengu**, persistent chat sessions, and a resilient AI engine that keeps working when an individual provider is unavailable.
 
 - **Startup & Founder**: Sudarshan Hadmode — *Startup & Founder of Team Alum, Alumni AI Developer*
 
@@ -11,8 +11,8 @@
 | | |
 |---|---|
 | **Three intelligence modes** | 🎓 Professional (scholarly rigor) · 📖 Basic (simple, friendly) · 😏 Sarcastic (senior-dev banter, accurate answers) |
-| **10-tier auto-fallback AI engine** | Tries providers in order on every request — OpenCode Zen → OpenRouter → Qwen → Ollama → Google Gemini → Groq → Cerebras → Mistral → GitHub Models → built-in offline brain. Rate-limited or down? It moves on automatically. |
-| **Voice assistant "May"** | Hindi, Hinglish & Indian English detection with Sarvam AI neural TTS — concise answers by default, silent on small talk, voice-controlled UI actions |
+| **Resilient AI engine** | Automatic failover keeps responses flowing when a provider is rate-limited or down. The provider order and configuration are private. |
+| **Voice assistant "May"** | Hindi, Hinglish & Indian English detection with neural TTS — concise answers by default, silent on small talk, voice-controlled UI actions |
 | **Sessions & chat history** | Email-bound accounts with strict per-user isolation — nobody can read another user's sessions. Powered by Supabase Postgres. |
 | **Sign-in options** | Google Sign-In (server-verified OAuth credentials), username/password, and guest access that politely asks for a display name first |
 | **3D companion "Pengu"** | Interactive SVG mascot with eye/flipper physics, shy & happy states |
@@ -28,7 +28,7 @@ alumni-ai/
 ├── app/
 │   ├── main.py              # FastAPI app, routers, static mount
 │   ├── config.py            # Env settings — ALL secrets come from .env (never committed)
-│   ├── database.py          # Dual-mode DB layer: Supabase Postgres (prod) or SQLite (local fallback)
+│   ├── database.py          # Dual-mode DB layer: Supabase Postgres (prod) or SQLite (local)
 │   ├── security.py          # Token auth dependency
 │   ├── models.py            # Pydantic schemas
 │   ├── routes/
@@ -42,7 +42,7 @@ alumni-ai/
 │   │   ├── files.py         # /api/files — attachments
 │   │   └── analytics.py     # /api/analytics — founder-only
 │   └── services/
-│       ├── ai_service.py    # 10-tier fallback orchestration
+│       ├── ai_service.py    # AI response orchestration
 │       ├── voice_service.py # May: language detection, TTS, speech formatting
 │       ├── browser_service.py
 │       └── code_sandbox.py
@@ -70,7 +70,7 @@ pip install -r requirements.txt
 copy .env.example .env       # Windows (use cp on macOS/Linux)
 ```
 
-Edit `.env` — at minimum set `DATABASE_URL` (Supabase) or leave it empty to use local SQLite. All AI provider keys are optional: the fallback engine works its way down to the offline brain.
+Edit `.env` — at minimum set `DATABASE_URL` (Supabase) or leave it empty to use local SQLite. AI provider credentials are optional and configured privately; the engine degrades gracefully when a provider is not available.
 
 ```bash
 run.bat
@@ -87,12 +87,8 @@ Open **http://127.0.0.1:8000**
 |---|---|---|
 | `DATABASE_URL` | Supabase Postgres connection string (URI). Empty = local SQLite mode | Production |
 | `GOOGLE_CLIENT_ID` | Google OAuth Web client ID for Sign-In button | Google login |
-| `OPENCODE_API_KEY` | Tier 1 — OpenCode Zen | optional |
-| `OPENROUTER_API_KEY` | Tier 2 — OpenRouter free models | optional |
-| `GEMINI_API_KEY` | Tier 5 — Google Gemini | optional |
-| `GROQ_API_KEY` / `CEREBRAS_API_KEY` / `MISTRAL_API_KEY` / `GITHUB_TOKEN` | Tiers 6–9 | optional |
-| `SARVAM_API_KEY` | May's neural voice (Sarvam Bulbul TTS) | Voice |
-| `ENABLE_OFFLINE_FALLBACK` | Tier 10 built-in brain (default `True`) | — |
+| `SARVAM_API_KEY` | May's neural voice | Voice |
+| AI provider credentials | Configured privately via `.env` or the hosting provider's environment settings | Production |
 
 > **Security:** secrets live only in `.env` — it is gitignored. Never hardcode keys in source.
 
@@ -102,7 +98,7 @@ Open **http://127.0.0.1:8000**
 
 1. Push this repo to GitHub and import it at [vercel.com/new](https://vercel.com/new)
 2. Vercel auto-detects FastAPI via `pyproject.toml` — zero config needed
-3. Add the environment variables above in **Project Settings → Environment Variables** (at least `DATABASE_URL` and your provider keys)
+3. Add the environment variables above in **Project Settings → Environment Variables**
 4. Deploy → your app is live at `https://<project>.vercel.app`
 5. Add that URL to your Google OAuth client's **Authorized JavaScript origins**
 

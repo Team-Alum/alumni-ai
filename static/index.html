@@ -115,6 +115,9 @@
     <link rel="preload" as="style" href="/tailwind.css">
     <script defer src="/vendor/marked.min.js"></script>
     <script defer src="/vendor/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -933,6 +936,120 @@
         .starter-chip:active { background: rgba(6, 182, 212, 0.08); border-color: #06b6d4; }
         html.dark .starter-chip { background: #131b2e; color: #cbd5e1; }
 
+        /* ============================================================
+           AI CHAT EXPERIENCE — streaming, actions, mode switcher
+           ============================================================ */
+        .msg-bubble { transition: box-shadow 0.18s ease, border-color 0.18s ease; }
+        .msg-bubble:hover { box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07); }
+        html.dark .msg-bubble:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+
+        .ai-avatar { background: linear-gradient(135deg, #06b6d4, #6366f1); }
+        html.dark .ai-avatar { background: linear-gradient(135deg, #0891b2, #4f46e5); }
+
+        .msg-bubble.ai-bubble { border-left: 3px solid rgba(6, 182, 212, 0.55); }
+        html.dark .msg-bubble.ai-bubble { border-left-color: rgba(34, 211, 238, 0.55); }
+
+        .msg-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            opacity: 0;
+            transform: translateY(-2px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .msg-bubble:hover .msg-actions,
+        .msg-actions:focus-within { opacity: 1; transform: none; }
+        @media (hover: none) { .msg-actions { opacity: 1; transform: none; } }
+        .msg-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 11px;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .msg-action-btn:hover { background: rgba(6, 182, 212, 0.10); color: #0891b2; }
+        html.dark .msg-action-btn:hover { background: rgba(34, 211, 238, 0.12); color: #67e8f9; }
+
+        .ai-typing { display: inline-flex; gap: 4px; align-items: center; height: 18px; }
+        .ai-typing i {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #06b6d4; display: inline-block;
+            animation: aiDot 1.2s infinite ease-in-out;
+        }
+        .ai-typing i:nth-child(2) { animation-delay: 0.15s; background: #3b82f6; }
+        .ai-typing i:nth-child(3) { animation-delay: 0.3s; background: #8b5cf6; }
+        @keyframes aiDot {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
+            40% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        .stream-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #06b6d4;
+            margin-left: 2px;
+            vertical-align: -2px;
+            animation: cursorBlink 0.9s steps(1) infinite;
+        }
+        @keyframes cursorBlink { 50% { opacity: 0; } }
+
+        .mode-seg {
+            display: flex;
+            gap: 3px;
+            padding: 3px;
+            border-radius: 12px;
+            background: var(--surface-2, #f1f5f9);
+            border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.25));
+        }
+        html.dark .mode-seg { background: #1e293b; }
+        .mode-seg button {
+            flex: 1;
+            min-width: 0;
+            padding: 5px 8px;
+            border-radius: 9px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        html.dark .mode-seg button { color: #94a3b8; }
+        .mode-seg button.active {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
+        }
+        .mode-seg button:active { transform: scale(0.97); }
+
+        .followup-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #0e7490;
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.22);
+            transition: background 0.15s ease, border-color 0.15s ease;
+            text-align: left;
+        }
+        .followup-chip:hover { background: rgba(6, 182, 212, 0.16); border-color: rgba(6, 182, 212, 0.4); }
+        html.dark .followup-chip { color: #67e8f9; background: rgba(34, 211, 238, 0.08); border-color: rgba(34, 211, 238, 0.22); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .ai-typing i, .stream-cursor { animation: none; }
+        }
+
         /* Prevent unintended horizontal scroll anywhere */
         .overflow-guard { max-width: 100%; min-width: 0; overflow-x: hidden; }
 
@@ -974,6 +1091,73 @@
             background: linear-gradient(135deg, #ffffff, #eef2f8) !important;
             border-color: rgba(148, 163, 184, 0.35) !important;
         }
+        .logo-chip img {
+            object-fit: contain !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        /* ============================================================
+           MATH (KaTeX) + MARKDOWN TABLES
+           ============================================================ */
+        .katex-display-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            margin: 0.75rem 0;
+            position: relative;
+            max-width: 100%;
+        }
+        .katex-display-scroll .katex-display { margin: 0.35rem 0; }
+        .katex-display-scroll .katex { font-size: 1.02em; }
+        .katex-copy-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(15, 23, 42, 0.55);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 8px;
+            padding: 1px 5px;
+            font-size: 10px;
+            line-height: 1.4;
+            opacity: 0.65;
+            transition: opacity 0.15s ease;
+        }
+        .katex-display-scroll:hover .katex-copy-btn { opacity: 1; }
+        .katex-error { color: #dc2626 !important; font-family: ui-monospace, monospace; }
+
+        /* Body numerals: clean tabular digits */
+        body, .markdown-content { font-variant-numeric: tabular-nums; }
+        .katex, .katex * { font-variant-numeric: normal; }
+
+        /* Markdown tables */
+        .markdown-content table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            font-size: 0.82rem;
+            display: block;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .markdown-content thead { background: rgba(6, 182, 212, 0.10); }
+        .markdown-content thead th {
+            position: sticky;
+            top: 0;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .markdown-content tbody tr:nth-child(even) { background: rgba(148, 163, 184, 0.06); }
 
         @media (max-height: 480px) and (orientation: landscape) {
             #chat-messages { padding-top: calc(var(--sat) + 3.25rem); padding-bottom: 0.5rem; }
@@ -1232,6 +1416,406 @@
     <link rel="stylesheet" href="/tailwind.css">
 </head>
 <body class="h-full w-full flex flex-col overflow-hidden" style="background-color: var(--bg-color);">
+
+    <!-- ==========================================================================
+         LAUNCH BARRICADE  ·  "Application will be live at 9 AM"
+         --------------------------------------------------------------------------
+         A fully self-contained overlay. It does NOT modify any existing UI markup,
+         styles or backend code. It simply sits on top of everything, counts down,
+         and removes itself automatically at 9:00 AM (then never blocks the app).
+         Force a demo at any time:  https://your-site/?gate=preview
+         Config lives in the LAUNCH GATE CONFIG block at the end of this section.
+         ========================================================================== -->
+    <style>
+        #launch-gate {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            background:
+                radial-gradient(900px 520px at 18% -5%, rgba(8, 145, 178, 0.20), transparent 62%),
+                radial-gradient(820px 520px at 92% 105%, rgba(219, 39, 119, 0.16), transparent 62%),
+                var(--bg-color, #eef3f8);
+            color: var(--text-1, #0f172a);
+            font-family: 'Nunito', 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior: none;
+            touch-action: none;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #launch-gate * { box-sizing: border-box; }
+        #launch-gate.lg-unlocking { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        #launch-gate .lg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.55;
+            pointer-events: none;
+        }
+        #launch-gate .lg-blob-a {
+            width: 320px; height: 320px; top: -80px; left: -60px;
+            background: var(--accent-cyan, #d0e8e9);
+            animation: lgFloat 14s ease-in-out infinite;
+        }
+        #launch-gate .lg-blob-b {
+            width: 300px; height: 300px; bottom: -90px; right: -70px;
+            background: var(--accent-pink, #f2dce0);
+            animation: lgFloat 18s ease-in-out infinite reverse;
+        }
+        @keyframes lgFloat {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50%      { transform: translate3d(18px, -22px, 0); }
+        }
+
+        #launch-gate .lg-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 520px;
+            padding: 34px 26px 24px;
+            text-align: center;
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.25));
+            border-radius: 28px;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        #launch-gate .lg-logo {
+            width: 76px; height: 76px;
+            margin: 0 auto 16px;
+            padding: 10px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 22px;
+            background: var(--surface-2, #f5f8fb);
+            border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.25));
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+        }
+        #launch-gate .lg-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+        #launch-gate .lg-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 6px 13px;
+            border-radius: 999px;
+            font-size: 11.5px; font-weight: 800;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            color: #0e7490;
+            background: rgba(8, 145, 178, 0.10);
+            border: 1px solid rgba(8, 145, 178, 0.22);
+        }
+        #launch-gate .lg-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #06b6d4;
+            box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.55);
+            animation: lgPulse 2s infinite;
+        }
+        @keyframes lgPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.55); }
+            70%  { box-shadow: 0 0 0 9px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        #launch-gate #lg-title {
+            margin: 16px 0 6px;
+            font-size: 24px; line-height: 1.25;
+            font-weight: 900; letter-spacing: -0.02em;
+            color: var(--text-1, #0f172a);
+        }
+        #launch-gate #lg-sub {
+            margin: 0 0 20px;
+            font-size: 12.5px; font-weight: 600;
+            color: var(--text-2, #475569);
+        }
+
+        #launch-gate .lg-countdown {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 9px;
+            margin: 0 0 18px;
+        }
+        #launch-gate .lg-unit {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 4px;
+            padding: 12px 4px 10px;
+            border-radius: 16px;
+            background: var(--surface-2, #f5f8fb);
+            border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.25));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+        #launch-gate .lg-num {
+            font-family: 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+            font-size: clamp(21px, 6vw, 28px);
+            font-weight: 800; line-height: 1;
+            letter-spacing: -0.03em;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-1, #0f172a);
+        }
+        #launch-gate .lg-lbl {
+            font-size: 9.5px; font-weight: 800;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--text-3, #94a3b8);
+        }
+
+        #launch-gate .lg-note {
+            margin: 0;
+            font-size: 11.5px; font-weight: 600;
+            color: var(--text-2, #475569);
+        }
+        #launch-gate .lg-note.lg-urgent {
+            color: #e11d48;
+            font-weight: 800;
+        }
+        #launch-gate .lg-foot {
+            margin: 16px 0 0;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-soft, rgba(148, 163, 184, 0.25));
+            font-size: 10.5px; font-weight: 700;
+            letter-spacing: 0.10em; text-transform: uppercase;
+            color: var(--text-3, #94a3b8);
+        }
+
+        html.dark #launch-gate .lg-blob-a { background: #164e63; opacity: 0.42; }
+        html.dark #launch-gate .lg-blob-b { background: #831843; opacity: 0.38; }
+        html.dark #launch-gate .lg-card {
+            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        html.dark #launch-gate .lg-badge {
+            color: #67e8f9;
+            background: rgba(34, 211, 238, 0.10);
+            border-color: rgba(34, 211, 238, 0.28);
+        }
+        html.dark #launch-gate .lg-unit { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+
+        @media (max-width: 380px) {
+            #launch-gate .lg-card { padding: 26px 16px 18px; border-radius: 22px; }
+            #launch-gate #lg-title { font-size: 20px; }
+            #launch-gate .lg-countdown { gap: 6px; }
+            #launch-gate .lg-unit { padding: 10px 2px 8px; border-radius: 13px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #launch-gate .lg-blob,
+            #launch-gate .lg-dot { animation: none; }
+            #launch-gate { transition: none; }
+        }
+    </style>
+
+    <div id="launch-gate" role="dialog" aria-modal="true" aria-labelledby="lg-title" aria-describedby="lg-sub">
+        <div class="lg-blob lg-blob-a" aria-hidden="true"></div>
+        <div class="lg-blob lg-blob-b" aria-hidden="true"></div>
+
+        <main class="lg-card">
+            <div class="lg-logo">
+                <img src="/logo.png" alt="Alumni AI">
+            </div>
+
+            <span class="lg-badge">
+                <span class="lg-dot" aria-hidden="true"></span>
+                Launching at <span id="lg-open-time">9:00 AM</span>
+            </span>
+
+            <h1 id="lg-title">Application will be live at 9 AM</h1>
+            <p id="lg-sub">The workspace opens automatically in</p>
+
+            <div class="lg-countdown" id="lg-countdown" aria-live="polite" aria-atomic="true">
+                <div class="lg-unit"><span class="lg-num" id="lg-days">--</span><span class="lg-lbl">Days</span></div>
+                <div class="lg-unit"><span class="lg-num" id="lg-hours">--</span><span class="lg-lbl">Hours</span></div>
+                <div class="lg-unit"><span class="lg-num" id="lg-minutes">--</span><span class="lg-lbl">Minutes</span></div>
+                <div class="lg-unit"><span class="lg-num" id="lg-seconds">--</span><span class="lg-lbl">Seconds</span></div>
+            </div>
+
+            <p class="lg-note" id="lg-status">This page will unlock on its own — no refresh needed.</p>
+            <p class="lg-foot">Team Alum · Alumni AI</p>
+        </main>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        /* ---------------------- LAUNCH GATE CONFIG ----------------------
+           Change ONE line to move the launch: `unlockAt` below.
+           It is the visitor's LOCAL time, format: 'YYYY-MM-DDTHH:mm:ss'.
+
+             mode: 'once'  -> barricade until `unlockAt`, then gone forever.
+                              (This is the normal launch-day setting.)
+             mode: 'daily' -> barricade only if the clock is before 9:00 AM,
+                              and it lifts at 9:00 AM every day. Use this if
+                              the app must stay open after 9 AM today.
+           ----------------------------------------------------------------- */
+        var CONFIG = {
+            enabled: true,
+
+            mode: 'once',
+
+            // Unlock clock (24-hour, visitor's local time).
+            hour: 9,
+            minute: 0,
+
+            // The single launch moment. Barricade lifts here, permanently.
+            unlockAt: '2026-10-26T09:00:00'
+        };
+        /* ---------------------------------------------------------------- */
+
+        var gate = document.getElementById('launch-gate');
+        if (!gate) return;
+
+        var preview = false;
+        try {
+            preview = new URLSearchParams(window.location.search).get('gate') === 'preview';
+        } catch (e) { preview = false; }
+
+        var el = {
+            days: document.getElementById('lg-days'),
+            hours: document.getElementById('lg-hours'),
+            minutes: document.getElementById('lg-minutes'),
+            seconds: document.getElementById('lg-seconds'),
+            status: document.getElementById('lg-status'),
+            openTime: document.getElementById('lg-open-time'),
+            title: document.getElementById('lg-title')
+        };
+
+        var timerId = null;
+        var finished = false;
+        var prevBodyOverflow = '';
+
+        function pad2(n) {
+            return (n < 10 ? '0' : '') + n;
+        }
+
+        function nextUnlock(from) {
+            var t = new Date(
+                from.getFullYear(), from.getMonth(), from.getDate(),
+                CONFIG.hour, CONFIG.minute, 0, 0
+            );
+            if (t.getTime() <= from.getTime()) t.setDate(t.getDate() + 1);
+            return t;
+        }
+
+        function computeTarget() {
+            var now = new Date();
+
+            if (CONFIG.mode === 'once') {
+                var fixed = CONFIG.unlockAt ? new Date(CONFIG.unlockAt) : null;
+                if (!fixed || isNaN(fixed.getTime())) fixed = nextUnlock(now);
+                if (fixed.getTime() > now.getTime()) return fixed;
+                // Launch moment already passed: app is live.
+                return preview ? nextUnlock(now) : null;
+            }
+
+            // daily: barricade only while the clock is before today's unlock time.
+            var todayUnlock = new Date(
+                now.getFullYear(), now.getMonth(), now.getDate(),
+                CONFIG.hour, CONFIG.minute, 0, 0
+            );
+            if (now.getTime() >= todayUnlock.getTime()) {
+                return preview ? nextUnlock(now) : null;
+            }
+            return todayUnlock;
+        }
+
+        function lockScroll() {
+            prevBodyOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        }
+
+        function unlockScroll() {
+            document.body.style.overflow = prevBodyOverflow;
+            document.documentElement.style.overflow = '';
+        }
+
+        function unlockNow(immediate) {
+            if (finished) return;
+            finished = true;
+
+            if (timerId) { clearInterval(timerId); timerId = null; }
+
+            unlockScroll();
+            gate.classList.add('lg-unlocking');
+
+            try {
+                window.dispatchEvent(new CustomEvent('alumni:launchgate:open'));
+            } catch (e) {}
+
+            function detach() {
+                if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
+            }
+            if (immediate) { detach(); } else { setTimeout(detach, 650); }
+        }
+
+        var target = computeTarget();
+
+        if (!CONFIG.enabled || !target) {
+            if (!CONFIG.enabled) {
+                console.info('[launch-gate] disabled by config — showing the app normally.');
+            } else {
+                console.info('[launch-gate] launch time already passed — app is live. ' +
+                             'Append ?gate=preview to see the barricade.');
+            }
+            unlockNow(true);
+            return;
+        }
+
+        var openLabel = target.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+        if (el.openTime) el.openTime.textContent = openLabel;
+        if (el.title && (CONFIG.hour !== 9 || CONFIG.minute !== 0)) {
+            el.title.textContent = 'Application will be live at ' + openLabel;
+        }
+
+        function render() {
+            var diff = target.getTime() - Date.now();
+
+            if (diff <= 0) { unlockNow(false); return; }
+
+            var total = Math.floor(diff / 1000);
+            var d = Math.floor(total / 86400);
+            var h = Math.floor((total % 86400) / 3600);
+            var m = Math.floor((total % 3600) / 60);
+            var s = total % 60;
+
+            if (el.days) el.days.textContent = pad2(d);
+            if (el.hours) el.hours.textContent = pad2(h);
+            if (el.minutes) el.minutes.textContent = pad2(m);
+            if (el.seconds) el.seconds.textContent = pad2(s);
+
+            if (el.status) {
+                if (total <= 60) {
+                    el.status.textContent = 'Opening in less than a minute…';
+                    el.status.classList.add('lg-urgent');
+                } else if (total <= 300) {
+                    el.status.textContent = 'Almost there — unlocking shortly.';
+                    el.status.classList.add('lg-urgent');
+                } else {
+                    el.status.textContent = 'This page will unlock on its own — no refresh needed.';
+                    el.status.classList.remove('lg-urgent');
+                }
+            }
+        }
+
+        lockScroll();
+        render();
+        timerId = setInterval(render, 500);
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) render();
+        });
+        window.addEventListener('focus', render);
+
+        window.LaunchGate = {
+            open: function () { unlockNow(false); },
+            target: function () { return new Date(target.getTime()); },
+            preview: preview
+        };
+    })();
+    </script>
 
     <!-- Splash Screen -->
     <div id="welcome-intro-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-700" style="background-color: var(--bg-color);">
@@ -1749,7 +2333,7 @@
                             <i class="fa-solid fa-code"></i> Engineered by Team Alum
                         </span>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-pink-500/10 text-pink-700 text-[11px] font-bold">
-                            <i class="fa-solid fa-brain"></i> OpenCode Zen API
+                            <i class="fa-solid fa-brain"></i> Advanced AI Engine
                         </span>
                     </div>
                     <span class="text-[10px] text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
@@ -1757,7 +2341,7 @@
                     </span>
                 </div>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    Evolved from an early testing prototype into a supercharged multi-mode workspace assistant. Powered by a specialized <strong>OpenCode API</strong> for advanced software problem-solving and debugging, alongside real-time web summarization, drafting, and Chrome exploration. Driven by <strong>Team Alum</strong>.
+                    Evolved from an early testing prototype into a supercharged multi-mode workspace assistant. Powered by an advanced <strong>AI engine</strong> for software problem-solving and debugging, alongside real-time web summarization, drafting, and Chrome exploration. Driven by <strong>Team Alum</strong>.
                 </p>
             </div>
 
@@ -2371,11 +2955,11 @@
                         </a>
                     </div>
                     <div class="flex gap-2">
-                        <input type="password" id="settings-api-key-input" placeholder="Paste Gemini / OpenRouter / Groq key..." class="clay-input flex-1 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white font-mono">
+                        <input type="password" id="settings-api-key-input" placeholder="Paste your AI provider key..." class="clay-input flex-1 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white font-mono">
                         <button onclick="saveCustomApiKey(); createRipple(event); playTactileSound('click');" class="clay-btn px-4 py-2.5 text-xs font-bold whitespace-nowrap">Save</button>
                     </div>
                     <div class="flex items-center justify-between pt-1 text-[10px]">
-                        <span id="settings-engine-badge" class="px-2 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">10-Tier Free Engine Active</span>
+                        <span id="settings-engine-badge" class="px-2 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">AI Engine Active</span>
                         <span class="text-slate-400">Stored locally in browser</span>
                     </div>
                 </div>
@@ -2646,6 +3230,13 @@
                         <!-- Attachment Previews Tray -->
                         <div id="attachment-tray" class="hidden mb-2 flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                             <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <!-- Quick response-mode switcher -->
+                        <div class="mode-seg mb-1.5" id="composer-mode-seg" role="group" aria-label="Response mode">
+                            <button type="button" data-mode="professional" class="active" onclick="setMode('professional'); playTactileSound('click');"><i class="fa-solid fa-briefcase mr-1"></i>Professional</button>
+                            <button type="button" data-mode="basic" onclick="setMode('basic'); playTactileSound('click');"><i class="fa-solid fa-book-open mr-1"></i>Basic</button>
+                            <button type="button" data-mode="sarcastic" onclick="setMode('sarcastic'); playTactileSound('click');"><i class="fa-solid fa-face-grin-tongue-wink mr-1"></i>Sarcastic</button>
                         </div>
 
                         <!-- Integrated Chat Editor: attach, textarea, May, send in one aligned flex row -->
@@ -3532,7 +4123,7 @@
                 showToast('API Key saved! Alumni AI will use this key for queries.');
             } else {
                 localStorage.removeItem('alumni_custom_api_key');
-                showToast('API Key cleared. Using 10-tier free auto-fallback engine.');
+                showToast('API Key cleared. Using the automatic AI engine.');
             }
             updateEngineStatusBadge();
         }
@@ -3545,7 +4136,7 @@
                     badge.textContent = "Custom Key Active";
                     badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700";
                 } else {
-                    badge.textContent = "10-Tier Free Engine";
+                    badge.textContent = "AI Engine";
                     badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700";
                 }
             }
@@ -3765,6 +4356,10 @@
                         btn.className = 'w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center justify-between';
                     }
                 }
+            });
+
+            document.querySelectorAll('#composer-mode-seg [data-mode]').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
             });
 
             showToast(`Switched to ${mode.toUpperCase()} mode.`);
@@ -4245,7 +4840,8 @@
 
         // On-demand video: user clicks the YouTube button on any AI message
         async function requestVideoForMessage(btn) {
-            const query = window.lastSentUserQuery || '';
+            const owner = btn.closest('[data-ai-message]');
+            const query = (owner && owner.getAttribute('data-user-query')) || window.lastSentUserQuery || '';
             if (!query) { showToast('No related query found for this message.'); return; }
             const bubble = btn.closest('.msg-bubble');
             if (bubble && bubble.querySelector('.yt-video-slot')) { showToast('Video already loaded for this answer.'); return; }
@@ -4399,12 +4995,109 @@
         }
 
         let isSubmittingMessage = false;
+        let activeStream = null;
 
-        async function sendUserMessage() {
+        function setStreamingUI(on) {
+            const btn = document.getElementById('send-msg-btn');
+            if (!btn) return;
+            if (on) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'pointer-events-none', 'from-cyan-500', 'to-blue-500');
+                btn.classList.add('from-rose-500', 'to-pink-500');
+                btn.title = 'Stop generating';
+                btn.innerHTML = '<i class="fa-solid fa-stop text-xs"></i>';
+                btn.onclick = (e) => { if (e) e.preventDefault(); stopGeneration(); };
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('from-rose-500', 'to-pink-500');
+                btn.classList.add('from-cyan-500', 'to-blue-500');
+                btn.title = 'Send Message';
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i>';
+                btn.onclick = (e) => { sendUserMessage(); if (e) { createRipple(e); playTactileSound('send'); } };
+            }
+        }
+
+        function stopGeneration() {
+            if (activeStream && activeStream.controller) {
+                try { activeStream.controller.abort(); } catch (e) {}
+            }
+        }
+
+        function buildSourcesHtml(sources) {
+            if (!sources || !Array.isArray(sources) || !sources.length) return '';
+            return `
+                <div class="mt-3.5 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
+                    <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-earth-americas text-cyan-600 dark:text-cyan-400"></i>
+                        <span>Researched Live Web Sources (${sources.length}):</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${sources.map((s, idx) => `
+                            <a href="${escapeHTML(s.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-semibold bg-slate-100 dark:bg-slate-800/90 hover:bg-cyan-50 dark:hover:bg-cyan-950/60 text-slate-700 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 border border-slate-200/60 dark:border-slate-700 transition" title="${escapeHTML(s.title)}">
+                                <span class="w-3.5 h-3.5 rounded-full bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300 flex items-center justify-center text-[9px] font-bold">${idx + 1}</span>
+                                <span class="truncate max-w-[140px] sm:max-w-[200px]">${escapeHTML(s.domain || s.title)}</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildFollowupsHtml(questions) {
+            if (!questions || !Array.isArray(questions) || !questions.length) return '';
+            return `
+                <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-800">
+                    <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles text-cyan-600 dark:text-cyan-400"></i> Keep going
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${questions.slice(0, 4).map((q) => {
+                            const value = typeof q === 'string' ? q : (q.query || q.title || '');
+                            const label = typeof q === 'string' ? q : (q.title || q.query || '');
+                            return `<button type="button" class="followup-chip" onclick="sendQuickPrompt(${escapeHTML(JSON.stringify(value))})"><i class="fa-solid fa-arrow-right text-[9px]"></i><span>${escapeHTML(label)}</span></button>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function copyMessageText(btn) {
+            const wrap = btn.closest('[data-ai-message]') || btn.closest('.msg-bubble');
+            const content = wrap ? (wrap.querySelector('[data-stream-content]') || wrap.querySelector('.markdown-content')) : null;
+            const text = content ? content.innerText : '';
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                const old = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i>';
+                setTimeout(() => { btn.innerHTML = old; }, 1400);
+            } catch (e) {
+                showToast('Copy failed. Select the text manually.', 'error');
+            }
+        }
+
+        async function regenerateMessage(btn) {
+            const wrap = btn.closest('[data-ai-message]');
+            if (!wrap || isSubmittingMessage) return;
+            const query = wrap.getAttribute('data-user-query') || window.lastSentUserQuery || '';
+            if (!query) { showToast('Nothing to regenerate yet.', 'info'); return; }
+            wrap.remove();
+            window.lastSentUserQuery = query;
+            isSubmittingMessage = true;
+            try {
+                await runChatPipeline({ text: query, attachmentsToSend: [], useWebResearch: false, videoPromise: Promise.resolve(null) });
+            } finally {
+                isSubmittingMessage = false;
+                if (!activeStream) setStreamingUI(false);
+            }
+        }
+
+        async function sendUserMessage(opts = {}) {
             if (isSubmittingMessage) return;
             const input = document.getElementById('chat-input');
             const sendBtn = document.getElementById('send-msg-btn');
-            const text = input.value.trim();
+            const text = (opts.textOverride != null ? String(opts.textOverride) : input.value).trim();
             if (!text && !currentAttachments.length) return;
 
             isSubmittingMessage = true;
@@ -4418,7 +5111,9 @@
             renderAttachmentTray();
 
             const displayText = text || (attachmentsToSend.length ? `[Analyzing attached file: ${attachmentsToSend[0].name}]` : '');
-            appendMessage(displayText, 'user', currentMode, null, null, attachmentsToSend);
+            if (!opts.skipUserBubble) {
+                appendMessage(displayText, 'user', currentMode, null, null, attachmentsToSend);
+            }
             input.value = '';
             input.style.height = 'auto';
 
@@ -4429,43 +5124,89 @@
             window.lastSentUserQuery = text || '';
             const videoPromise = (queryForVideo && shouldSuggestVideo(queryForVideo)) ? fetchYouTubeVideo(queryForVideo) : Promise.resolve(null);
 
-            // Show Loading Indicator with Rotating TA Spinner
+            try {
+                await runChatPipeline({ text, attachmentsToSend, useWebResearch, videoPromise });
+            } finally {
+                isSubmittingMessage = false;
+                if (sendBtn && !activeStream) {
+                    sendBtn.disabled = false;
+                    sendBtn.classList.remove('opacity-50', 'pointer-events-none');
+                }
+            }
+        }
+
+        async function runChatPipeline({ text, attachmentsToSend, useWebResearch, videoPromise }) {
             const chatContainer = document.getElementById('chat-messages');
+
+            // Loading indicator with animated typing dots
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'ai-loading-indicator';
             loadingDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
             loadingDiv.innerHTML = `
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
-                    <img src="/logo-256.webp" decoding="async" alt="Alumni AI" class="w-full h-full object-contain animate-pulse">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80 ai-avatar">
+                    <img src="/logo-256.webp" decoding="async" alt="Alumni AI" class="w-full h-full object-contain">
                 </div>
                 <div class="msg-bubble clay-surface-white p-3 rounded-2xl text-xs text-slate-700 dark:text-slate-200 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 flex-1 min-w-0">
-                    <div class="w-4 h-4 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin shrink-0"></div>
-                    <span id="ai-loading-text" class="min-w-0 truncate">${useWebResearch ? 'Researching the web & analyzing...' : (attachmentsToSend.length ? `Analyzing attached files (${currentMode})...` : `Alumni AI is reasoning (${currentMode})...`)}</span>
+                    <span class="ai-typing"><i></i><i></i><i></i></span>
+                    <span id="ai-loading-text" class="min-w-0 truncate">${useWebResearch ? 'Researching the web & analyzing...' : (attachmentsToSend.length ? `Analyzing attached files (${currentMode})...` : `Alumni AI is thinking (${currentMode})...`)}</span>
                 </div>
             `;
             chatContainer.appendChild(loadingDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            try {
-                const customKey = localStorage.getItem('alumni_custom_api_key') || null;
-                const endpoint = useWebResearch ? '/api/research' : '/api/chat';
-                const cleanQueryText = text.replace(/^(@research|\/research)\s*/i, '').trim() || text;
-                const bodyPayload = useWebResearch ? {
-                    session_id: currentSessionId,
-                    query: cleanQueryText || (attachmentsToSend.length ? `Analyze the attached document ${attachmentsToSend[0].name}` : ''),
-                    mode: currentMode,
-                    custom_api_key: customKey,
-                    depth: 'deep'
-                } : {
-                    session_id: currentSessionId,
-                    message: text || (attachmentsToSend.length ? `Provide a complete solution for the attached file${attachmentsToSend.length > 1 ? 's' : ''}: ${attachmentsToSend[0].name}${attachmentsToSend.length > 1 ? ` (+${attachmentsToSend.length - 1} more)` : ''} — analyze it and give exact fixes, steps, commands, or answers.` : ''),
-                    mode: currentMode,
-                    custom_api_key: customKey,
-                    web_research: false,
-                    use_memory: isMemoryModeEnabled(),
-                    attachments: attachmentsToSend.length ? attachmentsToSend : undefined
-                };
+            const customKey = localStorage.getItem('alumni_custom_api_key') || null;
+            const endpoint = useWebResearch ? '/api/research' : '/api/chat';
+            const cleanQueryText = text.replace(/^(@research|\/research)\s*/i, '').trim() || text;
+            const bodyPayload = useWebResearch ? {
+                session_id: currentSessionId,
+                query: cleanQueryText || (attachmentsToSend.length ? `Analyze the attached document ${attachmentsToSend[0].name}` : ''),
+                mode: currentMode,
+                custom_api_key: customKey,
+                depth: 'deep'
+            } : {
+                session_id: currentSessionId,
+                message: text || (attachmentsToSend.length ? `Provide a complete solution for the attached file${attachmentsToSend.length > 1 ? 's' : ''}: ${attachmentsToSend[0].name}${attachmentsToSend.length > 1 ? ` (+${attachmentsToSend.length - 1} more)` : ''} — analyze it and give exact fixes, steps, commands, or answers.` : ''),
+                mode: currentMode,
+                custom_api_key: customKey,
+                web_research: false,
+                use_memory: isMemoryModeEnabled(),
+                attachments: attachmentsToSend.length ? attachmentsToSend : undefined
+            };
 
+            // Prefer token streaming for normal chat. If it is unavailable for any
+            // reason, silently fall back to the standard JSON endpoint.
+            if (!useWebResearch && typeof ReadableStream !== 'undefined') {
+                const indicator = document.getElementById('ai-loading-indicator');
+                if (indicator) indicator.remove();
+                try {
+                    const streamed = await streamChatToBubble(bodyPayload, currentMode);
+                    if (streamed && streamed.aborted) return;
+                    currentSessionId = (streamed && streamed.sessionId) || currentSessionId;
+                    loadRecentSessions();
+                    let youtubeVideo = null;
+                    try {
+                        youtubeVideo = await Promise.race([
+                            videoPromise,
+                            new Promise(resolve => setTimeout(() => resolve(null), 3000))
+                        ]);
+                    } catch (ytErr) {
+                        console.warn('YouTube video resolution warning:', ytErr);
+                    }
+                    if (youtubeVideo && streamed && streamed.wrap) {
+                        const extras = streamed.wrap.querySelector('[data-stream-extras]');
+                        if (extras) extras.insertAdjacentHTML('beforeend', buildVideoSlotHtml(youtubeVideo));
+                    }
+                    return;
+                } catch (err) {
+                    console.warn('Streaming unavailable, falling back to standard response:', err);
+                    const stale = document.querySelector('[data-streaming="1"]');
+                    if (stale) stale.remove();
+                    activeStream = null;
+                    setStreamingUI(false);
+                }
+            }
+
+            try {
                 const resp = await fetch(endpoint, {
                     method: 'POST',
                     headers: getAuthHeaders(),
@@ -4517,12 +5258,160 @@
                 if (indicator) indicator.remove();
                 appendMessage("Failed to reach Alumni AI backend server. Please check your connection.", 'ai', currentMode);
             } finally {
-                isSubmittingMessage = false;
-                if (sendBtn) {
-                    sendBtn.disabled = false;
-                    sendBtn.classList.remove('opacity-50', 'pointer-events-none');
+                setStreamingUI(false);
+            }
+        }
+
+        async function streamChatToBubble(bodyPayload, mode) {
+            const chatContainer = document.getElementById('chat-messages');
+            const controller = new AbortController();
+            const wrap = document.createElement('div');
+            wrap.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
+            wrap.setAttribute('data-ai-message', '1');
+            wrap.setAttribute('data-streaming', '1');
+            wrap.setAttribute('data-user-query', window.lastSentUserQuery || '');
+            const msgId = 'msg-content-' + Date.now();
+            wrap.innerHTML = `
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80 ai-avatar">
+                    <img src="/logo-256.webp" decoding="async" alt="Alumni AI" class="w-full h-full object-contain">
+                </div>
+                <div class="msg-bubble ai-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-800 dark:text-slate-100 space-y-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex-1 min-w-0">
+                    <div class="font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-1.5 min-w-0 truncate">
+                            <span>Alumni AI (${(mode || currentMode).toUpperCase()})</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 shrink-0" data-live-badge><i class="fa-solid fa-bolt mr-1"></i>Live</span>
+                        </span>
+                        <div class="msg-actions">
+                            <button type="button" class="msg-action-btn" onclick="copyMessageText(this)" title="Copy response"><i class="fa-regular fa-copy"></i></button>
+                            <button type="button" class="msg-action-btn" onclick="regenerateMessage(this)" title="Regenerate response"><i class="fa-solid fa-rotate-right"></i></button>
+                            <button type="button" class="msg-action-btn" onclick="speakMessageBubble(this)" title="Listen with May"><i class="fa-solid fa-volume-high"></i></button>
+                        </div>
+                    </div>
+                    <div class="leading-relaxed font-medium overflow-x-auto markdown-content" id="${msgId}" data-stream-content><span class="ai-typing"><i></i><i></i><i></i></span></div>
+                    <div data-stream-extras></div>
+                </div>
+            `;
+            chatContainer.appendChild(wrap);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            activeStream = { controller, wrap, full: '' };
+            setStreamingUI(true);
+
+            const contentEl = wrap.querySelector('[data-stream-content]');
+            let full = '';
+            let rafPending = false;
+            let doneEvt = null;
+            let sessionId = currentSessionId;
+            let aborted = false;
+
+            const paint = () => {
+                rafPending = false;
+                // Fast plain-text paint while streaming; full Markdown + math
+                // rendering happens once the stream completes.
+                contentEl.innerHTML = escapeHTML(full).replace(/\n/g, '<br>') + '<span class="stream-cursor"></span>';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            };
+
+            try {
+                const resp = await fetch('/api/chat/stream', {
+                    method: 'POST',
+                    headers: Object.assign({ 'Accept': 'text/event-stream' }, getAuthHeaders()),
+                    body: JSON.stringify(bodyPayload),
+                    signal: controller.signal
+                });
+                if (!resp.ok || !resp.body) throw new Error('stream_http_' + resp.status);
+
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    let idx;
+                    while ((idx = buffer.indexOf('\n\n')) !== -1) {
+                        const raw = buffer.slice(0, idx);
+                        buffer = buffer.slice(idx + 2);
+                        const line = raw.split('\n').find(l => l.trim().startsWith('data:'));
+                        if (!line) continue;
+                        let evt;
+                        try { evt = JSON.parse(line.replace(/^\s*data:\s*/, '')); } catch (e) { continue; }
+                        if (evt.type === 'session') {
+                            sessionId = evt.session_id || sessionId;
+                        } else if (evt.type === 'token') {
+                            full += (evt.content || '');
+                            if (!rafPending) { rafPending = true; requestAnimationFrame(paint); }
+                        } else if (evt.type === 'done') {
+                            doneEvt = evt;
+                        } else if (evt.type === 'error') {
+                            throw new Error(evt.message || 'stream_error');
+                        }
+                    }
+                }
+                if (!doneEvt && !full) throw new Error('stream_empty');
+            } catch (err) {
+                if (err && err.name === 'AbortError') {
+                    aborted = true;
+                } else {
+                    wrap.remove();
+                    activeStream = null;
+                    setStreamingUI(false);
+                    throw err;
                 }
             }
+
+            if (aborted && !full) {
+                wrap.remove();
+                activeStream = null;
+                setStreamingUI(false);
+                return { aborted: true };
+            }
+
+            if (!full && doneEvt && doneEvt.ai_message && doneEvt.ai_message.content) {
+                full = doneEvt.ai_message.content;
+            }
+
+            contentEl.innerHTML = formatMessageContent(full);
+            contentEl.querySelectorAll('.stream-cursor').forEach(e => e.remove());
+            enhanceMessageCodeBlocks(wrap);
+            if (window.ARTIFACT_STUDIO) {
+                try { window.ARTIFACT_STUDIO.attach(wrap, full); } catch (e) { console.warn('Artifact attach:', e); }
+            }
+            const liveBadge = wrap.querySelector('[data-live-badge]');
+            if (liveBadge) liveBadge.remove();
+            const extras = wrap.querySelector('[data-stream-extras]');
+            if (extras) {
+                if (doneEvt && doneEvt.sources && doneEvt.sources.length) {
+                    extras.insertAdjacentHTML('beforeend', buildSourcesHtml(doneEvt.sources));
+                }
+                if (doneEvt && doneEvt.suggested_questions && doneEvt.suggested_questions.length) {
+                    extras.insertAdjacentHTML('beforeend', buildFollowupsHtml(doneEvt.suggested_questions));
+                }
+            }
+            wrap.removeAttribute('data-streaming');
+            activeStream = null;
+            setStreamingUI(false);
+
+            // Auto-speak if enabled in Workspace Preferences
+            const autoSpeakEnabled = localStorage.getItem('alumni_pref_auto_speak') === 'true';
+            if (autoSpeakEnabled && full) {
+                try {
+                    const cleanSummary = full.replace(/```[\s\S]*?```/g, 'Code snippet provided.').replace(/[*#_`>-]/g, '').slice(0, 280);
+                    if (cleanSummary) setTimeout(() => speakMayVoice(cleanSummary), 400);
+                } catch (e) {}
+            }
+
+            return { wrap, sessionId, text: full, data: doneEvt || {} };
+        }
+
+        function normalizeMathDelimiters(text) {
+            if (!text) return text;
+            return String(text).split(/(```[\s\S]*?```)/g).map(part => {
+                if (part.startsWith('```')) return part;
+                return part
+                    .replace(/\\\[([\s\S]*?)\\\]/g, (m, p1) => '$$' + p1 + '$$')
+                    .replace(/\\\(([\s\S]*?)\\\)/g, (m, p1) => '$' + p1 + '$');
+            }).join('');
         }
 
         function fallbackMarkdownParse(md) {
@@ -4579,8 +5468,17 @@
 
         function formatMessageContent(raw) {
             if (!raw) return '';
+            let normalized = raw;
+        if (typeof normalizeMathDelimiters === 'function') {
+            try { normalized = normalizeMathDelimiters(raw); } catch(e) { normalized = raw; }
+        } else {
+            try {
+                normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, function(m,p1){ return '$' + p1 + '$'; });
+                normalized = normalized.replace(/\\\[([\s\S]*?)\\\]/g, function(m,p1){ return '$$' + p1 + '$$'; });
+            } catch(e){}
+        }
             // 1. Client-side guardrail: Filter out any internal reasoning / thinking tags
-            let sanitized = raw.replace(/<think>[\s\S]*?<\/think>/gi, '')
+            let sanitized = normalized.replace(/<think>[\s\S]*?<\/think>/gi, '')
                                .replace(/<thought>[\s\S]*?<\/thought>/gi, '')
                                .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')
                                .replace(/<scratchpad>[\s\S]*?<\/scratchpad>/gi, '')
@@ -4603,6 +5501,51 @@
             if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
                 parsedHtml = DOMPurify.sanitize(parsedHtml);
             }
+
+            // Render math if available (KaTeX auto-render)
+            try {
+                if (typeof window.renderMathInElement === 'function') {
+                    var mathDiv = document.createElement('div');
+                    mathDiv.innerHTML = parsedHtml;
+                    window.renderMathInElement(mathDiv, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\[', right: '\\]', display: true},
+                            {left: '\\(', right: '\\)', display: false}
+                        ],
+                        throwOnError: false,
+                        errorColor: '#dc2626',
+                        strict: false,
+                        trust: true,
+                        ignoredTags: ['script', 'noscript', 'style', 'textarea', 'option']
+                    });
+                    // Wrap display math for scroll and add copy button
+                    mathDiv.querySelectorAll('.katex-display').forEach(function(el){
+                        if (el.parentElement && el.parentElement.classList.contains('katex-display-scroll')) return;
+                        var wrapper = document.createElement('div');
+                        wrapper.className = 'katex-display-scroll';
+                        el.parentNode.insertBefore(wrapper, el);
+                        wrapper.appendChild(el);
+                        var copyBtn = document.createElement('button');
+                        copyBtn.className = 'katex-copy-btn';
+                        copyBtn.type = 'button';
+                        copyBtn.title = 'Copy LaTeX';
+                        copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                        copyBtn.onclick = async function(ev){
+                            ev.stopPropagation();
+                            try {
+                                var tex = el.getAttribute('data-tex') || el.textContent || '';
+                                await navigator.clipboard.writeText(tex);
+                                copyBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i>';
+                                setTimeout(function(){ copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>'; }, 1400);
+                            } catch(e2){}
+                        };
+                        wrapper.appendChild(copyBtn);
+                    });
+                    parsedHtml = mathDiv.innerHTML;
+                }
+            } catch(e) { console.warn('Math render notice:', e); }
 
             return parsedHtml;
         }
@@ -4708,8 +5651,11 @@
             } else {
                 playTactileSound('receive');
                 messageDiv.className = 'flex items-start gap-2 max-w-full sm:max-w-3xl animate-slide-left overflow-guard';
+                messageDiv.setAttribute('data-ai-message', '1');
+                messageDiv.setAttribute('data-user-query', window.lastSentUserQuery || '');
 
                 let youtubeHtml = buildVideoSlotHtml(youtubeVideo);
+                let followupsHtml = buildFollowupsHtml(suggestedQuestions);
 
                 let sourcesHtml = '';
                 if (sources && Array.isArray(sources) && sources.length > 0) {
@@ -4733,28 +5679,27 @@
                 }
 
                 messageDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 logo-chip overflow-hidden p-1 border border-slate-800/80 ai-avatar">
                         <img src="/logo-256.webp" decoding="async" alt="Alumni AI" class="w-full h-full object-contain">
                     </div>
-                    <div class="msg-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-800 dark:text-slate-100 space-y-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex-1 min-w-0">
+                    <div class="msg-bubble ai-bubble clay-surface-white p-3 sm:p-4 rounded-2xl text-[13px] text-slate-800 dark:text-slate-100 space-y-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-800 flex-1 min-w-0">
                         <div class="font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-between gap-2">
                             <span class="flex items-center gap-1.5 min-w-0 truncate">
                                 <span>Alumni AI (${(mode || currentMode).toUpperCase()})</span>
                                 ${memoryUsed ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 shrink-0" title="Your saved memory was applied to this reply"><i class="fa-solid fa-brain mr-1"></i>Memory</span>' : ''}
                                 ${sources && sources.length ? '<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 shrink-0"><i class="fa-solid fa-globe mr-1"></i>Web</span>' : ''}
                             </span>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button type="button" onclick="requestVideoForMessage(this)" title="Find a related video for this topic" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition text-[11px] w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center">
-                                    <i class="fa-brands fa-youtube"></i>
-                                </button>
-                                <button type="button" onclick="speakMessageBubble(this)" title="Listen with May (Voice Assistant)" class="text-slate-400 hover:text-pink-600 dark:hover:text-pink-400 transition text-[11px] w-8 h-8 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-950/40 flex items-center justify-center">
-                                    <i class="fa-solid fa-volume-high"></i>
-                                </button>
+                            <div class="msg-actions">
+                                <button type="button" class="msg-action-btn" onclick="copyMessageText(this)" title="Copy response"><i class="fa-regular fa-copy"></i></button>
+                                <button type="button" class="msg-action-btn" onclick="regenerateMessage(this)" title="Regenerate response"><i class="fa-solid fa-rotate-right"></i></button>
+                                <button type="button" class="msg-action-btn" onclick="requestVideoForMessage(this)" title="Find a related video for this topic"><i class="fa-brands fa-youtube"></i></button>
+                                <button type="button" class="msg-action-btn" onclick="speakMessageBubble(this)" title="Listen with May (Voice Assistant)"><i class="fa-solid fa-volume-high"></i></button>
                             </div>
                         </div>
                         <div class="leading-relaxed font-medium overflow-x-auto markdown-content" id="msg-content-${Date.now()}">${formatMessageContent(text)}</div>
                         ${youtubeHtml}
                         ${sourcesHtml}
+                        ${followupsHtml}
                     </div>
                 `;
                 chatContainer.appendChild(messageDiv);
@@ -4770,7 +5715,7 @@
                     try {
                         const cleanSummary = text.replace(/```[\s\S]*?```/g, 'Code snippet provided.').replace(/[*#_`>-]/g, '').slice(0, 280);
                         if (cleanSummary) {
-                            setTimeout(() => speakMayResponse(cleanSummary), 400);
+                            setTimeout(() => speakMayVoice(cleanSummary), 400);
                         }
                     } catch(e) {}
                 }
@@ -4854,6 +5799,14 @@
                         <span class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">Mode: ${escapeHTML(currentMode)}</span>
                     </div>
 
+                    <!-- Quick-start actions -->
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button type="button" class="starter-chip" onclick="sendQuickPrompt('Explain a concept simply, with a real-world example.'); playTactileSound('click');"><i class="fa-solid fa-lightbulb text-amber-500 text-[11px] shrink-0"></i><span class="min-w-0 truncate">Explain a concept</span></button>
+                        <button type="button" class="starter-chip" onclick="sendQuickPrompt('Debug this code and give me the exact fix with a corrected version.'); playTactileSound('click');"><i class="fa-solid fa-bug text-rose-500 text-[11px] shrink-0"></i><span class="min-w-0 truncate">Debug my code</span></button>
+                        <button type="button" class="starter-chip" onclick="sendQuickPrompt('Summarize the key points of this topic into a short study note.'); playTactileSound('click');"><i class="fa-solid fa-note-sticky text-cyan-600 dark:text-cyan-400 text-[11px] shrink-0"></i><span class="min-w-0 truncate">Make study notes</span></button>
+                        <button type="button" class="starter-chip" onclick="sendQuickPrompt('Build a practical 7-day study plan for my next exam.'); playTactileSound('click');"><i class="fa-solid fa-calendar-check text-emerald-500 text-[11px] shrink-0"></i><span class="min-w-0 truncate">Plan my week</span></button>
+                    </div>
+
                     <!-- Compact Starter Research Chips (2 shown, more on demand) -->
                     <div class="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 space-y-1.5">
                         <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center justify-between gap-2">
@@ -4890,7 +5843,7 @@
         // ==========================================
         // Voice Assistant May Studio
         // Studio-grade Neural Speech + Live Subtitles
-        // Powered by Sarvam AI Bulbul Neural Engine
+        // Powered by a Neural Voice Engine
         // ==========================================
         let mayVoicesList = [];
         let selectedMayVoice = null;
@@ -4899,7 +5852,7 @@
         let isVoiceListening = false;
         let mayVoiceSpeed = 1.0;
         let mayVoicePitch = 1.08;
-        let currentSarvamSpeaker = 'ishita';
+        let currentMaySpeaker = 'ishita';
         let mayCurrentAudio = null;
 
         function stopCurrentSpeechAudio() {
@@ -4995,21 +5948,21 @@
         }
 
         function initMayVoices() {
-            const selectEl = document.getElementById('may-voice-select') || document.getElementById('bulbul-voice-select');
+            const selectEl = document.getElementById('may-voice-select') || document.getElementById('may-voice-select');
             if (!selectEl) return;
 
-            // 1. Premium Sarvam AI Studio Neural Voices (Bulbul Model)
-            const sarvamVoices = [
-                { id: 'sarvam:ishita', label: 'May ✨ Sarvam Neural (Ishita - Natural)' },
-                { id: 'sarvam:kavya', label: 'May ✨ Sarvam Neural (Kavya - Executive)' },
-                { id: 'sarvam:shreya', label: 'May ✨ Sarvam Neural (Shreya - Expressive)' },
-                { id: 'sarvam:priya', label: 'May ✨ Sarvam Neural (Priya - Warm)' },
-                { id: 'sarvam:ritu', label: 'May ✨ Sarvam Neural (Ritu - Authoritative)' },
-                { id: 'sarvam:neha', label: 'May ✨ Sarvam Neural (Neha - Balanced)' }
+            // 1. Premium Neural Voices
+            const neuralVoices = [
+                { id: 'neural:ishita', label: 'May ✨ Ishita (Natural)' },
+                { id: 'neural:kavya', label: 'May ✨ Kavya (Executive)' },
+                { id: 'neural:shreya', label: 'May ✨ Shreya (Expressive)' },
+                { id: 'neural:priya', label: 'May ✨ Priya (Warm)' },
+                { id: 'neural:ritu', label: 'May ✨ Ritu (Authoritative)' },
+                { id: 'neural:neha', label: 'May ✨ Neha (Balanced)' }
             ];
 
             selectEl.innerHTML = '';
-            sarvamVoices.forEach(sv => {
+            neuralVoices.forEach(sv => {
                 const opt = document.createElement('option');
                 opt.value = sv.id;
                 opt.textContent = sv.label;
@@ -5036,11 +5989,10 @@
                 }
             }
 
-            selectEl.value = 'sarvam:' + (currentSarvamSpeaker || 'ishita');
+            selectEl.value = 'neural:' + (currentMaySpeaker || 'ishita');
         }
 
         // Backward compatibility alias
-        const initBulbulVoices = initMayVoices;
 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.onvoiceschanged = () => {
@@ -5049,16 +6001,16 @@
         }
 
         function changeMayVoice(voiceVal) {
-            if (voiceVal.startsWith('sarvam:')) {
-                currentSarvamSpeaker = voiceVal.replace('sarvam:', '').trim();
-                showToast(`May voice switched to Sarvam Neural (${currentSarvamSpeaker.toUpperCase()})`);
+            if (voiceVal.startsWith('neural:')) {
+                currentMaySpeaker = voiceVal.replace('neural:', '').trim();
+                showToast(`May voice switched to ${currentMaySpeaker.toUpperCase()} (Neural)`);
                 return;
             } else if (voiceVal.startsWith('browser:')) {
                 const vName = voiceVal.replace('browser:', '').trim();
                 const found = mayVoicesList.find(v => v.name === vName);
                 if (found) {
                     selectedMayVoice = found;
-                    currentSarvamSpeaker = null;
+                    currentMaySpeaker = null;
                     showToast(`Switched to Browser voice (${found.name.split(' ')[0]})`);
                 }
             }
@@ -5076,7 +6028,7 @@
             stopCurrentSpeechAudio();
             setVoiceVisualizer('thinking');
             const maySub = document.getElementById('voice-may-subtitle');
-            if (maySub) maySub.textContent = "Connecting to Sarvam Neural Voice Engine...";
+            if (maySub) maySub.textContent = "Connecting to Neural Voice Engine...";
 
             try {
                 const resp = await fetch('/api/voice/query', {
@@ -5085,7 +6037,7 @@
                     body: JSON.stringify({
                         query: "Introduce yourself in one executive sentence.",
                         mode: currentMode,
-                        speaker: currentSarvamSpeaker || 'ishita'
+                        speaker: currentMaySpeaker || 'ishita'
                     })
                 });
 
@@ -5107,7 +6059,6 @@
         }
 
         // Backward compatibility alias
-        const changeBulbulVoice = changeMayVoice;
 
         function setVoiceVisualizer(state) {
             const statusText = document.getElementById('may-status-text');
@@ -5332,7 +6283,7 @@
 
         async function triggerMayVoiceQuery(query) {
             setVoiceVisualizer('thinking');
-            const maySub = document.getElementById('voice-may-subtitle') || document.getElementById('voice-bulbul-subtitle');
+            const maySub = document.getElementById('voice-may-subtitle') || document.getElementById('voice-may-subtitle');
             if (maySub) maySub.textContent = "Thinking...";
 
             try {
@@ -5343,8 +6294,8 @@
                     session_id: currentSessionId || null,
                     custom_api_key: customKey
                 };
-                if (currentSarvamSpeaker) {
-                    payload.speaker = currentSarvamSpeaker;
+                if (currentMaySpeaker) {
+                    payload.speaker = currentMaySpeaker;
                 }
 
                 const resp = await fetch('/api/voice/query', {
@@ -5419,7 +6370,7 @@
                     body: JSON.stringify({
                         query: "Read this response clearly: " + textToSpeak.slice(0, 1200),
                         mode: currentMode,
-                        speaker: currentSarvamSpeaker || 'ishita'
+                        speaker: currentMaySpeaker || 'ishita'
                     })
                 });
 
@@ -5459,7 +6410,6 @@
         }
 
         // Backward compatibility alias
-        const triggerBulbulVoiceQuery = triggerMayVoiceQuery;
 
         function speakMayVoice(text) {
             if (!('speechSynthesis' in window)) {
@@ -5502,7 +6452,6 @@
         }
 
         // Backward compatibility alias
-        const speakBulbulVoice = speakMayVoice;
 
 
         // Integrated Chrome Browser & Tools
@@ -6182,25 +7131,9 @@
                 ];
                 let i = 0;
 
-                const friendlyNames = {
-                    'opencode_zen': 'OpenCode Zen (fast cooldown fail)',
-                    'openrouter_free': 'OpenRouter (Free Tier)',
-                    'groq': 'Groq (qwen3.8-27b)',
-                    'qwen': 'Alibaba Qwen',
-                    'ollama': 'Local Ollama (disabled in prod)',
-                    'gemini_free': 'Google Gemini (flash-lite)',
-                    'cerebras': 'Cerebras',
-                    'mistral': 'Mistral',
-                    'github_models': 'GitHub Models',
-                    'voice_may': 'May Voice Assistant (Sarvam Bulbul)',
-                    'offline_brain': 'Alumni AI Neural Brain (Offline)',
-                    'research_pipeline+opencode_zen': 'Deep Research Engine + OpenCode Zen',
-                    'research_pipeline+offline_brain': 'Deep Research + Neural Brain',
-                    'research_pipeline+groq': 'Deep Research + Groq',
-                    'research_pipeline+gemini_free': 'Deep Research + Gemini',
-                    'web_research+opencode_zen': 'Web Research + OpenCode Zen',
-                    'web_research+offline_brain': 'Web Research + Neural Brain'
-                };
+                // Provider identities are intentionally masked in the public UI.
+                // Stable aliases keep the distribution chart meaningful without
+                // exposing provider or model names.
 
                 if (providerEntries.length === 0) {
                     providerContainer.innerHTML = '<div class="text-slate-400 text-xs">Zero queries recorded yet.</div>';
@@ -6209,7 +7142,7 @@
                         const numericCount = Number(count) || 0;
                         const pct = Math.round((numericCount / total) * 100);
                         const color = colors[i % colors.length];
-                        const label = friendlyNames[provider] || provider;
+                        const label = providerAlias(provider);
                         const el = document.createElement('div');
                         el.className = 'space-y-1';
                         el.innerHTML = `
@@ -6301,7 +7234,7 @@
                     <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-white truncate max-w-[120px]">${escapeHTML(userDisplay)}</td>
                     <td class="py-2.5 px-3">
                         <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 truncate max-w-[150px] inline-block">
-                            ${escapeHTML(ev.provider_used || 'engine')}
+                            ${escapeHTML(providerAlias(ev.provider_used))}
                         </span>
                     </td>
                     <td class="py-2.5 px-3 font-mono text-cyan-600 dark:text-cyan-400">${latency}</td>
@@ -6930,6 +7863,21 @@
             return String(str).replace(/[&<>'"]/g, 
                 tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
+        }
+
+        // Mask provider/model identities in the public UI while keeping
+        // analytics labels stable and distinguishable for the founder view.
+        function providerAlias(name) {
+            const raw = String(name || 'engine');
+            let prefix = '';
+            let base = raw;
+            if (raw.startsWith('research_pipeline+')) { prefix = 'Deep Research · '; base = raw.slice('research_pipeline+'.length); }
+            else if (raw.startsWith('web_research+')) { prefix = 'Web Research · '; base = raw.slice('web_research+'.length); }
+            if (base === 'voice_may') return 'Voice Assistant';
+            if (base === 'offline_brain') return prefix + 'Built-in Engine';
+            let h = 0;
+            for (let k = 0; k < base.length; k++) h = (h * 31 + base.charCodeAt(k)) >>> 0;
+            return prefix + 'AI Engine ' + String(h % 997).padStart(3, '0');
         }
 
         /* ============================================================

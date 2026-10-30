@@ -37,7 +37,7 @@ def test_file_extract_and_chat_attachment():
     headers = {"Authorization": f"Bearer {token}"}
 
     # 2. Test Text / Python Code extraction
-    py_code = 'def hello_world():\n    return "Alumni AI with OpenCode Zen"\nprint(hello_world())'
+    py_code = 'def hello_world():\n    return "Alumni AI"\nprint(hello_world())'
     b64_code = base64.b64encode(py_code.encode("utf-8")).decode("utf-8")
     
     extract_res = client.post("/api/files/extract", json={

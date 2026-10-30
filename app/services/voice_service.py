@@ -162,7 +162,7 @@ async def synthesize_sarvam_audio(
     language_code: Optional[str] = None
 ) -> Optional[str]:
     """
-    Synthesizes studio-quality neural MP3 audio using Sarvam AI Bulbul model.
+    Synthesizes studio-quality neural MP3 audio using the configured voice model.
     Dynamically routes between hi-IN (Hindi / Hinglish) and en-IN (Indian English).
     Returns base64-encoded audio string, or None if unavailable/offline.
     """
@@ -194,9 +194,9 @@ async def synthesize_sarvam_audio(
                 if audios and len(audios) > 0 and audios[0]:
                     return audios[0]
             else:
-                print(f"[Sarvam AI TTS] Warning: API returned status {resp.status_code}: {resp.text[:150]}")
+                print(f"[Neural TTS] Warning: API returned status {resp.status_code}: {resp.text[:150]}")
     except Exception as e:
-        print(f"[Sarvam AI TTS] Audio synthesis notice: {e}")
+        print(f"[Neural TTS] Audio synthesis notice: {e}")
         
     return None
 
@@ -372,7 +372,7 @@ async def process_voice_query(
         except Exception as e:
             print(f"[May Voice Session Persistence] Notice: {e}")
 
-    # 10. Synthesize Studio Neural Audio via Sarvam AI Bulbul
+    # 10. Synthesize studio neural audio
     audio_base64 = await synthesize_sarvam_audio(
         formatted_reply, 
         speaker=speaker, 

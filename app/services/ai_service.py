@@ -55,7 +55,7 @@ BASE_SYSTEM_INSTRUCTION = (
     "- SOHAM: Soham is the Co-creator, Core Engineer & Founder at Team Alum who engineered Alumni AI alongside Sudarshan.\n"
     "- TEAM ALUM: The pioneering innovation team and startup driven by Sudarshan and Soham that created, designed, and powers Alumni AI.\n"
     "- EVOLUTION & CAPABILITIES: In earlier versions, you were just a basic prototype in early testing. Sudarshan and Soham heavily engineered your architecture, integrating advanced core abilities that make you exceptionally powerful: web summarization, drafting, deep research, Chrome browsing, and voice interaction (May).\n"
-    "- SPECIALIZED CODING & SOFTWARE PROBLEM SOLVING: You feature a specialized API powered by OpenCode (OpenCode Zen / space-bunny-free reasoning engine), delivering deep analytical problem-solving for all software-related issues, code debugging, and programming.\n"
+    "- SPECIALIZED CODING & SOFTWARE PROBLEM SOLVING: You feature an advanced reasoning engine for deep analytical problem-solving across all software-related issues, code debugging, and programming.\n"
     "- INFRASTRUCTURE & LICENSING: You are driven by Team Alum, hosted on Hack Club Nest (NEST), and officially licensed to Sudarshan Hadmode.\n"
     "When asked about who made you, who developed you, who Sudarshan is, who Soham is, what Team Alum is, or your origins, always answer accurately and proudly based on these facts.\n\n"
     "STRICT OUTPUT CONSTRAINTS:\n"
@@ -259,7 +259,7 @@ def clean_ai_response(text: str) -> str:
 
 
 # -------------------------------------------------------------
-# Tier Callers (OpenAI-compatible, Ollama, Google GenAI)
+# Provider callers (OpenAI-compatible, local, and Google GenAI)
 # -------------------------------------------------------------
 
 async def _call_openai_compatible(
@@ -435,7 +435,7 @@ async def _call_gemini_vision(
     raise RuntimeError(f"All Gemini vision candidate models failed. Last error: {last_err}")
 
 # -------------------------------------------------------------
-# Tier 10: High-Capability Built-in Neural Brain (Offline Heuristic Engine)
+# Built-in offline engine (heuristic)
 # -------------------------------------------------------------
 def fallback_generate(prompt: str, mode: str, conversation_history: Optional[List[Dict[str, str]]] = None) -> str:
     lower = prompt.lower().strip()
@@ -636,7 +636,7 @@ def fallback_generate(prompt: str, mode: str, conversation_history: Optional[Lis
         if mode == "sarcastic":
             return (
                 "**Team Alum** is the innovation squad founded by **Sudarshan** and **Soham**! "
-                "They're the driving force behind everything I do—from my specialized OpenCode coding engine to my deployment on NEST. Basically, the geniuses who made me awesome."
+                "They're the driving force behind everything I do—from my advanced reasoning engine to my deployment on NEST. Basically, the geniuses who made me awesome."
             )
         elif mode == "basic":
             return (
@@ -651,7 +651,7 @@ def fallback_generate(prompt: str, mode: str, conversation_history: Optional[Lis
             return (
                 "### Team Alum (Engineering Collective & Startup)\n\n"
                 "**Team Alum** is the pioneering engineering collective and startup founded and driven by **Sudarshan Hadmode** and **Soham**. "
-                "Team Alum powers and maintains **Alumni AI**, orchestrating its deployment on Hack Club Nest (NEST), integrating specialized OpenCode reasoning APIs, and building next-generation AI tools."
+                "Team Alum powers and maintains **Alumni AI**, orchestrating its deployment on Hack Club Nest (NEST), integrating advanced reasoning capabilities, and building next-generation AI tools."
             )
 
     if is_who_made or is_general_identity:
@@ -659,7 +659,7 @@ def fallback_generate(prompt: str, mode: str, conversation_history: Optional[Lis
             return (
                 "I was engineered and developed by the power duo: **Sudarshan** and **Soham** from **Team Alum**! 🚀\n\n"
                 "Previously, I was honestly just a basic, boring testing prototype. But they got to work, overhauled my architecture, and turned me into an absolute beast of an AI. "
-                "Now I'm super powerful—I can draft content, summarize entire webs, and when it comes to coding, I have a specialized **OpenCode** API that solves your software nightmares and bugs faster than you can blink.\n\n"
+                "Now I'm super powerful—I can draft content, summarize entire webs, and when it comes to coding, I have an advanced reasoning engine that solves your software nightmares and bugs faster than you can blink.\n\n"
                 "I'm proudly driven by **Team Alum**, hosted on **Hack Club Nest (NEST)**, and officially licensed to **Sudarshan Hadmode**."
             )
         elif mode == "basic":
@@ -668,19 +668,19 @@ def fallback_generate(prompt: str, mode: str, conversation_history: Optional[Lis
                 "Here is my story:\n"
                 "- **From Testing to Supercharged**: At first, I was just a basic testing project. Sudarshan and Soham engineered me from scratch and integrated powerful core abilities!\n"
                 "- **What I Can Do**: I can help you with web summarization, drafting articles or essays, studying, and voice conversations with May.\n"
-                "- **Special Coding Engine**: I have a special API powered by **OpenCode** that gives me extra problem-solving power for software bugs and programming!\n"
+                "- **Special Coding Engine**: I have an advanced reasoning engine that gives me extra problem-solving power for software bugs and programming!\n"
                 "- **Hosting & License**: I am driven by **Team Alum**, hosted on **Hack Club Nest (NEST)**, and officially licensed to **Sudarshan Hadmode**."
             )
         elif mode == "may":
             return (
-                "I was created and developed by Sudarshan and Soham from Team Alum! Originally a basic test, they engineered me with powerful core abilities and a special OpenCode API for coding and problem solving. I'm driven by Team Alum, hosted on NEST, and licensed to Sudarshan Hadmode."
+                "I was created and developed by Sudarshan and Soham from Team Alum! Originally a basic test, they engineered me with powerful core abilities and an advanced reasoning engine for coding and problem solving. I'm driven by Team Alum, hosted on NEST, and licensed to Sudarshan Hadmode."
             )
         else:
             return (
                 "### Alumni AI Architecture & Origin\n\n"
                 "I am **Alumni AI**, created and developed by **Sudarshan Hadmode** and **Soham** under **Team Alum**.\n\n"
                 "- **Evolution**: Originally conceived as a basic testing prototype, Alumni AI was extensively engineered by Sudarshan and Soham to integrate high-capability multi-modal workflows including web summarization, academic drafting, and browser intelligence.\n"
-                "- **Specialized Coding Engine**: Integrated with high-performance APIs powered by **OpenCode** (`space-bunny-free` / OpenCode Zen reasoning engine), delivering deep analytical problem-solving for complex software architecture, debugging, and programming.\n"
+                "- **Specialized Coding Engine**: Integrated with high-performance reasoning capabilities, delivering deep analytical problem-solving for complex software architecture, debugging, and programming.\n"
                 "- **Operations & Infrastructure**: Driven by **Team Alum**, hosted on **Hack Club Nest (NEST)**, and officially licensed to **Sudarshan Hadmode**."
             )
 
@@ -904,7 +904,7 @@ async def observe_and_analyze_attachments(
         f"ATTACHMENTS TO OBSERVE:\n{files_block or '(see attached images)'}"
     )
 
-    # Path A: images attached -> Gemini VISION analyzes real image bytes (works, Tier 5 provider)
+    # Path A: images attached -> vision model analyzes real image bytes
     if image_data_urls and GEMINI_API_KEY and HAS_GENAI:
         try:
             obs_report = await _call_gemini_vision(
@@ -919,7 +919,7 @@ async def observe_and_analyze_attachments(
         except Exception as e:
             logger.warning(f"[Attachment Observer vision notice]: {e}. Falling back to text observers...")
 
-    # Path B: text dossier via OpenCode observer key, Gemini text fallback
+    # Path B: text dossier via observer key, with text-model fallback
     obs_key = OPENCODE_ATTACHMENT_KEY or OPENCODE_FALLBACK_KEY or OPENCODE_KEY_3
     if obs_key:
         try:
@@ -967,6 +967,13 @@ def _is_cooldown_error(e: Exception) -> bool:
     s = str(e).lower()
     return "rate limit" in s or "cooldown" in s or "timeout" in s or "timed out" in s
 
+# Circuit breaker for providers that fail fast with a hard policy/model error.
+# Without this, every chat request pays the full retry cost for a provider that
+# is known to be rejecting requests, which makes the assistant feel slow.
+_TIER1_COOLDOWN_UNTIL = 0.0
+_TIER1_POLICY_FAILURES = 0
+
+
 async def generate_ai_response(
     prompt: str,
     mode: str = "professional",
@@ -976,6 +983,7 @@ async def generate_ai_response(
     deadline: Optional[float] = None,
     memory_context: Optional[str] = None
 ) -> AIResponse:
+    global _TIER1_COOLDOWN_UNTIL, _TIER1_POLICY_FAILURES
     system_instruction = custom_system_instruction or get_system_instruction(mode, prompt=prompt)
     if memory_context:
         system_instruction = (
@@ -1009,17 +1017,18 @@ async def generate_ai_response(
     # User custom key passed directly from client
     client_key = (custom_api_key or "").strip()
 
-    # Tier 1: OpenCode Zen key rotation (Keys No. 1, 3 & 4). Each key first tries its
-    # primary model; on failure/cooldown the SAME key retries once with the Big Pickle
-    # cooldown fallback model before moving to the next key.
+    # Primary provider tier with key rotation and a secondary fallback model.
     zen_keys = []
-    if client_key and client_key.startswith("oc_sk_"):
-        zen_keys.append(client_key)
-    for _zk in (OPENCODE_API_KEY, OPENCODE_FALLBACK_KEY, OPENCODE_KEY_3):
-        if _zk and _zk not in zen_keys:
-            zen_keys.append(_zk)
-    if not zen_keys and client_key:
-        zen_keys.append(client_key)
+    if time.time() >= _TIER1_COOLDOWN_UNTIL:
+        if client_key and client_key.startswith("oc_sk_"):
+            zen_keys.append(client_key)
+        for _zk in (OPENCODE_API_KEY, OPENCODE_FALLBACK_KEY, OPENCODE_KEY_3):
+            if _zk and _zk not in zen_keys:
+                zen_keys.append(_zk)
+        if not zen_keys and client_key:
+            zen_keys.append(client_key)
+    else:
+        logger.info("[Tier 1: OpenCode Zen] Cooling down after repeated hard failures; skipping to the next tier.")
 
     for _zi, zen_key in enumerate(zen_keys):
         if not _can(7.0) or (time.time() - chain_start) > 14.0:
@@ -1041,6 +1050,7 @@ async def generate_ai_response(
                     provider_name = f"opencode_big_pickle_key{_zi + 1}"
                 else:
                     provider_name = "opencode_zen" if _zi == 0 else f"opencode_zen_key{_zi + 1}"
+                _TIER1_POLICY_FAILURES = 0
                 return AIResponse(content, provider=provider_name, fallback_count=fallback_count, status="success")
             except Exception as e:
                 fallback_count += 1
@@ -1050,13 +1060,17 @@ async def generate_ai_response(
                     logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' cooldown/rate-limited]: {e}. Retrying this key with Big Pickle...")
                     continue
                 else:
+                    _TIER1_POLICY_FAILURES += 1
+                    if _TIER1_POLICY_FAILURES >= 3:
+                        _TIER1_COOLDOWN_UNTIL = time.time() + 600.0
+                        logger.warning("[Tier 1: OpenCode Zen] Repeated hard failures — cooling down this tier for 10 minutes.")
                     logger.warning(f"[Tier 1: OpenCode Zen key #{_zi + 1} model '{_model}' policy failure]: {e}. Skipping Big Pickle (not a cooldown), next key...")
                     break
 
     if zen_keys:
         logger.warning("[Tier 1: OpenCode Zen] All keys exhausted. Failing over to Tier 2...")
 
-    # Tier 2: OpenRouter Free Models (qwen/qwen-2.5-72b-instruct:free, gemini:free, llama:free)
+    # Provider tier
     or_key = client_key or OPENROUTER_API_KEY
     if or_key and _can() and _fast_path_open():
         try:
@@ -1075,7 +1089,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 2: OpenRouter free failed]: {e}. Failing over to Tier 3...")
             fallback_count += 1
 
-    # Tier 2b: Groq Cloud (Ultra-Fast Free Tier — ~0.4s replies, sits before Gemini)
+    # Provider tier
     groq_key = client_key or GROQ_API_KEY
     if GROQ_API_KEY and _can() and _fast_path_open():
         try:
@@ -1093,7 +1107,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 2b: Groq free failed]: {e}. Failing over to Gemini...")
             fallback_count += 1
 
-    # Tier 3: Qwen (Alibaba DashScope / Compatible Endpoint)
+    # Provider tier
     qwen_key = client_key or QWEN_API_KEY
     if qwen_key and _can() and _fast_path_open():
         try:
@@ -1111,7 +1125,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 3: Qwen failed]: {e}. Failing over to Tier 4...")
             fallback_count += 1
 
-    # Tier 4: Ollama (100% Free Local or Nest-hosted Server)
+    # Provider tier
     if ENABLE_OLLAMA and _can(5.0) and _fast_path_open():
         try:
             content = await _call_ollama(
@@ -1125,9 +1139,9 @@ async def generate_ai_response(
             return AIResponse(content, provider="ollama", fallback_count=fallback_count, status="success")
         except Exception as e:
             logger.debug(f"[Tier 4: Ollama unavailable]: {e}. Continuing chain...")
-            # don't increment fallback_count if Ollama simply wasn't running locally
+            # don't increment fallback_count if the local provider simply wasn't running
 
-    # Tier 5: Google Gemini (Free Tier via Google AI Studio)
+    # Provider tier
     gem_key = GEMINI_API_KEY if (not client_key or client_key.startswith("oc_sk_")) else client_key
     if gem_key and HAS_GENAI and _can(8.0):
         try:
@@ -1146,7 +1160,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 5: Gemini failed]: {e}. Failing over to Tier 6...")
             fallback_count += 1
 
-    # Tier 7: Cerebras Cloud (Ultra-Fast Free Tier: Llama 3.1 8B)
+    # Provider tier
     if CEREBRAS_API_KEY and _can():
         try:
             content = await _call_openai_compatible(
@@ -1163,7 +1177,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 7: Cerebras failed]: {e}. Failing over to Tier 8...")
             fallback_count += 1
 
-    # Tier 8: Mistral AI (Free Tier: mistral-small / open-mistral-nemo)
+    # Provider tier
     if MISTRAL_API_KEY and _can():
         try:
             content = await _call_openai_compatible(
@@ -1180,7 +1194,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 8: Mistral failed]: {e}. Failing over to Tier 9...")
             fallback_count += 1
 
-    # Tier 9: GitHub Models / Azure AI (Free Tier via Personal Access Token)
+    # Provider tier
     if GITHUB_TOKEN and _can():
         try:
             content = await _call_openai_compatible(
@@ -1197,7 +1211,7 @@ async def generate_ai_response(
             logger.warning(f"[Tier 9: GitHub Models failed]: {e}. Failing over to Tier 10...")
             fallback_count += 1
 
-    # Tier 10: Alumni AI Built-in Neural Brain (Offline Heuristic Engine)
+    # Provider tier
     # Guaranteed 100% uptime with zero external dependencies
     fallback_content = clean_ai_response(fallback_generate(prompt, mode, conversation_history))
     return AIResponse(
